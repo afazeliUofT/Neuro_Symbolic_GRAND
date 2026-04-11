@@ -1,0 +1,143 @@
+{
+  "analysis": {
+    "calibration_bins": 10,
+    "top_tail_cases": 100,
+    "top_trace_examples": 20
+  },
+  "channel": {
+    "allow_fallback": true,
+    "backend": "sionna_tdl",
+    "carrier_frequency_hz": "3.5e9",
+    "delay_spread_s": 1e-07,
+    "eval_profiles": [
+      "A",
+      "C",
+      "E"
+    ],
+    "max_speed_mps": 10.0,
+    "min_speed_mps": 0.0,
+    "normalization": true,
+    "profile_family": "TDL",
+    "subcarrier_spacing_hz": "1.5e4",
+    "train_profiles": [
+      "A",
+      "C",
+      "E"
+    ]
+  },
+  "code": {
+    "k": 64,
+    "n": 128,
+    "p_column_weight": 3,
+    "seed": 31415
+  },
+  "data": {
+    "batch_size": 256,
+    "shard_size": 4000,
+    "snr_max_db": 8.0,
+    "snr_min_db": -4.0,
+    "trace_fraction": 0.01,
+    "train_samples": 40000,
+    "val_samples": 8000
+  },
+  "eval": {
+    "batch_size": 200,
+    "export_global_raw_gzip": true,
+    "interesting_traces_per_category": 20,
+    "samples_per_point": 1200,
+    "snr_grid_db": [
+      -4.0,
+      -2.0,
+      0.0,
+      2.0,
+      4.0,
+      6.0
+    ],
+    "trace_fraction": 0.01
+  },
+  "experiment_name": "nsgrand_fir_v2_full",
+  "model": {
+    "d_model": 64,
+    "dropout": 0.1,
+    "ff_multiplier": 4,
+    "max_weight_class": 4,
+    "n_heads": 4,
+    "n_layers": 2,
+    "num_segments": 8
+  },
+  "output_dir": "outputs/nsgrand_fir_v2_full",
+  "resources": {
+    "evaluation_threads_per_worker": 4,
+    "evaluation_workers": 16,
+    "generation_threads_per_worker": 4,
+    "generation_workers": 16,
+    "train_loader_workers": 0,
+    "train_torch_interop_threads": 1,
+    "train_torch_threads": 60
+  },
+  "search": {
+    "adaptive_budget": 2400,
+    "adaptive_max_weight": 5,
+    "adaptive_pool_size": 22,
+    "adaptive_top_bits_extra": 8,
+    "adaptive_top_segments": 4,
+    "ai_budget": 1200,
+    "ai_max_weight": 4,
+    "ai_pool_size": 18,
+    "ai_weight_penalties": [
+      0.0,
+      -0.05,
+      0.0,
+      0.2,
+      0.55,
+      0.95
+    ],
+    "always_fallback_after_ai_fail": true,
+    "baseline_budget": 2500,
+    "baseline_max_weight": 4,
+    "baseline_pool_size": 24,
+    "baseline_weight_penalties": [
+      0.0,
+      0.0,
+      0.15,
+      0.4,
+      0.9
+    ],
+    "candidate_mass_threshold": 0.85,
+    "confidence_presearch_threshold": 0.15,
+    "confidence_threshold": 0.35,
+    "fallback_budget": 4000,
+    "fallback_max_weight": 5,
+    "fallback_pool_size": 24,
+    "fallback_weight_penalties": [
+      0.0,
+      0.0,
+      0.1,
+      0.35,
+      0.75,
+      1.25
+    ],
+    "overflow_direct_fallback_threshold": 0.7,
+    "overflow_expand_threshold": 0.25,
+    "top_bits_extra": 6,
+    "top_segments": 3,
+    "trace_top_attempts": 25
+  },
+  "seed": 20260411,
+  "train": {
+    "batch_size": 512,
+    "bit_loss_weight": 1.0,
+    "confidence_loss_weight": 0.2,
+    "confidence_rank_limit": 22,
+    "confidence_weight_limit": 5,
+    "early_stopping_patience": 3,
+    "epochs": 12,
+    "grad_clip_norm": 1.0,
+    "label_smoothing": 0.0,
+    "learning_rate": 0.002,
+    "positive_bit_class_weight": 12.0,
+    "segment_loss_weight": 0.3,
+    "weight_decay": 0.0001,
+    "weight_loss_weight": 0.4
+  }
+}

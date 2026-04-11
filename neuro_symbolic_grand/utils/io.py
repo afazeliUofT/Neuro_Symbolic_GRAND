@@ -48,6 +48,13 @@ def append_jsonl(records: Iterable[Dict[str, Any]], path: Path) -> None:
             f.write(json.dumps(record, sort_keys=True) + "\n")
 
 
+def write_jsonl(records: Iterable[Dict[str, Any]], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for record in records:
+            f.write(json.dumps(record, sort_keys=True) + "\n")
+
+
 def read_jsonl(path: Path) -> List[Dict[str, Any]]:
     with path.open("r", encoding="utf-8") as f:
         return [json.loads(line) for line in f if line.strip()]
@@ -55,7 +62,7 @@ def read_jsonl(path: Path) -> List[Dict[str, Any]]:
 
 def write_dataframe_csv(df: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path, index=False)
+    df.to_csv(path, index=False, compression="infer")
 
 
 def copy_file(src: Path, dst: Path) -> None:

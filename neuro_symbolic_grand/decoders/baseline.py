@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import numpy as np
 
@@ -30,16 +30,29 @@ class WeightedReliabilityGRAND:
         llr = np.asarray(llr, dtype=np.float32)
         hard_bits = np.asarray(hard_bits, dtype=np.uint8)
         if self.code.is_codeword(hard_bits):
+            elapsed = (time.perf_counter() - start) * 1e3
             return DecodeResult(
                 success=True,
                 decoded_codeword=hard_bits.copy(),
                 queries=0,
                 stage="hard_decision",
-                elapsed_ms=(time.perf_counter() - start) * 1e3,
+                elapsed_ms=elapsed,
                 fallback_used=False,
                 candidate_pool_size=0,
                 oracle_pool_hit=True if truth_error_mask is not None and int(np.sum(truth_error_mask)) == 0 else None,
                 trace=[],
+                primary_queries=0,
+                fallback_queries=0,
+                primary_elapsed_ms=elapsed,
+                fallback_elapsed_ms=0.0,
+                gate_reason="hard_decision",
+                diagnostics={
+                    "decoder_name": "baseline",
+                    "pool_size": 0,
+                    "max_weight": int(self.max_weight),
+                    "budget": int(self.budget),
+                    "allowed_weights": [0],
+                },
             )
 
         rank_order = np.argsort(np.abs(llr), kind="stable")
@@ -81,26 +94,54 @@ class WeightedReliabilityGRAND:
                     )
                 )
             if success:
+                elapsed = (time.perf_counter() - start) * 1e3
                 return DecodeResult(
                     success=True,
                     decoded_codeword=candidate,
                     queries=queries,
                     stage="baseline",
-                    elapsed_ms=(time.perf_counter() - start) * 1e3,
+                    elapsed_ms=elapsed,
                     fallback_used=False,
                     candidate_pool_size=len(pool_positions),
                     oracle_pool_hit=oracle_pool_hit,
                     trace=trace,
+                    primary_queries=queries,
+                    fallback_queries=0,
+                    primary_elapsed_ms=elapsed,
+                    fallback_elapsed_ms=0.0,
+                    gate_reason="baseline_search",
+                    diagnostics={
+                        "decoder_name": "baseline",
+                        "pool_size": int(len(pool_positions)),
+                        "max_weight": int(self.max_weight),
+                        "budget": int(self.budget),
+                        "allowed_weights": list(range(self.max_weight + 1)),
+                        "pool_positions_top10": pool_positions[:10].astype(int).tolist(),
+                    },
                 )
 
+        elapsed = (time.perf_counter() - start) * 1e3
         return DecodeResult(
             success=False,
             decoded_codeword=hard_bits.copy(),
             queries=queries,
             stage="baseline_fail",
-            elapsed_ms=(time.perf_counter() - start) * 1e3,
+            elapsed_ms=elapsed,
             fallback_used=False,
             candidate_pool_size=len(pool_positions),
             oracle_pool_hit=oracle_pool_hit,
             trace=trace,
+            primary_queries=queries,
+            fallback_queries=0,
+            primary_elapsed_ms=elapsed,
+            fallback_elapsed_ms=0.0,
+            gate_reason="baseline_exhausted",
+            diagnostics={
+                "decoder_name": "baseline",
+                "pool_size": int(len(pool_positions)),
+                "max_weight": int(self.max_weight),
+                "budget": int(self.budget),
+                "allowed_weights": list(range(self.max_weight + 1)),
+                "pool_positions_top10": pool_positions[:10].astype(int).tolist(),
+            },
         )

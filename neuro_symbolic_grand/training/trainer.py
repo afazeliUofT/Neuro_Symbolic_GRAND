@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import asdict
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -25,6 +24,8 @@ def _prepare_supervised_arrays(
     code,
     num_segments: int,
     max_weight_class: int,
+    confidence_weight_limit: int,
+    confidence_rank_limit: int,
 ) -> Dict[str, np.ndarray]:
     bit_features = []
     global_features = []
@@ -41,7 +42,8 @@ def _prepare_supervised_arrays(
             profile_id=int(arrays["profile_id"][idx]),
             num_segments=num_segments,
             error_mask=arrays["error_mask"][idx],
-            confidence_weight_threshold=max_weight_class,
+            confidence_weight_threshold=confidence_weight_limit,
+            confidence_rank_limit=confidence_rank_limit,
         )
         bit_features.append(feat.bit_features)
         global_features.append(feat.global_features)
@@ -74,6 +76,40 @@ def _build_model(cfg: ExperimentConfig, n_bits: int, per_bit_dim: int, global_di
     )
 
 
+def _classification_metrics(outputs, bit_y, segment_y, weight_y, conf_y) -> Dict[str, float]:
+    bit_prob = torch.sigmoid(outputs["bit_logits"])
+    segment_prob = torch.sigmoid(outputs["segment_logits"])
+    weight_pred = torch.argmax(outputs["weight_logits"], dim=-1)
+    conf_prob = torch.sigmoid(outputs["confidence_logit"])
+
+    bit_pred = (bit_prob >= 0.5).float()
+    bit_tp = float(((bit_pred == 1.0) & (bit_y == 1.0)).sum().item())
+    bit_fp = float(((bit_pred == 1.0) & (bit_y == 0.0)).sum().item())
+    bit_fn = float(((bit_pred == 0.0) & (bit_y == 1.0)).sum().item())
+    bit_precision = bit_tp / max(1.0, bit_tp + bit_fp)
+    bit_recall = bit_tp / max(1.0, bit_tp + bit_fn)
+
+    seg_pred = (segment_prob >= 0.5).float()
+    seg_acc = float((seg_pred == segment_y).float().mean().item())
+    weight_acc = float((weight_pred == weight_y).float().mean().item())
+    overflow_true = (weight_y == weight_y.max()).float()
+    overflow_pred = (weight_pred == weight_y.max()).float()
+    overflow_tp = float(((overflow_true == 1.0) & (overflow_pred == 1.0)).sum().item())
+    overflow_fn = float(((overflow_true == 1.0) & (overflow_pred == 0.0)).sum().item())
+    overflow_recall = overflow_tp / max(1.0, overflow_tp + overflow_fn)
+    conf_acc = float((((conf_prob >= 0.5).float()) == conf_y).float().mean().item())
+    conf_brier = float(torch.mean((conf_prob - conf_y) ** 2).item())
+    return {
+        "bit_precision": bit_precision,
+        "bit_recall": bit_recall,
+        "segment_acc": seg_acc,
+        "weight_acc": weight_acc,
+        "overflow_recall": overflow_recall,
+        "confidence_acc": conf_acc,
+        "confidence_brier": conf_brier,
+    }
+
+
 def train_model(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, object]:
     set_global_seed(cfg.seed)
     configure_torch_threads(cfg.resources.train_torch_threads, cfg.resources.train_torch_interop_threads)
@@ -84,8 +120,22 @@ def train_model(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, ob
     val_arrays = load_dataset_arrays(output_dir / "datasets" / "val")
 
     logger.info("Preparing supervised tensors from train/val datasets")
-    train_data = _prepare_supervised_arrays(train_arrays, code, cfg.model.num_segments, cfg.model.max_weight_class)
-    val_data = _prepare_supervised_arrays(val_arrays, code, cfg.model.num_segments, cfg.model.max_weight_class)
+    train_data = _prepare_supervised_arrays(
+        train_arrays,
+        code,
+        cfg.model.num_segments,
+        cfg.model.max_weight_class,
+        cfg.train.confidence_weight_limit,
+        cfg.train.confidence_rank_limit,
+    )
+    val_data = _prepare_supervised_arrays(
+        val_arrays,
+        code,
+        cfg.model.num_segments,
+        cfg.model.max_weight_class,
+        cfg.train.confidence_weight_limit,
+        cfg.train.confidence_rank_limit,
+    )
 
     train_ds = TensorDataset(
         torch.from_numpy(train_data["bit_features"]),
@@ -135,11 +185,13 @@ def train_model(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, ob
     history = []
     best_state = None
     best_val_loss = float("inf")
+    best_epoch = 0
     epochs_without_improvement = 0
 
     for epoch in range(1, cfg.train.epochs + 1):
         model.train()
         train_totals = {"loss": 0.0, "bit": 0.0, "segment": 0.0, "weight": 0.0, "confidence": 0.0}
+        train_metric_totals = {k: 0.0 for k in ["bit_precision", "bit_recall", "segment_acc", "weight_acc", "overflow_recall", "confidence_acc", "confidence_brier"]}
         train_samples = 0
         for batch in train_loader:
             bit_x, glob_x, bit_y, segment_y, weight_y, conf_y = [tensor.to(device) for tensor in batch]
@@ -166,9 +218,13 @@ def train_model(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, ob
             train_totals["segment"] += float(segment_loss.item()) * batch_size
             train_totals["weight"] += float(weight_loss.item()) * batch_size
             train_totals["confidence"] += float(confidence_loss.item()) * batch_size
+            batch_metrics = _classification_metrics(outputs, bit_y, segment_y, weight_y, conf_y)
+            for key, value in batch_metrics.items():
+                train_metric_totals[key] += float(value) * batch_size
 
         model.eval()
         val_totals = {"loss": 0.0, "bit": 0.0, "segment": 0.0, "weight": 0.0, "confidence": 0.0}
+        val_metric_totals = {k: 0.0 for k in ["bit_precision", "bit_recall", "segment_acc", "weight_acc", "overflow_recall", "confidence_acc", "confidence_brier"]}
         val_samples = 0
         with torch.no_grad():
             for batch in val_loader:
@@ -191,6 +247,9 @@ def train_model(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, ob
                 val_totals["segment"] += float(segment_loss.item()) * batch_size
                 val_totals["weight"] += float(weight_loss.item()) * batch_size
                 val_totals["confidence"] += float(confidence_loss.item()) * batch_size
+                batch_metrics = _classification_metrics(outputs, bit_y, segment_y, weight_y, conf_y)
+                for key, value in batch_metrics.items():
+                    val_metric_totals[key] += float(value) * batch_size
 
         epoch_record = {
             "epoch": epoch,
@@ -205,16 +264,23 @@ def train_model(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, ob
             "val_weight_loss": val_totals["weight"] / max(1, val_samples),
             "val_confidence_loss": val_totals["confidence"] / max(1, val_samples),
         }
+        for key, total in train_metric_totals.items():
+            epoch_record[f"train_{key}"] = total / max(1, train_samples)
+        for key, total in val_metric_totals.items():
+            epoch_record[f"val_{key}"] = total / max(1, val_samples)
         history.append(epoch_record)
         logger.info(
-            "Epoch %d | train_loss=%.4f | val_loss=%.4f",
+            "Epoch %d | train_loss=%.4f | val_loss=%.4f | val_weight_acc=%.4f | val_conf_brier=%.4f",
             epoch,
             epoch_record["train_loss"],
             epoch_record["val_loss"],
+            epoch_record["val_weight_acc"],
+            epoch_record["val_confidence_brier"],
         )
 
         if epoch_record["val_loss"] < best_val_loss:
             best_val_loss = epoch_record["val_loss"]
+            best_epoch = epoch
             best_state = copy.deepcopy(model.state_dict())
             epochs_without_improvement = 0
         else:
@@ -245,10 +311,22 @@ def train_model(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, ob
     summary = {
         "checkpoint_path": str(checkpoint_path),
         "best_val_loss": best_val_loss,
+        "best_epoch": best_epoch,
         "num_train_samples": int(train_data["bit_features"].shape[0]),
         "num_val_samples": int(val_data["bit_features"].shape[0]),
         "epochs_ran": int(len(history)),
+        "confidence_rank_limit": int(cfg.train.confidence_rank_limit),
+        "confidence_weight_limit": int(cfg.train.confidence_weight_limit),
     }
+    if history:
+        best_row = min(history, key=lambda row: row["val_loss"])
+        summary.update(
+            {
+                "best_val_weight_acc": float(best_row["val_weight_acc"]),
+                "best_val_confidence_brier": float(best_row["val_confidence_brier"]),
+                "best_val_overflow_recall": float(best_row["val_overflow_recall"]),
+            }
+        )
     write_json(summary, output_dir / "training" / "training_summary.json")
     return summary
 

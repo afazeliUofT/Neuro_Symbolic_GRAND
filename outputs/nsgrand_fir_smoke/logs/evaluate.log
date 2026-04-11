@@ -1,9 +1,0 @@
-2026-04-11 08:15:52 | INFO | Evaluating 8 operating points
-2026-04-11 08:16:00 | INFO | Completed evaluation at outputs/nsgrand_fir_smoke/evaluation/profile_A/snr_+4.0dB/summary.json
-2026-04-11 08:16:02 | INFO | Completed evaluation at outputs/nsgrand_fir_smoke/evaluation/profile_A/snr_+2.0dB/summary.json
-2026-04-11 08:16:05 | INFO | Completed evaluation at outputs/nsgrand_fir_smoke/evaluation/profile_A/snr_+0.0dB/summary.json
-2026-04-11 08:16:06 | INFO | Completed evaluation at outputs/nsgrand_fir_smoke/evaluation/profile_A/snr_-2.0dB/summary.json
-2026-04-11 08:16:09 | INFO | Completed evaluation at outputs/nsgrand_fir_smoke/evaluation/profile_C/snr_+4.0dB/summary.json
-2026-04-11 08:16:09 | INFO | Completed evaluation at outputs/nsgrand_fir_smoke/evaluation/profile_C/snr_-2.0dB/summary.json
-2026-04-11 08:16:09 | INFO | Completed evaluation at outputs/nsgrand_fir_smoke/evaluation/profile_C/snr_+0.0dB/summary.json
-2026-04-11 08:16:11 | INFO | Completed evaluation at outputs/nsgrand_fir_smoke/evaluation/profile_C/snr_+2.0dB/summary.json

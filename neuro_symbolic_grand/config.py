@@ -66,6 +66,8 @@ class TrainConfig:
     confidence_loss_weight: float = 0.2
     positive_bit_class_weight: float = 12.0
     label_smoothing: float = 0.0
+    confidence_rank_limit: int = 22
+    confidence_weight_limit: int = 5
 
 
 @dataclass
@@ -74,16 +76,31 @@ class SearchConfig:
     baseline_max_weight: int = 4
     baseline_budget: int = 2500
     baseline_weight_penalties: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.15, 0.4, 0.9])
+
     ai_pool_size: int = 18
     ai_max_weight: int = 4
     ai_budget: int = 1200
-    fallback_budget: int = 1800
-    ai_weight_penalties: List[float] = field(default_factory=lambda: [0.0, -0.05, 0.0, 0.2, 0.55])
+    ai_weight_penalties: List[float] = field(default_factory=lambda: [0.0, -0.05, 0.0, 0.2, 0.55, 0.95])
     top_segments: int = 3
     top_bits_extra: int = 6
     candidate_mass_threshold: float = 0.85
     confidence_threshold: float = 0.35
+    confidence_presearch_threshold: float = 0.15
     trace_top_attempts: int = 25
+
+    adaptive_pool_size: int = 22
+    adaptive_max_weight: int = 5
+    adaptive_budget: int = 2400
+    adaptive_top_segments: int = 4
+    adaptive_top_bits_extra: int = 8
+    overflow_expand_threshold: float = 0.25
+    overflow_direct_fallback_threshold: float = 0.70
+    always_fallback_after_ai_fail: bool = True
+
+    fallback_pool_size: int = 24
+    fallback_max_weight: int = 5
+    fallback_budget: int = 4000
+    fallback_weight_penalties: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.10, 0.35, 0.75, 1.25])
 
 
 @dataclass
@@ -92,11 +109,15 @@ class EvalConfig:
     samples_per_point: int = 2000
     batch_size: int = 200
     trace_fraction: float = 0.02
+    interesting_traces_per_category: int = 20
+    export_global_raw_gzip: bool = True
 
 
 @dataclass
 class AnalysisConfig:
     top_trace_examples: int = 20
+    calibration_bins: int = 10
+    top_tail_cases: int = 100
 
 
 @dataclass
@@ -105,9 +126,9 @@ class ResourceConfig:
     generation_threads_per_worker: int = 4
     evaluation_workers: int = 16
     evaluation_threads_per_worker: int = 4
-    train_torch_threads: int = 48
+    train_torch_threads: int = 60
     train_torch_interop_threads: int = 1
-    train_loader_workers: int = 4
+    train_loader_workers: int = 0
 
 
 @dataclass

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Tuple
 
 import numpy as np
 
@@ -41,6 +40,7 @@ def build_decoder_features(
     num_segments: int,
     error_mask: np.ndarray | None = None,
     confidence_weight_threshold: int = 4,
+    confidence_rank_limit: int | None = None,
 ) -> DecoderFeatures:
     llr = np.asarray(llr, dtype=np.float32)
     hard_bits = np.asarray(hard_bits, dtype=np.uint8)
@@ -90,7 +90,16 @@ def build_decoder_features(
         segment_labels = _segment_labels(error_mask_ranked, num_segments=num_segments)
         weight = int(error_mask_ranked.sum())
         weight_label = weight
-        confidence_label = float(weight <= confidence_weight_threshold)
+        if weight == 0:
+            confidence_label = 1.0
+        else:
+            in_weight = weight <= int(confidence_weight_threshold)
+            if confidence_rank_limit is None:
+                in_rank = True
+            else:
+                error_ranks = np.where(error_mask_ranked == 1)[0]
+                in_rank = bool(error_ranks.size > 0 and error_ranks.max() < int(confidence_rank_limit))
+            confidence_label = float(in_weight and in_rank)
 
     return DecoderFeatures(
         rank_order=rank_order.astype(np.int64),

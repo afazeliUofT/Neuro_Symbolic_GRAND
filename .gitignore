@@ -1,6 +1,38 @@
+# Virtual environments and caches
 .venv/
 venv/
-.probe_env_*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
 .pip_cache/
+.probe_env_*/
 probe_logs/
 probe_logs_*.tar.gz
+
+# Slurm and runtime logs
+slurm-*.out
+*.log
+
+# Packaging archives
+*.tar.gz
+*.zip
+
+# Generated outputs to keep out of Git by default
+outputs/**/datasets/
+outputs/**/checkpoints/
+outputs/**/logs/
+
+# Keep compact analysis bundles and reports trackable
+!outputs/**/repo_export/
+!outputs/**/repo_export/**
+!outputs/**/reports/
+!outputs/**/reports/**
+!outputs/**/evaluation/
+!outputs/**/evaluation/**
+!outputs/**/training/training_history.csv
+!outputs/**/training/training_summary.json
+!outputs/**/artifacts/resolved_config.json
+!outputs/**/artifacts/runtime_snapshot.json

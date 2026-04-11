@@ -30,3 +30,10 @@ class DecodeResult:
     predicted_weight_top: Optional[int] = None
     confidence_prob: Optional[float] = None
     trace: List[DecodeAttempt] = field(default_factory=list)
+    primary_queries: int = 0
+    fallback_queries: int = 0
+    primary_elapsed_ms: float = 0.0
+    fallback_elapsed_ms: float = 0.0
+    gate_reason: str = "none"
+    predicted_overflow_prob: Optional[float] = None
+    diagnostics: Dict[str, object] = field(default_factory=dict)

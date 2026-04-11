@@ -1,5 +1,0 @@
-2026-04-11 08:15:24 | INFO | Preparing supervised tensors from train/val datasets
-2026-04-11 08:15:36 | INFO | Epoch 1 | train_loss=1.6206 | val_loss=1.1892
-2026-04-11 08:15:41 | INFO | Epoch 2 | train_loss=1.0701 | val_loss=0.9181
-2026-04-11 08:15:46 | INFO | Epoch 3 | train_loss=0.8883 | val_loss=0.7880
-2026-04-11 08:15:51 | INFO | Epoch 4 | train_loss=0.7771 | val_loss=0.7147
