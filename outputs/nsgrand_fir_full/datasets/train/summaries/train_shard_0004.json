@@ -1,0 +1,18 @@
+{
+  "backends": {
+    "A": "SionnaTDLBackend",
+    "C": "SionnaTDLBackend",
+    "E": "SionnaTDLBackend"
+  },
+  "num_samples": 4000,
+  "profiles": [
+    "A",
+    "C",
+    "E"
+  ],
+  "seed": 20260415,
+  "shard_path": "outputs/nsgrand_fir_full/datasets/train/train_shard_0004.npz",
+  "snr_max_db": 7.996705532073975,
+  "snr_min_db": -3.9990532398223877,
+  "summary_path": "outputs/nsgrand_fir_full/datasets/train/summaries/train_shard_0004.json"
+}

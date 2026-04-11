@@ -1,1 +1,14 @@
 2026-04-11 08:25:18 | INFO | Generating train split with 10 shards using 16 workers
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0000.npz
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0004.npz
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0006.npz
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0009.npz
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0008.npz
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0005.npz
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0003.npz
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0001.npz
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0007.npz
+2026-04-11 08:26:05 | INFO | Completed outputs/nsgrand_fir_full/datasets/train/train_shard_0002.npz
+2026-04-11 08:26:06 | INFO | Generating val split with 2 shards using 16 workers
+2026-04-11 08:26:11 | INFO | Completed outputs/nsgrand_fir_full/datasets/val/val_shard_0000.npz
+2026-04-11 08:26:11 | INFO | Completed outputs/nsgrand_fir_full/datasets/val/val_shard_0001.npz
