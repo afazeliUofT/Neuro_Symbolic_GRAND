@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neuro-symbolic-grand"
+version = "0.1.0"
+description = "Research scaffold for Neuro-Symbolic GRAND under Sionna 3GPP TDL channels"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+  {name = "OpenAI generated scaffold"}
+]
+dependencies = []
+
+[project.scripts]
+nsgrand = "neuro_symbolic_grand.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["neuro_symbolic_grand*"]

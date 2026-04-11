@@ -1,0 +1,36 @@
+{
+  "rows": [
+    {
+      "avg_elapsed_ms": 14.429496395983733,
+      "avg_queries": 780.872,
+      "ber": 0.1359375,
+      "bler": 0.976,
+      "decoder": "baseline",
+      "fallback_rate": 0.0,
+      "median_queries": 799.0,
+      "num_samples": 250,
+      "oracle_pool_hit_rate": 0.068,
+      "p95_queries": 799.0,
+      "p99_queries": 799.0,
+      "profile": "A",
+      "profile_id": 0,
+      "snr_db": -2.0
+    },
+    {
+      "avg_elapsed_ms": 19.90428110404173,
+      "avg_queries": 568.548,
+      "ber": 0.1350625,
+      "bler": 0.972,
+      "decoder": "nsgrand",
+      "fallback_rate": 0.932,
+      "median_queries": 599.0,
+      "num_samples": 250,
+      "oracle_pool_hit_rate": 0.12449799196787148,
+      "p95_queries": 599.0,
+      "p99_queries": 599.0,
+      "profile": "A",
+      "profile_id": 0,
+      "snr_db": -2.0
+    }
+  ]
+}

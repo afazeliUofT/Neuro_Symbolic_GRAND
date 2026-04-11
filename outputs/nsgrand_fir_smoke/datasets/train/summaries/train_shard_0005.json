@@ -1,0 +1,16 @@
+{
+  "backends": {
+    "A": "SionnaTDLBackend",
+    "C": "SionnaTDLBackend"
+  },
+  "num_samples": 500,
+  "profiles": [
+    "A",
+    "C"
+  ],
+  "seed": 20260416,
+  "shard_path": "outputs/nsgrand_fir_smoke/datasets/train/train_shard_0005.npz",
+  "snr_max_db": 5.98560094833374,
+  "snr_min_db": -1.993985891342163,
+  "summary_path": "outputs/nsgrand_fir_smoke/datasets/train/summaries/train_shard_0005.json"
+}
