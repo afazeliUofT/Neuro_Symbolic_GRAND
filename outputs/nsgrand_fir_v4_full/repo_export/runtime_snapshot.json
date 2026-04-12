@@ -1,0 +1,11 @@
+{
+  "cwd": "/scratch/rsadve1/Neuro_Symbolic_GRAND",
+  "omp_num_threads": null,
+  "pid": 2195776,
+  "platform": "Linux-5.14.0-570.22.1.el9_6.x86_64-x86_64-AMD_EPYC_9655_96-Core_Processor-with-glibc2.37",
+  "python": "3.12.4",
+  "slurm_cpus_per_task": "64",
+  "slurm_job_id": "34333187",
+  "tf_num_interop_threads": null,
+  "tf_num_intraop_threads": null
+}

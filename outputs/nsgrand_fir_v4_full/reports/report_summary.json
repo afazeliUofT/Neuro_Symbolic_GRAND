@@ -1,0 +1,18 @@
+{
+  "export_dir": "outputs/nsgrand_fir_v4_full/repo_export",
+  "key_findings": [
+    "Best non-saturated query reduction occurs at profile=A and snr_db=0.0 with reduction=99.87%",
+    "Largest non-saturated BLER increase for nsgrand relative to baseline is at profile=E and snr_db=6.0, delta=-0.002500",
+    "Largest non-saturated BLER decrease for nsgrand relative to baseline is at profile=E and snr_db=2.0, delta=-0.235000",
+    "Highest paired-sample nsgrand win rate against baseline is at profile=E and snr_db=2.0 with win_rate=0.2417",
+    "Highest paired-sample nsgrand win rate against strong_symbolic is at profile=E and snr_db=2.0 with win_rate=0.2150",
+    "Most common nsgrand policy action is presearch_skip_hopeless with count=13392",
+    "Largest contributor to overall nsgrand query cost is postsearch_skip_after_expanded_fail with avg_queries_contribution=9.630 per sample",
+    "Least efficient post-search fallback regime is search_mode=standard stage=fallback_fail with estimated_success_rate=0.0000"
+  ],
+  "num_eval_points": 54,
+  "num_paired_records": 21600,
+  "num_raw_records": 64800,
+  "num_strong_pairwise_records": 21600,
+  "report_dir": "outputs/nsgrand_fir_v4_full/reports"
+}

@@ -1,0 +1,7 @@
+gate_reason,stage,count,bler,avg_queries,avg_elapsed_ms,fallback_rate
+ai_success,ai,811,0.007398273736128237,5.156596794081381,16.43363699809626,0.0
+presearch_skip_hopeless,skip_hopeless,244,1.0,0.0,1.7122587658556514,0.0
+hard_decision,hard_decision,87,0.0,0.0,0.010039678764069217,0.0
+postsearch_skip_after_expanded_fail,skip_after_ai_fail,23,1.0,2400.0,102.86884991776036,0.0
+postsearch_exhausted,fallback_fail,20,1.0,3500.55,69.07343281200156,1.0
+postsearch_exhausted,fallback,15,0.0,779.4,40.62413355956475,1.0

@@ -1,34 +1,44 @@
-# Next-step package instructions
-
-1. Unzip this package directly into:
-
-```text
-/home/rsadve1/scratch/Neuro_Symbolic_GRAND
-```
-
-2. Refresh repo hygiene:
+# Next-step instructions for v4
 
 ```bash
+cd /home/rsadve1/scratch/Neuro_Symbolic_GRAND
+source .venv/bin/activate
+export PYTHONPATH="$PWD:${PYTHONPATH}"
+```
+
+## Clean before the next run
+
+```bash
+bash scripts/cleanup_before_v4_run.sh
 bash scripts/cleanup_repo_for_git.sh
 ```
 
-3. Optional quick validation:
+## Quick checks
 
 ```bash
-sbatch slurm/fir_nsgrand_v2_smoke.sbatch
+pytest -q
 ```
 
-4. Full run:
+## Optional micro-smoke
 
 ```bash
-rm -rf outputs/nsgrand_fir_v2_full
-sbatch slurm/fir_nsgrand_v2_pipeline.sbatch
+sbatch slurm/fir_nsgrand_v4_smoke.sbatch
 ```
 
-5. After the full run, the compact GitHub-ready bundle will be available at:
+## Full v4 run
+
+```bash
+sbatch slurm/fir_nsgrand_v4_pipeline.sbatch
+```
+
+## Files to inspect or push after the run
 
 ```text
-outputs/nsgrand_fir_v2_full/repo_export/
+outputs/nsgrand_fir_v4_full/repo_export/report.md
+outputs/nsgrand_fir_v4_full/repo_export/overview_by_profile_snr.csv
+outputs/nsgrand_fir_v4_full/repo_export/overview_nontrivial_by_profile_snr.csv
+outputs/nsgrand_fir_v4_full/repo_export/nsgrand_action_contribution_summary.csv
+outputs/nsgrand_fir_v4_full/repo_export/postsearch_outcome_summary.csv
+outputs/nsgrand_fir_v4_full/repo_export/all_raw_records.csv.gz
+outputs/nsgrand_fir_v4_full/repo_export/all_paired_records.csv.gz
 ```
-
-6. Push at least that directory, together with the code changes, for later remote analysis.

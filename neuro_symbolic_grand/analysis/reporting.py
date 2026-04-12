@@ -114,6 +114,56 @@ def _build_paired_summary(paired_df: pd.DataFrame, *, ref_decoder: str, target_d
     return paired_summary
 
 
+def _build_nontrivial_overview(overview: pd.DataFrame, saturated_bler_threshold: float) -> pd.DataFrame:
+    if overview.empty or "bler_baseline" not in overview.columns:
+        return pd.DataFrame()
+    return overview[overview["bler_baseline"] < float(saturated_bler_threshold)].copy().sort_values(["profile", "snr_db"])
+
+
+def _build_action_contribution_summary(action_df: pd.DataFrame, total_samples: int) -> pd.DataFrame:
+    if action_df.empty or total_samples <= 0:
+        return pd.DataFrame()
+    tmp = action_df.copy()
+    tmp["errors"] = tmp["count"] * tmp["bler"]
+    grouped = (
+        tmp.groupby("policy_action", as_index=False)
+        .agg(
+            count=("count", "sum"),
+            errors=("errors", "sum"),
+            avg_queries_weighted=("avg_queries", lambda s: float((s * tmp.loc[s.index, "count"]).sum() / max(1, tmp.loc[s.index, "count"].sum()))),
+            avg_elapsed_ms_weighted=("avg_elapsed_ms", lambda s: float((s * tmp.loc[s.index, "count"]).sum() / max(1, tmp.loc[s.index, "count"].sum()))),
+        )
+        .sort_values("count", ascending=False)
+    )
+    grouped["count_share"] = grouped["count"] / float(total_samples)
+    total_errors = max(1e-9, float(grouped["errors"].sum()))
+    grouped["error_share"] = grouped["errors"] / total_errors
+    contrib_q = {name: float((sub["count"] * sub["avg_queries"]).sum() / float(total_samples)) for name, sub in tmp.groupby("policy_action")}
+    contrib_t = {name: float((sub["count"] * sub["avg_elapsed_ms"]).sum() / float(total_samples)) for name, sub in tmp.groupby("policy_action")}
+    grouped["avg_queries_contribution"] = grouped["policy_action"].map(contrib_q)
+    grouped["avg_elapsed_ms_contribution"] = grouped["policy_action"].map(contrib_t)
+    return grouped
+
+
+def _build_postsearch_outcome_summary(action_df: pd.DataFrame) -> pd.DataFrame:
+    if action_df.empty:
+        return pd.DataFrame()
+    sub = action_df[action_df["policy_action"] == "postsearch_fallback"].copy()
+    if sub.empty:
+        return pd.DataFrame()
+    sub["estimated_success_rate"] = 1.0 - sub["bler"]
+    return (
+        sub.groupby(["search_mode", "stage"], as_index=False)
+        .agg(
+            count=("count", "sum"),
+            estimated_success_rate=("estimated_success_rate", lambda s: float((s * sub.loc[s.index, "count"]).sum() / max(1, sub.loc[s.index, "count"].sum()))),
+            avg_queries=("avg_queries", lambda s: float((s * sub.loc[s.index, "count"]).sum() / max(1, sub.loc[s.index, "count"].sum()))),
+            avg_elapsed_ms=("avg_elapsed_ms", lambda s: float((s * sub.loc[s.index, "count"]).sum() / max(1, sub.loc[s.index, "count"].sum()))),
+        )
+        .sort_values(["search_mode", "stage"])
+    )
+
+
 def _copy_if_exists(src: Path, dst: Path) -> None:
     if src.exists():
         copy_file(src, dst)
@@ -152,6 +202,9 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
 
     overview = _build_overview(summary_df)
     write_dataframe_csv(overview, report_root / "overview_by_profile_snr.csv")
+    nontrivial_overview = _build_nontrivial_overview(overview, saturated_bler_threshold=float(cfg.analysis.saturated_bler_threshold))
+    if not nontrivial_overview.empty:
+        write_dataframe_csv(nontrivial_overview, report_root / "overview_nontrivial_by_profile_snr.csv")
 
     paired_summary = _build_paired_summary(paired_df, ref_decoder="baseline", target_decoder="nsgrand")
     if not paired_summary.empty:
@@ -218,9 +271,16 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
         write_dataframe_csv(gate_df, report_root / "nsgrand_gate_summary.csv")
 
     action_summary_path = eval_root / "nsgrand_action_summary.csv"
+    action_df = pd.DataFrame()
     if action_summary_path.exists():
         action_df = pd.read_csv(action_summary_path)
         write_dataframe_csv(action_df, report_root / "nsgrand_action_summary.csv")
+        action_contrib_df = _build_action_contribution_summary(action_df, total_samples=int(len(raw_df)) if not raw_df.empty else int(summary_df["num_samples"].sum() / max(1, summary_df["decoder"].nunique())))
+        if not action_contrib_df.empty:
+            write_dataframe_csv(action_contrib_df, report_root / "nsgrand_action_contribution_summary.csv")
+        postsearch_df = _build_postsearch_outcome_summary(action_df)
+        if not postsearch_df.empty:
+            write_dataframe_csv(postsearch_df, report_root / "postsearch_outcome_summary.csv")
 
     conf_bins_path = eval_root / "nsgrand_confidence_bins.csv"
     if conf_bins_path.exists():
@@ -254,19 +314,20 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
             _single_series_plot(history_df, "epoch", "val_confidence_brier", "Validation confidence Brier by epoch", plots_root / "val_confidence_brier_by_epoch.png")
 
     key_findings: List[str] = []
-    if not overview.empty and "query_reduction_pct" in overview.columns:
-        best_query_row = overview.sort_values("query_reduction_pct", ascending=False).iloc[0]
+    headline_overview = nontrivial_overview if not nontrivial_overview.empty else overview
+    if not headline_overview.empty and "query_reduction_pct" in headline_overview.columns:
+        best_query_row = headline_overview.sort_values("query_reduction_pct", ascending=False).iloc[0]
         key_findings.append(
-            f"Best query reduction occurs at profile={best_query_row['profile']} and snr_db={best_query_row['snr_db']:.1f} with reduction={best_query_row['query_reduction_pct']:.2f}%"
+            f"Best non-saturated query reduction occurs at profile={best_query_row['profile']} and snr_db={best_query_row['snr_db']:.1f} with reduction={best_query_row['query_reduction_pct']:.2f}%"
         )
-    if not overview.empty and "bler_delta" in overview.columns:
-        worst_row = overview.sort_values("bler_delta", ascending=False).iloc[0]
-        best_row = overview.sort_values("bler_delta", ascending=True).iloc[0]
+    if not headline_overview.empty and "bler_delta" in headline_overview.columns:
+        worst_row = headline_overview.sort_values("bler_delta", ascending=False).iloc[0]
+        best_row = headline_overview.sort_values("bler_delta", ascending=True).iloc[0]
         key_findings.append(
-            f"Largest BLER increase for nsgrand relative to baseline is at profile={worst_row['profile']} and snr_db={worst_row['snr_db']:.1f}, delta={worst_row['bler_delta']:.6f}"
+            f"Largest non-saturated BLER increase for nsgrand relative to baseline is at profile={worst_row['profile']} and snr_db={worst_row['snr_db']:.1f}, delta={worst_row['bler_delta']:.6f}"
         )
         key_findings.append(
-            f"Largest BLER decrease for nsgrand relative to baseline is at profile={best_row['profile']} and snr_db={best_row['snr_db']:.1f}, delta={best_row['bler_delta']:.6f}"
+            f"Largest non-saturated BLER decrease for nsgrand relative to baseline is at profile={best_row['profile']} and snr_db={best_row['snr_db']:.1f}, delta={best_row['bler_delta']:.6f}"
         )
     if not paired_summary.empty:
         best_paired = paired_summary.sort_values("target_better_rate", ascending=False).iloc[0]
@@ -288,6 +349,22 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
             top_action = action_totals.iloc[0]
             key_findings.append(
                 f"Most common nsgrand policy action is {top_action['policy_action']} with count={int(top_action['count'])}"
+            )
+    action_contrib_file = report_root / "nsgrand_action_contribution_summary.csv"
+    if action_contrib_file.exists():
+        contrib_df = pd.read_csv(action_contrib_file)
+        if not contrib_df.empty:
+            top_q = contrib_df.sort_values("avg_queries_contribution", ascending=False).iloc[0]
+            key_findings.append(
+                f"Largest contributor to overall nsgrand query cost is {top_q['policy_action']} with avg_queries_contribution={top_q['avg_queries_contribution']:.3f} per sample"
+            )
+    postsearch_file = report_root / "postsearch_outcome_summary.csv"
+    if postsearch_file.exists():
+        post_df = pd.read_csv(postsearch_file)
+        if not post_df.empty:
+            worst_post = post_df.sort_values("estimated_success_rate", ascending=True).iloc[0]
+            key_findings.append(
+                f"Least efficient post-search fallback regime is search_mode={worst_post['search_mode']} stage={worst_post['stage']} with estimated_success_rate={worst_post['estimated_success_rate']:.4f}"
             )
 
     report_md = [
@@ -328,11 +405,14 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
         (eval_root / "all_paired_records.csv.gz", export_root / "all_paired_records.csv.gz"),
         (eval_root / "strong_vs_nsgrand_paired_records.csv.gz", export_root / "strong_vs_nsgrand_paired_records.csv.gz"),
         (report_root / "overview_by_profile_snr.csv", export_root / "overview_by_profile_snr.csv"),
+        (report_root / "overview_nontrivial_by_profile_snr.csv", export_root / "overview_nontrivial_by_profile_snr.csv"),
         (report_root / "paired_summary_by_profile_snr.csv", export_root / "paired_summary_by_profile_snr.csv"),
         (report_root / "strong_vs_nsgrand_paired_summary.csv", export_root / "strong_vs_nsgrand_paired_summary.csv"),
         (report_root / "metrics_by_true_error_weight.csv", export_root / "metrics_by_true_error_weight.csv"),
         (report_root / "nsgrand_gate_summary.csv", export_root / "nsgrand_gate_summary.csv"),
         (report_root / "nsgrand_action_summary.csv", export_root / "nsgrand_action_summary.csv"),
+        (report_root / "nsgrand_action_contribution_summary.csv", export_root / "nsgrand_action_contribution_summary.csv"),
+        (report_root / "postsearch_outcome_summary.csv", export_root / "postsearch_outcome_summary.csv"),
         (report_root / "nsgrand_confidence_bins.csv", export_root / "nsgrand_confidence_bins.csv"),
         (report_root / "nsgrand_overflow_bins.csv", export_root / "nsgrand_overflow_bins.csv"),
         (report_root / "nsgrand_tail_cases_top.csv", export_root / "nsgrand_tail_cases_top.csv"),

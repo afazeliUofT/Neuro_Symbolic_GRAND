@@ -277,6 +277,8 @@ def _evaluate_point_worker(payload: Dict[str, object]) -> Dict[str, object]:
         overflow_direct_action=str(payload.get("overflow_direct_action", "fallback")),
         overflow_direct_confidence_ceiling=float(payload.get("overflow_direct_confidence_ceiling", 1.0)),
         always_fallback_after_ai_fail=bool(payload["always_fallback_after_ai_fail"]),
+        fallback_after_standard_ai_fail=bool(payload.get("fallback_after_standard_ai_fail", True)),
+        fallback_after_expanded_ai_fail=bool(payload.get("fallback_after_expanded_ai_fail", False)),
         trace_top_attempts=int(payload["trace_top_attempts"]),
     )
     sim = ChannelSimulationContext(

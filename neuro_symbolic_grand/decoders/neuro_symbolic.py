@@ -42,6 +42,8 @@ class NeuroSymbolicGRAND:
     overflow_direct_action: str = "fallback"
     overflow_direct_confidence_ceiling: float = 1.0
     always_fallback_after_ai_fail: bool = True
+    fallback_after_standard_ai_fail: bool = True
+    fallback_after_expanded_ai_fail: bool = False
     trace_top_attempts: int = 25
 
     def _choose_allowed_weights(self, weight_prob: np.ndarray, max_weight_cap: int) -> Set[int]:
@@ -422,7 +424,12 @@ class NeuroSymbolicGRAND:
                 )
 
         primary_elapsed_ms = (time.perf_counter() - primary_start) * 1e3
-        if self.always_fallback_after_ai_fail or confidence_prob < float(self.confidence_threshold):
+        mode_allows_fallback = (
+            bool(self.fallback_after_expanded_ai_fail)
+            if search_mode == "expanded_overflow"
+            else bool(self.fallback_after_standard_ai_fail)
+        )
+        if bool(self.always_fallback_after_ai_fail) and mode_allows_fallback:
             fallback_result = self.fallback_decoder.decode(llr=llr, hard_bits=hard_bits, truth_error_mask=truth_error_mask)
             return self._merge_fallback_result(
                 fallback_result=fallback_result,
@@ -436,15 +443,24 @@ class NeuroSymbolicGRAND:
                 predicted_overflow_prob=predicted_overflow_prob,
                 gate_reason="postsearch_exhausted",
                 trace=trace,
-                diagnostics={**diagnostics, "policy_action": "postsearch_fallback", "ai_success": False, "fallback_success": bool(fallback_result.success)},
+                diagnostics={
+                    **diagnostics,
+                    "policy_action": "postsearch_fallback",
+                    "ai_success": False,
+                    "fallback_success": bool(fallback_result.success),
+                    "mode_allows_fallback": True,
+                },
             )
 
         total_elapsed_ms = (time.perf_counter() - start) * 1e3
+        gate_reason = "postsearch_skip_after_expanded_fail" if search_mode == "expanded_overflow" else "ai_exhausted_no_fallback"
+        policy_action = "postsearch_skip_after_expanded_fail" if search_mode == "expanded_overflow" else "ai_fail_no_fallback"
+        stage = "skip_after_ai_fail" if search_mode == "expanded_overflow" else "ai_fail"
         return DecodeResult(
             success=False,
             decoded_codeword=hard_bits.copy(),
             queries=queries,
-            stage="ai_fail",
+            stage=stage,
             elapsed_ms=total_elapsed_ms,
             fallback_used=False,
             candidate_pool_size=len(pool_positions),
@@ -456,7 +472,13 @@ class NeuroSymbolicGRAND:
             fallback_queries=0,
             primary_elapsed_ms=primary_elapsed_ms,
             fallback_elapsed_ms=0.0,
-            gate_reason="ai_exhausted_no_fallback",
+            gate_reason=gate_reason,
             predicted_overflow_prob=predicted_overflow_prob,
-            diagnostics={**diagnostics, "policy_action": "ai_fail_no_fallback", "ai_success": False, "fallback_success": False},
+            diagnostics={
+                **diagnostics,
+                "policy_action": policy_action,
+                "ai_success": False,
+                "fallback_success": False,
+                "mode_allows_fallback": bool(mode_allows_fallback),
+            },
         )

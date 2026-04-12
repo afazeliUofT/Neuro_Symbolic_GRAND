@@ -1,0 +1,3 @@
+search_mode,stage,count,estimated_success_rate,avg_queries,avg_elapsed_ms
+standard,fallback,86,0.9883720930232558,837.7790697674419,41.73121840400665
+standard,fallback_fail,129,0.0,3565.813953488372,79.9009060295833

@@ -1,0 +1,120 @@
+experiment_name: nsgrand_fir_v4_smoke
+seed: 20260411
+output_dir: outputs/nsgrand_fir_v4_smoke
+
+code:
+  n: 128
+  k: 64
+  p_column_weight: 3
+  seed: 31415
+
+channel:
+  backend: sionna_tdl
+  allow_fallback: true
+  profile_family: TDL
+  train_profiles: [A, C, E]
+  eval_profiles: [E]
+  delay_spread_s: 1.0e-7
+  carrier_frequency_hz: 3.5e9
+  subcarrier_spacing_hz: 1.5e4
+  min_speed_mps: 0.0
+  max_speed_mps: 10.0
+  normalization: true
+
+data:
+  train_samples: 4000
+  val_samples: 800
+  shard_size: 1000
+  batch_size: 128
+  snr_min_db: -2.0
+  snr_max_db: 6.0
+  trace_fraction: 0.02
+
+model:
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  ff_multiplier: 4
+  dropout: 0.1
+  num_segments: 8
+  max_weight_class: 4
+
+train:
+  epochs: 2
+  batch_size: 256
+  learning_rate: 0.002
+  weight_decay: 0.0001
+  grad_clip_norm: 1.0
+  early_stopping_patience: 2
+  bit_loss_weight: 1.0
+  weight_loss_weight: 0.4
+  segment_loss_weight: 0.3
+  confidence_loss_weight: 0.2
+  positive_bit_class_weight: 12.0
+  confidence_rank_limit: 22
+  confidence_weight_limit: 5
+
+search:
+  baseline_pool_size: 24
+  baseline_max_weight: 4
+  baseline_budget: 2500
+  baseline_weight_penalties: [0.0, 0.0, 0.15, 0.4, 0.9]
+
+  ai_pool_size: 18
+  ai_max_weight: 4
+  ai_budget: 1200
+  ai_weight_penalties: [0.0, -0.05, 0.0, 0.2, 0.55, 0.95]
+  top_segments: 3
+  top_bits_extra: 6
+  candidate_mass_threshold: 0.85
+  confidence_threshold: 0.35
+  confidence_presearch_threshold: 0.00
+  trace_top_attempts: 20
+
+  adaptive_pool_size: 22
+  adaptive_max_weight: 5
+  adaptive_budget: 2400
+  adaptive_top_segments: 4
+  adaptive_top_bits_extra: 8
+  overflow_expand_threshold: 0.25
+  overflow_direct_fallback_threshold: 0.90
+  overflow_direct_action: skip
+  overflow_direct_confidence_ceiling: 0.20
+  always_fallback_after_ai_fail: true
+  fallback_after_standard_ai_fail: true
+  fallback_after_expanded_ai_fail: false
+
+  ns_fallback_kind: baseline
+  fallback_pool_size: 24
+  fallback_max_weight: 5
+  fallback_budget: 4000
+  fallback_weight_penalties: [0.0, 0.0, 0.10, 0.35, 0.75, 1.25]
+
+  evaluate_strong_symbolic: false
+  strong_pool_size: 24
+  strong_max_weight: 5
+  strong_budget: 4000
+  strong_weight_penalties: [0.0, 0.0, 0.10, 0.35, 0.75, 1.25]
+
+eval:
+  snr_grid_db: [4.0]
+  samples_per_point: 200
+  batch_size: 100
+  trace_fraction: 0.02
+  interesting_traces_per_category: 8
+  export_global_raw_gzip: true
+
+analysis:
+  top_trace_examples: 8
+  calibration_bins: 10
+  top_tail_cases: 30
+  saturated_bler_threshold: 0.999999
+
+resources:
+  generation_workers: 4
+  generation_threads_per_worker: 2
+  evaluation_workers: 4
+  evaluation_threads_per_worker: 2
+  train_torch_threads: 8
+  train_torch_interop_threads: 1
+  train_loader_workers: 0

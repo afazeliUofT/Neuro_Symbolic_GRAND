@@ -1,0 +1,24 @@
+{
+  "num_points": 18,
+  "num_summary_rows": 54,
+  "points": [
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_A/snr_+0.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_A/snr_+2.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_A/snr_+4.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_A/snr_+6.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_A/snr_-2.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_A/snr_-4.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_C/snr_+0.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_C/snr_+2.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_C/snr_+4.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_C/snr_+6.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_C/snr_-2.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_C/snr_-4.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_E/snr_+0.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_E/snr_+2.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_E/snr_+4.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_E/snr_+6.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_E/snr_-2.0dB/raw_records.csv",
+    "outputs/nsgrand_fir_v4_full/evaluation/profile_E/snr_-4.0dB/raw_records.csv"
+  ]
+}

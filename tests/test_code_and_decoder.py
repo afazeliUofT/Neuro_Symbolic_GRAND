@@ -227,3 +227,58 @@ def test_nsgrand_skip_hopeless_returns_zero_queries() -> None:
     assert result.queries == 0
     assert result.stage == "skip_hopeless"
     assert result.gate_reason == "presearch_skip_hopeless"
+
+
+def test_nsgrand_expanded_fail_can_skip_postsearch_fallback() -> None:
+    code = build_systematic_sparse_code(n=32, k=16, p_column_weight=3, seed=11)
+    message = np.random.default_rng(12).integers(0, 2, size=(code.k,), dtype=np.uint8)
+    codeword = code.encode(message)[0]
+    llr = (1.0 - 2.0 * codeword.astype(np.float32)) * 5.0
+    hard_bits = codeword.copy()
+    hard_bits[1] ^= 1
+    llr[1] *= -1.0
+
+    model = DummyModel(n_bits=code.n, num_segments=4, max_weight_class=4, confidence=0.6, overflow_prob=0.7, hot_rank=min(6, code.n - 1))
+    fallback = WeightedReliabilityGRAND(
+        code=code,
+        pool_size=8,
+        max_weight=2,
+        budget=100,
+        weight_penalties=[0.0, 0.0, 0.1],
+    )
+    decoder = NeuroSymbolicGRAND(
+        code=code,
+        model=model,
+        device="cpu",
+        num_segments=4,
+        max_weight_class=4,
+        ai_pool_size=4,
+        ai_max_weight=1,
+        ai_budget=1,
+        fallback_decoder=fallback,
+        ai_weight_penalties=[0.0, 0.0],
+        top_segments=1,
+        top_bits_extra=0,
+        confidence_threshold=0.35,
+        candidate_mass_threshold=0.85,
+        adaptive_pool_size=6,
+        adaptive_max_weight=2,
+        adaptive_budget=2,
+        adaptive_top_segments=1,
+        adaptive_top_bits_extra=0,
+        overflow_expand_threshold=0.5,
+        overflow_direct_fallback_threshold=0.95,
+        confidence_presearch_threshold=0.01,
+        overflow_direct_action="disabled",
+        always_fallback_after_ai_fail=True,
+        fallback_after_standard_ai_fail=True,
+        fallback_after_expanded_ai_fail=False,
+        trace_top_attempts=10,
+    )
+    result = decoder.decode(llr=llr, hard_bits=hard_bits, snr_db=2.0, profile_id=0, truth_error_mask=(hard_bits ^ codeword))
+    assert not result.success
+    assert not result.fallback_used
+    assert result.primary_queries > 0
+    assert result.fallback_queries == 0
+    assert result.stage == "skip_after_ai_fail"
+    assert result.gate_reason == "postsearch_skip_after_expanded_fail"

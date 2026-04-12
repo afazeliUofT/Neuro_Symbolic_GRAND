@@ -97,7 +97,14 @@ class SearchConfig:
     overflow_direct_fallback_threshold: float = 0.70
     overflow_direct_action: str = "fallback"  # fallback | skip | disabled
     overflow_direct_confidence_ceiling: float = 1.0
+
+    # Deprecated coarse fallback switch kept for backward compatibility.
+    # Mode-specific switches below are the preferred controls.
     always_fallback_after_ai_fail: bool = True
+
+    # Mode-specific post-search fallback policy.
+    fallback_after_standard_ai_fail: bool = True
+    fallback_after_expanded_ai_fail: bool = False
 
     # Which symbolic decoder NS-GRAND should use when it falls back after AI search.
     ns_fallback_kind: str = "strong"  # strong | baseline
@@ -129,6 +136,7 @@ class AnalysisConfig:
     top_trace_examples: int = 20
     calibration_bins: int = 10
     top_tail_cases: int = 100
+    saturated_bler_threshold: float = 0.999999
 
 
 @dataclass
