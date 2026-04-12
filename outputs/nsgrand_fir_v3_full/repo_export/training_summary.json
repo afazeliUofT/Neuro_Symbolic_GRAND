@@ -1,0 +1,13 @@
+{
+  "best_epoch": 10,
+  "best_val_confidence_brier": 0.022467122703790664,
+  "best_val_loss": 0.5241140441894532,
+  "best_val_overflow_recall": 0.9942286265550844,
+  "best_val_weight_acc": 0.9632500009536743,
+  "checkpoint_path": "outputs/nsgrand_fir_v3_full/checkpoints/posterior_scorer.pt",
+  "confidence_rank_limit": 22,
+  "confidence_weight_limit": 5,
+  "epochs_ran": 12,
+  "num_train_samples": 40000,
+  "num_val_samples": 8000
+}

@@ -2,22 +2,29 @@
 
 This repository is a CPU-oriented research scaffold for an **AI-enhanced GRAND decoder** for finite block-length linear codes, trained on **Sionna-generated 3GPP TR 38.901 TDL channel realizations**. It is designed for Compute Canada / Alliance systems such as **FIR**.
 
-## What is in this v2 package
+## What is in this v3 package
 
-This package is the **next-step revision** of the original scaffold. It adds three practical upgrades motivated by the first full run:
+This package is the **fairness-and-efficiency revision** after analyzing the v2 full run.
 
-- **Correct query accounting** for AI-first decoding with fallback.
-  - `queries = primary_queries + fallback_queries`
-  - latency is split into `primary_elapsed_ms` and `fallback_elapsed_ms`
-- **Overflow-aware / early-gated Neuro-Symbolic GRAND**.
-  - pre-search fallback on very high predicted overflow or very low confidence
-  - expanded AI search when predicted overflow is moderate
-  - configurable stronger symbolic fallback after AI exhaustion
-- **Comprehensive result export for GitHub-based analysis**.
-  - compact `repo_export/` bundle for pushing to GitHub
-  - compressed global per-sample records
-  - paired baseline-vs-nsgrand records on the same sample ids
-  - gate/fallback summaries, calibration summaries, tail-case tables, and selected traces
+It adds four targeted upgrades:
+
+- **Fairer scientific comparison**.
+  - the main `nsgrand` path can now use a fallback that is **equalized to the baseline**
+  - a separate `strong_symbolic` reference can be evaluated in parallel
+  - this separates “AI scheduling gain” from “stronger symbolic fallback gain”
+
+- **Hopeless-case skipping instead of expensive direct fallback**.
+  - a new `overflow_direct_action` policy supports `skip`, `fallback`, or `disabled`
+  - the recommended v3 FIR configs use `skip` for extreme predicted-overflow cases
+  - this is meant to cut wasted computation at very low SNR / very high true error weight
+
+- **Expanded diagnostics for policy analysis**.
+  - `policy_action` is logged per sample
+  - `nsgrand_action_summary.csv` is exported per point and globally
+  - `strong_vs_nsgrand_paired_records.csv(.gz)` and a paired summary are exported when the strong reference is enabled
+
+- **GitHub-ready export remains compact**.
+  - `repo_export/` still contains the tables, plots, traces, training summaries, and compressed per-sample records needed for later analysis
 
 ## Important scope note
 
@@ -26,8 +33,8 @@ This project uses Sionna for **5G NR-standard channel generation** and a **custo
 ## Repository layout
 
 - `neuro_symbolic_grand/` — Python package
-- `configs/` — FIR configs, including `fir_v2_smoke.yaml` and `fir_v2_full.yaml`
-- `scripts/` — convenience launchers and cleanup helper
+- `configs/` — FIR configs, including `fir_v3_smoke.yaml` and `fir_v3_full.yaml`
+- `scripts/` — convenience launchers and cleanup helpers
 - `slurm/` — FIR sbatch scripts
 - `outputs/` — generated experiment artifacts
 
@@ -41,30 +48,31 @@ source .venv/bin/activate
 export PYTHONPATH="$PWD:${PYTHONPATH}"
 ```
 
-### Clean the repo for the next iteration
+### Clean the repo and old outputs before v3
 
 ```bash
+bash scripts/cleanup_before_v3_run.sh
 bash scripts/cleanup_repo_for_git.sh
 ```
 
-### Optional v2 smoke test
+### Optional v3 smoke test
 
 ```bash
-sbatch slurm/fir_nsgrand_v2_smoke.sbatch
+sbatch slurm/fir_nsgrand_v3_smoke.sbatch
 ```
 
-### v2 full run
+### v3 full run
 
 ```bash
-sbatch slurm/fir_nsgrand_v2_pipeline.sbatch
+sbatch slurm/fir_nsgrand_v3_pipeline.sbatch
 ```
 
-## Outputs from the v2 full run
+## Outputs from the v3 full run
 
 A full run writes results under:
 
 ```text
-outputs/nsgrand_fir_v2_full/
+outputs/nsgrand_fir_v3_full/
   artifacts/
   checkpoints/
   datasets/
@@ -80,9 +88,12 @@ outputs/nsgrand_fir_v2_full/
 - `evaluation/evaluation_summary.csv`
 - `evaluation/all_raw_records.csv.gz`
 - `evaluation/all_paired_records.csv.gz`
+- `evaluation/strong_vs_nsgrand_paired_records.csv.gz`
 - `evaluation/nsgrand_gate_summary.csv`
+- `evaluation/nsgrand_action_summary.csv`
 - `reports/overview_by_profile_snr.csv`
 - `reports/paired_summary_by_profile_snr.csv`
+- `reports/strong_vs_nsgrand_paired_summary.csv`
 - `reports/metrics_by_true_error_weight.csv`
 - `reports/report.md`
 
@@ -91,7 +102,7 @@ outputs/nsgrand_fir_v2_full/
 The directory below is intentionally designed to be the compact bundle you push to GitHub after the run:
 
 ```text
-outputs/nsgrand_fir_v2_full/repo_export/
+outputs/nsgrand_fir_v3_full/repo_export/
 ```
 
 It keeps:

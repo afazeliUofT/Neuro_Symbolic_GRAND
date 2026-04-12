@@ -95,12 +95,23 @@ class SearchConfig:
     adaptive_top_bits_extra: int = 8
     overflow_expand_threshold: float = 0.25
     overflow_direct_fallback_threshold: float = 0.70
+    overflow_direct_action: str = "fallback"  # fallback | skip | disabled
+    overflow_direct_confidence_ceiling: float = 1.0
     always_fallback_after_ai_fail: bool = True
 
+    # Which symbolic decoder NS-GRAND should use when it falls back after AI search.
+    ns_fallback_kind: str = "strong"  # strong | baseline
     fallback_pool_size: int = 24
     fallback_max_weight: int = 5
     fallback_budget: int = 4000
     fallback_weight_penalties: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.10, 0.35, 0.75, 1.25])
+
+    # Optional stronger symbolic reference for fair decomposition in evaluation.
+    evaluate_strong_symbolic: bool = False
+    strong_pool_size: int = 24
+    strong_max_weight: int = 5
+    strong_budget: int = 4000
+    strong_weight_penalties: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.10, 0.35, 0.75, 1.25])
 
 
 @dataclass

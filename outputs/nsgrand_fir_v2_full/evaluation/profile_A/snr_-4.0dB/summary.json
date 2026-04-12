@@ -1,0 +1,62 @@
+{
+  "artifacts": {
+    "gate_summary_csv": "outputs/nsgrand_fir_v2_full/evaluation/profile_A/snr_-4.0dB/nsgrand_gate_summary.csv",
+    "paired_csv_path": "outputs/nsgrand_fir_v2_full/evaluation/profile_A/snr_-4.0dB/paired_records.csv",
+    "raw_csv_path": "outputs/nsgrand_fir_v2_full/evaluation/profile_A/snr_-4.0dB/raw_records.csv",
+    "stage_weight_csv": "outputs/nsgrand_fir_v2_full/evaluation/profile_A/snr_-4.0dB/nsgrand_by_stage_weight.csv",
+    "summary_path": "outputs/nsgrand_fir_v2_full/evaluation/profile_A/snr_-4.0dB/summary.json"
+  },
+  "interesting_trace_counts": {
+    "presearch_fallback_fail": 20
+  },
+  "rows": [
+    {
+      "avg_confidence_prob": null,
+      "avg_elapsed_ms": 64.66006984861451,
+      "avg_fallback_elapsed_ms": 0.0,
+      "avg_fallback_queries": 0.0,
+      "avg_predicted_overflow_prob": null,
+      "avg_primary_elapsed_ms": 64.66006984861451,
+      "avg_primary_queries": 2499.0,
+      "avg_queries": 2499.0,
+      "ber": 0.19885416666666667,
+      "bler": 1.0,
+      "decoder": "baseline",
+      "fallback_rate": 0.0,
+      "median_queries": 2499.0,
+      "num_samples": 1200,
+      "oracle_pool_hit_rate": 0.0,
+      "p95_elapsed_ms": 67.68600848299684,
+      "p95_queries": 2499.0,
+      "p99_elapsed_ms": 69.52050160674844,
+      "p99_queries": 2499.0,
+      "profile": "A",
+      "profile_id": 0,
+      "snr_db": -4.0
+    },
+    {
+      "avg_confidence_prob": 0.00011083067062524302,
+      "avg_elapsed_ms": 215.06666910194326,
+      "avg_fallback_elapsed_ms": 212.92409926924543,
+      "avg_fallback_queries": 3999.0,
+      "avg_predicted_overflow_prob": 0.9998640856643518,
+      "avg_primary_elapsed_ms": 0.0,
+      "avg_primary_queries": 0.0,
+      "avg_queries": 3999.0,
+      "ber": 0.19885416666666667,
+      "bler": 1.0,
+      "decoder": "nsgrand",
+      "fallback_rate": 1.0,
+      "median_queries": 3999.0,
+      "num_samples": 1200,
+      "oracle_pool_hit_rate": null,
+      "p95_elapsed_ms": 229.1706690142746,
+      "p95_queries": 3999.0,
+      "p99_elapsed_ms": 234.62513731996296,
+      "p99_queries": 3999.0,
+      "profile": "A",
+      "profile_id": 0,
+      "snr_db": -4.0
+    }
+  ]
+}

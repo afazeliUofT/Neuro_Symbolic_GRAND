@@ -1,0 +1,68 @@
+{
+  "artifacts": {
+    "gate_summary_csv": "outputs/nsgrand_fir_v2_full/evaluation/profile_E/snr_+2.0dB/nsgrand_gate_summary.csv",
+    "paired_csv_path": "outputs/nsgrand_fir_v2_full/evaluation/profile_E/snr_+2.0dB/paired_records.csv",
+    "raw_csv_path": "outputs/nsgrand_fir_v2_full/evaluation/profile_E/snr_+2.0dB/raw_records.csv",
+    "stage_weight_csv": "outputs/nsgrand_fir_v2_full/evaluation/profile_E/snr_+2.0dB/nsgrand_by_stage_weight.csv",
+    "summary_path": "outputs/nsgrand_fir_v2_full/evaluation/profile_E/snr_+2.0dB/summary.json"
+  },
+  "interesting_trace_counts": {
+    "ai_success": 20,
+    "final_failure": 20,
+    "high_query_tail": 3,
+    "postsearch_fallback_fail": 20,
+    "postsearch_fallback_success": 13,
+    "presearch_fallback_fail": 20,
+    "presearch_fallback_success": 20
+  },
+  "rows": [
+    {
+      "avg_confidence_prob": null,
+      "avg_elapsed_ms": 61.19826213480943,
+      "avg_fallback_elapsed_ms": 0.0,
+      "avg_fallback_queries": 0.0,
+      "avg_predicted_overflow_prob": null,
+      "avg_primary_elapsed_ms": 61.19826213480943,
+      "avg_primary_queries": 2016.0683333333334,
+      "avg_queries": 2016.0683333333334,
+      "ber": 0.03672526041666667,
+      "bler": 0.76,
+      "decoder": "baseline",
+      "fallback_rate": 0.0,
+      "median_queries": 2499.0,
+      "num_samples": 1200,
+      "oracle_pool_hit_rate": 0.5283333333333333,
+      "p95_elapsed_ms": 71.41276941256365,
+      "p95_queries": 2499.0,
+      "p99_elapsed_ms": 73.81846790900454,
+      "p99_queries": 2499.0,
+      "profile": "E",
+      "profile_id": 2,
+      "snr_db": 2.0
+    },
+    {
+      "avg_confidence_prob": 0.40121333422905686,
+      "avg_elapsed_ms": 151.54639499392943,
+      "avg_fallback_elapsed_ms": 135.69071732252874,
+      "avg_fallback_queries": 2362.3116666666665,
+      "avg_predicted_overflow_prob": 0.5929770342710147,
+      "avg_primary_elapsed_ms": 0.8368433324843257,
+      "avg_primary_queries": 77.41166666666666,
+      "avg_queries": 2439.7233333333334,
+      "ber": 0.03166015625,
+      "bler": 0.605,
+      "decoder": "nsgrand",
+      "fallback_rate": 0.6066666666666667,
+      "median_queries": 3999.0,
+      "num_samples": 1200,
+      "oracle_pool_hit_rate": 0.9619047619047619,
+      "p95_elapsed_ms": 252.23556074488442,
+      "p95_queries": 3999.0,
+      "p99_elapsed_ms": 340.75037998467445,
+      "p99_queries": 5199.0,
+      "profile": "E",
+      "profile_id": 2,
+      "snr_db": 2.0
+    }
+  ]
+}

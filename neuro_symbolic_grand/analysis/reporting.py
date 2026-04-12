@@ -91,9 +91,11 @@ def _build_overview(summary_df: pd.DataFrame) -> pd.DataFrame:
     return overview
 
 
-def _build_paired_summary(paired_df: pd.DataFrame) -> pd.DataFrame:
+def _build_paired_summary(paired_df: pd.DataFrame, *, ref_decoder: str, target_decoder: str) -> pd.DataFrame:
     if paired_df.empty:
         return pd.DataFrame()
+    target_better_col = f"{target_decoder}_better_block_error"
+    ref_better_col = f"{ref_decoder}_better_block_error"
     paired_summary = (
         paired_df.groupby(["profile", "snr_db"], as_index=False)
         .agg(
@@ -101,12 +103,14 @@ def _build_paired_summary(paired_df: pd.DataFrame) -> pd.DataFrame:
             avg_query_delta=("query_delta", "mean"),
             median_query_delta=("query_delta", "median"),
             avg_latency_delta_ms=("latency_delta_ms", "mean"),
-            nsgrand_better_rate=("nsgrand_better_block_error", "mean"),
-            baseline_better_rate=("baseline_better_block_error", "mean"),
+            target_better_rate=(target_better_col, "mean"),
+            reference_better_rate=(ref_better_col, "mean"),
             tied_block_error_rate=("block_error_delta", lambda s: float((s == 0).mean())),
         )
         .sort_values(["profile", "snr_db"])
     )
+    paired_summary["reference_decoder"] = ref_decoder
+    paired_summary["target_decoder"] = target_decoder
     return paired_summary
 
 
@@ -139,12 +143,23 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
         paired_paths = sorted(eval_root.glob("profile_*/snr_*dB/paired_records.csv"))
         paired_df = pd.concat([pd.read_csv(path) for path in paired_paths], ignore_index=True) if paired_paths else pd.DataFrame()
 
+    strong_pairwise_path = eval_root / "strong_vs_nsgrand_paired_records.csv.gz"
+    if strong_pairwise_path.exists():
+        strong_pairwise_df = pd.read_csv(strong_pairwise_path)
+    else:
+        strong_pairwise_paths = sorted(eval_root.glob("profile_*/snr_*dB/strong_vs_nsgrand_paired_records.csv"))
+        strong_pairwise_df = pd.concat([pd.read_csv(path) for path in strong_pairwise_paths], ignore_index=True) if strong_pairwise_paths else pd.DataFrame()
+
     overview = _build_overview(summary_df)
     write_dataframe_csv(overview, report_root / "overview_by_profile_snr.csv")
 
-    paired_summary = _build_paired_summary(paired_df)
+    paired_summary = _build_paired_summary(paired_df, ref_decoder="baseline", target_decoder="nsgrand")
     if not paired_summary.empty:
         write_dataframe_csv(paired_summary, report_root / "paired_summary_by_profile_snr.csv")
+
+    strong_paired_summary = _build_paired_summary(strong_pairwise_df, ref_decoder="strong_symbolic", target_decoder="nsgrand")
+    if not strong_paired_summary.empty:
+        write_dataframe_csv(strong_paired_summary, report_root / "strong_vs_nsgrand_paired_summary.csv")
 
     profiles: List[str] = sorted(summary_df["profile"].unique().tolist())
     for profile in profiles:
@@ -202,6 +217,11 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
         gate_df = pd.read_csv(gate_summary_path)
         write_dataframe_csv(gate_df, report_root / "nsgrand_gate_summary.csv")
 
+    action_summary_path = eval_root / "nsgrand_action_summary.csv"
+    if action_summary_path.exists():
+        action_df = pd.read_csv(action_summary_path)
+        write_dataframe_csv(action_df, report_root / "nsgrand_action_summary.csv")
+
     conf_bins_path = eval_root / "nsgrand_confidence_bins.csv"
     if conf_bins_path.exists():
         conf_df = pd.read_csv(conf_bins_path)
@@ -249,10 +269,26 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
             f"Largest BLER decrease for nsgrand relative to baseline is at profile={best_row['profile']} and snr_db={best_row['snr_db']:.1f}, delta={best_row['bler_delta']:.6f}"
         )
     if not paired_summary.empty:
-        best_paired = paired_summary.sort_values("nsgrand_better_rate", ascending=False).iloc[0]
+        best_paired = paired_summary.sort_values("target_better_rate", ascending=False).iloc[0]
         key_findings.append(
-            f"Highest paired-sample nsgrand win rate is at profile={best_paired['profile']} and snr_db={best_paired['snr_db']:.1f} with win_rate={best_paired['nsgrand_better_rate']:.4f}"
+            f"Highest paired-sample nsgrand win rate against baseline is at profile={best_paired['profile']} and snr_db={best_paired['snr_db']:.1f} with win_rate={best_paired['target_better_rate']:.4f}"
         )
+    if not strong_paired_summary.empty:
+        best_strong = strong_paired_summary.sort_values("target_better_rate", ascending=False).iloc[0]
+        key_findings.append(
+            f"Highest paired-sample nsgrand win rate against strong_symbolic is at profile={best_strong['profile']} and snr_db={best_strong['snr_db']:.1f} with win_rate={best_strong['target_better_rate']:.4f}"
+        )
+    action_summary_file = report_root / "nsgrand_action_summary.csv"
+    if action_summary_file.exists():
+        action_df = pd.read_csv(action_summary_file)
+        if not action_df.empty:
+            action_totals = (
+                action_df.groupby("policy_action", as_index=False)["count"].sum().sort_values("count", ascending=False)
+            )
+            top_action = action_totals.iloc[0]
+            key_findings.append(
+                f"Most common nsgrand policy action is {top_action['policy_action']} with count={int(top_action['count'])}"
+            )
 
     report_md = [
         f"# Neuro-Symbolic GRAND report: {cfg.experiment_name}",
@@ -262,9 +298,12 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
         "- `evaluation/evaluation_summary.csv` contains point-level metrics.",
         "- `evaluation/all_raw_records.csv.gz` contains per-sample decoder behavior across all operating points.",
         "- `evaluation/all_paired_records.csv.gz` aligns baseline and nsgrand on the same sample ids.",
+        "- `evaluation/strong_vs_nsgrand_paired_records.csv.gz` aligns strong_symbolic and nsgrand on the same sample ids when the strong reference is enabled.",
         "- `reports/overview_by_profile_snr.csv` compiles BLER, query count, latency, fallback, and confidence summaries.",
-        "- `reports/paired_summary_by_profile_snr.csv` contains paired-sample win/loss and delta statistics.",
+        "- `reports/paired_summary_by_profile_snr.csv` contains paired-sample baseline-vs-nsgrand win/loss and delta statistics.",
+        "- `reports/strong_vs_nsgrand_paired_summary.csv` compares nsgrand against the stronger symbolic reference when available.",
         "- `reports/nsgrand_gate_summary.csv` diagnoses how often each gate and fallback path is used.",
+        "- `reports/nsgrand_action_summary.csv` summarizes high-level nsgrand policy actions.",
         "- `reports/interesting_traces_combined.jsonl` stores selected diagnostic traces for hard and representative cases.",
         "",
         "## Key findings",
@@ -287,10 +326,13 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
         (eval_root / "evaluation_summary.json", export_root / "evaluation_summary.json"),
         (eval_root / "all_raw_records.csv.gz", export_root / "all_raw_records.csv.gz"),
         (eval_root / "all_paired_records.csv.gz", export_root / "all_paired_records.csv.gz"),
+        (eval_root / "strong_vs_nsgrand_paired_records.csv.gz", export_root / "strong_vs_nsgrand_paired_records.csv.gz"),
         (report_root / "overview_by_profile_snr.csv", export_root / "overview_by_profile_snr.csv"),
         (report_root / "paired_summary_by_profile_snr.csv", export_root / "paired_summary_by_profile_snr.csv"),
+        (report_root / "strong_vs_nsgrand_paired_summary.csv", export_root / "strong_vs_nsgrand_paired_summary.csv"),
         (report_root / "metrics_by_true_error_weight.csv", export_root / "metrics_by_true_error_weight.csv"),
         (report_root / "nsgrand_gate_summary.csv", export_root / "nsgrand_gate_summary.csv"),
+        (report_root / "nsgrand_action_summary.csv", export_root / "nsgrand_action_summary.csv"),
         (report_root / "nsgrand_confidence_bins.csv", export_root / "nsgrand_confidence_bins.csv"),
         (report_root / "nsgrand_overflow_bins.csv", export_root / "nsgrand_overflow_bins.csv"),
         (report_root / "nsgrand_tail_cases_top.csv", export_root / "nsgrand_tail_cases_top.csv"),
@@ -326,7 +368,9 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
                 "- `paired_summary_by_profile_snr.csv`",
                 "- `all_raw_records.csv.gz`",
                 "- `all_paired_records.csv.gz`",
+                "- `strong_vs_nsgrand_paired_records.csv.gz`",
                 "- `nsgrand_gate_summary.csv`",
+                "- `nsgrand_action_summary.csv`",
                 "- `interesting_traces_combined.jsonl`",
                 "- `report.md`",
             ]
@@ -342,6 +386,7 @@ def build_reports(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
         "num_eval_points": int(len(summary_df)),
         "num_raw_records": int(len(raw_df)),
         "num_paired_records": int(len(paired_df)),
+        "num_strong_pairwise_records": int(len(strong_pairwise_df)),
         "key_findings": key_findings,
     }
     write_json(summary, report_root / "report_summary.json")

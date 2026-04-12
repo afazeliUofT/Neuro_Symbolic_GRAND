@@ -1,9 +1,0 @@
-{
-  "key_findings": [
-    "Best query reduction occurs at profile=E and snr_db=4.0 with reduction=67.54%",
-    "Largest BLER increase for nsgrand relative to baseline is at profile=E and snr_db=6.0, delta=0.000833"
-  ],
-  "num_eval_points": 36,
-  "raw_record_files": 18,
-  "report_dir": "outputs/nsgrand_fir_full/reports"
-}

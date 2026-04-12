@@ -53,6 +53,8 @@ def _trace_category_for_ns(record: Dict[str, object]) -> Optional[str]:
     block_error = int(record.get("block_error", 1))
     queries = int(record.get("queries", 0))
     primary_budget = max(1, int(record.get("primary_budget", 1)))
+    if gate_reason == "presearch_skip_hopeless":
+        return "presearch_skip_hopeless"
     if stage == "ai" and block_error == 0:
         return "ai_success"
     if gate_reason.startswith("presearch") and block_error == 0:
@@ -109,6 +111,7 @@ def _record_from_result(
         "stage": str(result.stage),
         "gate_reason": str(getattr(result, "gate_reason", "none")),
         "search_mode": str(diagnostics.get("search_mode", "none")),
+        "policy_action": str(diagnostics.get("policy_action", "none")),
         "allowed_weights_json": _jsonify(diagnostics.get("allowed_weights", [])),
         "top_segment_ids_json": _jsonify(diagnostics.get("top_segment_ids", [])),
         "pool_positions_top10_json": _jsonify(diagnostics.get("pool_positions_top10", [])),
@@ -152,31 +155,37 @@ def _summarize_decoder_frame(sub_df: pd.DataFrame, *, profile_name: str, profile
     return row
 
 
-def _build_paired_df(raw_df: pd.DataFrame) -> pd.DataFrame:
+def _build_pairwise_df(raw_df: pd.DataFrame, ref_decoder: str, target_decoder: str) -> pd.DataFrame:
     if raw_df.empty:
         return pd.DataFrame()
-    base = raw_df[raw_df["decoder"] == "baseline"].copy()
-    ns = raw_df[raw_df["decoder"] == "nsgrand"].copy()
-    if base.empty or ns.empty:
+    ref = raw_df[raw_df["decoder"] == ref_decoder].copy()
+    target = raw_df[raw_df["decoder"] == target_decoder].copy()
+    if ref.empty or target.empty:
         return pd.DataFrame()
-    base = base.add_prefix("baseline_")
-    ns = ns.add_prefix("nsgrand_")
-    paired = base.merge(
-        ns,
-        left_on=["baseline_sample_id", "baseline_profile", "baseline_snr_db"],
-        right_on=["nsgrand_sample_id", "nsgrand_profile", "nsgrand_snr_db"],
+    ref = ref.add_prefix(f"{ref_decoder}_")
+    target = target.add_prefix(f"{target_decoder}_")
+    paired = ref.merge(
+        target,
+        left_on=[f"{ref_decoder}_sample_id", f"{ref_decoder}_profile", f"{ref_decoder}_snr_db"],
+        right_on=[f"{target_decoder}_sample_id", f"{target_decoder}_profile", f"{target_decoder}_snr_db"],
         how="inner",
     )
-    paired["sample_id"] = paired["baseline_sample_id"]
-    paired["profile"] = paired["baseline_profile"]
-    paired["snr_db"] = paired["baseline_snr_db"]
-    paired["true_error_weight"] = paired["baseline_true_error_weight"]
-    paired["query_delta"] = paired["nsgrand_queries"] - paired["baseline_queries"]
-    paired["latency_delta_ms"] = paired["nsgrand_elapsed_ms"] - paired["baseline_elapsed_ms"]
-    paired["block_error_delta"] = paired["nsgrand_block_error"] - paired["baseline_block_error"]
-    paired["nsgrand_better_block_error"] = ((paired["nsgrand_block_error"] < paired["baseline_block_error"])).astype(int)
-    paired["baseline_better_block_error"] = ((paired["baseline_block_error"] < paired["nsgrand_block_error"])).astype(int)
+    paired["sample_id"] = paired[f"{ref_decoder}_sample_id"]
+    paired["profile"] = paired[f"{ref_decoder}_profile"]
+    paired["snr_db"] = paired[f"{ref_decoder}_snr_db"]
+    paired["true_error_weight"] = paired[f"{ref_decoder}_true_error_weight"]
+    paired["reference_decoder"] = ref_decoder
+    paired["target_decoder"] = target_decoder
+    paired["query_delta"] = paired[f"{target_decoder}_queries"] - paired[f"{ref_decoder}_queries"]
+    paired["latency_delta_ms"] = paired[f"{target_decoder}_elapsed_ms"] - paired[f"{ref_decoder}_elapsed_ms"]
+    paired["block_error_delta"] = paired[f"{target_decoder}_block_error"] - paired[f"{ref_decoder}_block_error"]
+    paired[f"{target_decoder}_better_block_error"] = ((paired[f"{target_decoder}_block_error"] < paired[f"{ref_decoder}_block_error"])).astype(int)
+    paired[f"{ref_decoder}_better_block_error"] = ((paired[f"{ref_decoder}_block_error"] < paired[f"{target_decoder}_block_error"])).astype(int)
     return paired
+
+
+def _build_paired_df(raw_df: pd.DataFrame) -> pd.DataFrame:
+    return _build_pairwise_df(raw_df, ref_decoder="baseline", target_decoder="nsgrand")
 
 
 def _evaluate_point_worker(payload: Dict[str, object]) -> Dict[str, object]:
@@ -211,6 +220,37 @@ def _evaluate_point_worker(payload: Dict[str, object]) -> Dict[str, object]:
         weight_penalties=list(payload["baseline_weight_penalties"]),
         trace_top_attempts=int(payload["trace_top_attempts"]),
     )
+    strong_symbolic = None
+    if bool(payload.get("evaluate_strong_symbolic", False)):
+        strong_symbolic = WeightedReliabilityGRAND(
+            code=code,
+            pool_size=int(payload["strong_pool_size"]),
+            max_weight=int(payload["strong_max_weight"]),
+            budget=int(payload["strong_budget"]),
+            weight_penalties=list(payload["strong_weight_penalties"]),
+            trace_top_attempts=int(payload["trace_top_attempts"]),
+        )
+
+    ns_fallback_kind = str(payload.get("ns_fallback_kind", "strong")).strip().lower()
+    if ns_fallback_kind == "baseline":
+        ns_fallback_decoder = WeightedReliabilityGRAND(
+            code=code,
+            pool_size=int(payload["baseline_pool_size"]),
+            max_weight=int(payload["baseline_max_weight"]),
+            budget=int(payload["baseline_budget"]),
+            weight_penalties=list(payload["baseline_weight_penalties"]),
+            trace_top_attempts=int(payload["trace_top_attempts"]),
+        )
+    else:
+        ns_fallback_decoder = WeightedReliabilityGRAND(
+            code=code,
+            pool_size=int(payload["fallback_pool_size"]),
+            max_weight=int(payload["fallback_max_weight"]),
+            budget=int(payload["fallback_budget"]),
+            weight_penalties=list(payload["fallback_weight_penalties"]),
+            trace_top_attempts=int(payload["trace_top_attempts"]),
+        )
+
     ns_decoder = NeuroSymbolicGRAND(
         code=code,
         model=model,
@@ -220,14 +260,7 @@ def _evaluate_point_worker(payload: Dict[str, object]) -> Dict[str, object]:
         ai_pool_size=int(payload["ai_pool_size"]),
         ai_max_weight=int(payload["ai_max_weight"]),
         ai_budget=int(payload["ai_budget"]),
-        fallback_decoder=WeightedReliabilityGRAND(
-            code=code,
-            pool_size=int(payload["fallback_pool_size"]),
-            max_weight=int(payload["fallback_max_weight"]),
-            budget=int(payload["fallback_budget"]),
-            weight_penalties=list(payload["fallback_weight_penalties"]),
-            trace_top_attempts=int(payload["trace_top_attempts"]),
-        ),
+        fallback_decoder=ns_fallback_decoder,
         ai_weight_penalties=list(payload["ai_weight_penalties"]),
         top_segments=int(payload["top_segments"]),
         top_bits_extra=int(payload["top_bits_extra"]),
@@ -241,6 +274,8 @@ def _evaluate_point_worker(payload: Dict[str, object]) -> Dict[str, object]:
         overflow_expand_threshold=float(payload["overflow_expand_threshold"]),
         overflow_direct_fallback_threshold=float(payload["overflow_direct_fallback_threshold"]),
         confidence_presearch_threshold=float(payload["confidence_presearch_threshold"]),
+        overflow_direct_action=str(payload.get("overflow_direct_action", "fallback")),
+        overflow_direct_confidence_ceiling=float(payload.get("overflow_direct_confidence_ceiling", 1.0)),
         always_fallback_after_ai_fail=bool(payload["always_fallback_after_ai_fail"]),
         trace_top_attempts=int(payload["trace_top_attempts"]),
     )
@@ -280,6 +315,9 @@ def _evaluate_point_worker(payload: Dict[str, object]) -> Dict[str, object]:
                 truth_error_mask=truth_error_mask,
             )
             result_map = {"baseline": baseline_result, "nsgrand": ns_result}
+            if strong_symbolic is not None:
+                strong_result = strong_symbolic.decode(llr=llr, hard_bits=hard_bits, truth_error_mask=truth_error_mask)
+                result_map["strong_symbolic"] = strong_result
             point_trace_payloads: Dict[str, Dict[str, object]] = {}
             for decoder_name, result in result_map.items():
                 record = _record_from_result(
@@ -336,6 +374,11 @@ def _evaluate_point_worker(payload: Dict[str, object]) -> Dict[str, object]:
     if not paired_df.empty:
         write_dataframe_csv(paired_df, paired_csv_path)
 
+    strong_pairwise_df = _build_pairwise_df(raw_df, ref_decoder="strong_symbolic", target_decoder="nsgrand")
+    strong_pairwise_path = point_dir / "strong_vs_nsgrand_paired_records.csv"
+    if not strong_pairwise_df.empty:
+        write_dataframe_csv(strong_pairwise_df, strong_pairwise_path)
+
     summary_rows = []
     for _, sub_df in raw_df.groupby("decoder"):
         summary_rows.append(
@@ -351,6 +394,8 @@ def _evaluate_point_worker(payload: Dict[str, object]) -> Dict[str, object]:
     point_artifacts: Dict[str, str] = {"raw_csv_path": str(raw_csv_path), "summary_path": str(summary_path)}
     if not paired_df.empty:
         point_artifacts["paired_csv_path"] = str(paired_csv_path)
+    if not strong_pairwise_df.empty:
+        point_artifacts["strong_vs_nsgrand_paired_csv_path"] = str(strong_pairwise_path)
 
     ns_df = raw_df[raw_df["decoder"] == "nsgrand"].copy()
     if not ns_df.empty:
@@ -383,11 +428,27 @@ def _evaluate_point_worker(payload: Dict[str, object]) -> Dict[str, object]:
         write_dataframe_csv(stage_weight_summary, stage_weight_path)
         point_artifacts["stage_weight_csv"] = str(stage_weight_path)
 
+        action_summary = (
+            ns_df.groupby(["policy_action", "gate_reason", "stage", "search_mode"], as_index=False)
+            .agg(
+                count=("sample_id", "count"),
+                bler=("block_error", "mean"),
+                avg_queries=("queries", "mean"),
+                avg_elapsed_ms=("elapsed_ms", "mean"),
+                fallback_rate=("fallback_used", "mean"),
+            )
+            .sort_values(["count", "policy_action"], ascending=[False, True])
+        )
+        action_path = point_dir / "nsgrand_action_summary.csv"
+        write_dataframe_csv(action_summary, action_path)
+        point_artifacts["action_summary_csv"] = str(action_path)
+
     write_json({"rows": summary_rows, "artifacts": point_artifacts, "interesting_trace_counts": interesting_counts}, summary_path)
     return {
         "summary_path": str(summary_path),
         "raw_csv_path": str(raw_csv_path),
         "paired_csv_path": str(paired_csv_path) if not paired_df.empty else None,
+        "strong_vs_nsgrand_paired_csv_path": str(strong_pairwise_path) if not strong_pairwise_df.empty else None,
         "rows": summary_rows,
     }
 
@@ -438,11 +499,19 @@ def evaluate_grid(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
                     "adaptive_top_bits_extra": int(cfg.search.adaptive_top_bits_extra),
                     "overflow_expand_threshold": float(cfg.search.overflow_expand_threshold),
                     "overflow_direct_fallback_threshold": float(cfg.search.overflow_direct_fallback_threshold),
+                    "overflow_direct_action": str(cfg.search.overflow_direct_action),
+                    "overflow_direct_confidence_ceiling": float(cfg.search.overflow_direct_confidence_ceiling),
                     "always_fallback_after_ai_fail": bool(cfg.search.always_fallback_after_ai_fail),
+                    "ns_fallback_kind": str(cfg.search.ns_fallback_kind),
                     "fallback_pool_size": int(cfg.search.fallback_pool_size),
                     "fallback_max_weight": int(cfg.search.fallback_max_weight),
                     "fallback_budget": int(cfg.search.fallback_budget),
                     "fallback_weight_penalties": list(cfg.search.fallback_weight_penalties),
+                    "evaluate_strong_symbolic": bool(cfg.search.evaluate_strong_symbolic),
+                    "strong_pool_size": int(cfg.search.strong_pool_size),
+                    "strong_max_weight": int(cfg.search.strong_max_weight),
+                    "strong_budget": int(cfg.search.strong_budget),
+                    "strong_weight_penalties": list(cfg.search.strong_weight_penalties),
                 }
             )
 
@@ -480,6 +549,9 @@ def evaluate_grid(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
         paired_df = _build_paired_df(raw_df)
         if not paired_df.empty and cfg.eval.export_global_raw_gzip:
             write_dataframe_csv(paired_df, eval_root / "all_paired_records.csv.gz")
+        strong_pairwise_df = _build_pairwise_df(raw_df, ref_decoder="strong_symbolic", target_decoder="nsgrand")
+        if not strong_pairwise_df.empty and cfg.eval.export_global_raw_gzip:
+            write_dataframe_csv(strong_pairwise_df, eval_root / "strong_vs_nsgrand_paired_records.csv.gz")
 
         ns_df = raw_df[raw_df["decoder"] == "nsgrand"].copy()
         if not ns_df.empty:
@@ -495,6 +567,19 @@ def evaluate_grid(cfg: ExperimentConfig, output_dir: Path, logger) -> Dict[str, 
                 .sort_values(["profile", "snr_db", "count"], ascending=[True, True, False])
             )
             write_dataframe_csv(gate_summary, eval_root / "nsgrand_gate_summary.csv")
+
+            action_summary = (
+                ns_df.groupby(["profile", "snr_db", "policy_action", "gate_reason", "stage", "search_mode"], as_index=False)
+                .agg(
+                    count=("sample_id", "count"),
+                    bler=("block_error", "mean"),
+                    avg_queries=("queries", "mean"),
+                    avg_elapsed_ms=("elapsed_ms", "mean"),
+                    fallback_rate=("fallback_used", "mean"),
+                )
+                .sort_values(["profile", "snr_db", "count"], ascending=[True, True, False])
+            )
+            write_dataframe_csv(action_summary, eval_root / "nsgrand_action_summary.csv")
 
             bins = np.linspace(0.0, 1.0, int(cfg.analysis.calibration_bins) + 1)
             conf_df = ns_df[ns_df["confidence_prob"].notna()].copy()

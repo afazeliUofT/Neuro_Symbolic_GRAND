@@ -1,7 +1,0 @@
-{
-  "best_val_loss": 0.7146796154975891,
-  "checkpoint_path": "outputs/nsgrand_fir_smoke/checkpoints/posterior_scorer.pt",
-  "epochs_ran": 4,
-  "num_train_samples": 3000,
-  "num_val_samples": 800
-}

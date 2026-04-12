@@ -1,0 +1,3 @@
+gate_reason,stage,count,bler,avg_queries,avg_elapsed_ms,fallback_rate
+presearch_skip_hopeless,skip_hopeless,1187,1.0,0.0,2.3277931128375124,0.0
+ai_success,ai,13,0.23076923076923078,53.38461538461539,66.23860837246936,0.0

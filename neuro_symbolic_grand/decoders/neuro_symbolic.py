@@ -39,6 +39,8 @@ class NeuroSymbolicGRAND:
     overflow_expand_threshold: float
     overflow_direct_fallback_threshold: float
     confidence_presearch_threshold: float
+    overflow_direct_action: str = "fallback"
+    overflow_direct_confidence_ceiling: float = 1.0
     always_fallback_after_ai_fail: bool = True
     trace_top_attempts: int = 25
 
@@ -98,7 +100,6 @@ class NeuroSymbolicGRAND:
         self,
         *,
         fallback_result: DecodeResult,
-        hard_bits: np.ndarray,
         start_time: float,
         primary_queries: int,
         primary_elapsed_ms: float,
@@ -114,7 +115,7 @@ class NeuroSymbolicGRAND:
         total_elapsed_ms = (time.perf_counter() - start_time) * 1e3
         fallback_trace = self._shift_trace(fallback_result.trace[: self.trace_top_attempts], offset=primary_queries)
         merged_trace = (trace + fallback_trace)[: self.trace_top_attempts]
-        merged = DecodeResult(
+        return DecodeResult(
             success=bool(fallback_result.success),
             decoded_codeword=fallback_result.decoded_codeword.copy() if hasattr(fallback_result.decoded_codeword, "copy") else fallback_result.decoded_codeword,
             queries=int(primary_queries + fallback_result.queries),
@@ -142,7 +143,39 @@ class NeuroSymbolicGRAND:
                 "fallback_max_weight": int(getattr(self.fallback_decoder, "max_weight", 0)),
             },
         )
-        return merged
+
+    def _skip_result(
+        self,
+        *,
+        hard_bits: np.ndarray,
+        start_time: float,
+        predicted_weight_top: int,
+        confidence_prob: float,
+        predicted_overflow_prob: float,
+        gate_reason: str,
+        diagnostics: Dict[str, object],
+    ) -> DecodeResult:
+        elapsed_ms = (time.perf_counter() - start_time) * 1e3
+        return DecodeResult(
+            success=False,
+            decoded_codeword=hard_bits.copy(),
+            queries=0,
+            stage="skip_hopeless",
+            elapsed_ms=elapsed_ms,
+            fallback_used=False,
+            candidate_pool_size=0,
+            oracle_pool_hit=None,
+            predicted_weight_top=int(predicted_weight_top),
+            confidence_prob=float(confidence_prob),
+            trace=[],
+            primary_queries=0,
+            fallback_queries=0,
+            primary_elapsed_ms=elapsed_ms,
+            fallback_elapsed_ms=0.0,
+            gate_reason=str(gate_reason),
+            predicted_overflow_prob=float(predicted_overflow_prob),
+            diagnostics=diagnostics,
+        )
 
     def decode(
         self,
@@ -174,11 +207,13 @@ class NeuroSymbolicGRAND:
                 predicted_overflow_prob=0.0,
                 diagnostics={
                     "search_mode": "hard_decision",
+                    "policy_action": "hard_decision",
                     "allowed_weights": [0],
                     "top_segment_ids": [],
                     "pool_positions_top10": [],
                     "primary_budget": 0,
                     "primary_max_weight": 0,
+                    "presearch_gate": False,
                 },
             )
 
@@ -204,73 +239,95 @@ class NeuroSymbolicGRAND:
         bounds = np.linspace(0, self.code.n, self.num_segments + 1, dtype=int)
         profile_segments = [np.arange(bounds[i], bounds[i + 1], dtype=np.int64) for i in range(self.num_segments)]
 
+        direct_threshold = float(self.overflow_direct_fallback_threshold)
+        direct_action = str(self.overflow_direct_action).strip().lower()
+        direct_conf_ceiling = float(self.overflow_direct_confidence_ceiling)
+        if predicted_overflow_prob >= direct_threshold and confidence_prob <= direct_conf_ceiling:
+            if direct_action == "skip":
+                return self._skip_result(
+                    hard_bits=hard_bits,
+                    start_time=start,
+                    predicted_weight_top=predicted_weight_top,
+                    confidence_prob=confidence_prob,
+                    predicted_overflow_prob=predicted_overflow_prob,
+                    gate_reason="presearch_skip_hopeless",
+                    diagnostics={
+                        "search_mode": "skip_hopeless",
+                        "policy_action": "presearch_skip_hopeless",
+                        "allowed_weights": [],
+                        "top_segment_ids": [],
+                        "pool_positions_top10": [],
+                        "primary_budget": 0,
+                        "primary_max_weight": 0,
+                        "presearch_gate": True,
+                        "predicted_overflow_prob": predicted_overflow_prob,
+                    },
+                )
+            if direct_action == "fallback":
+                fallback_result = self.fallback_decoder.decode(llr=llr, hard_bits=hard_bits, truth_error_mask=truth_error_mask)
+                return self._merge_fallback_result(
+                    fallback_result=fallback_result,
+                    start_time=start,
+                    primary_queries=0,
+                    primary_elapsed_ms=0.0,
+                    candidate_pool_size=0,
+                    oracle_pool_hit=None,
+                    predicted_weight_top=predicted_weight_top,
+                    confidence_prob=confidence_prob,
+                    predicted_overflow_prob=predicted_overflow_prob,
+                    gate_reason="presearch_overflow_direct",
+                    trace=[],
+                    diagnostics={
+                        "search_mode": "direct_fallback",
+                        "policy_action": "presearch_direct_fallback",
+                        "allowed_weights": [],
+                        "top_segment_ids": [],
+                        "pool_positions_top10": [],
+                        "primary_budget": 0,
+                        "primary_max_weight": 0,
+                        "presearch_gate": True,
+                        "predicted_overflow_prob": predicted_overflow_prob,
+                    },
+                )
+
+        if confidence_prob < float(self.confidence_presearch_threshold):
+            fallback_result = self.fallback_decoder.decode(llr=llr, hard_bits=hard_bits, truth_error_mask=truth_error_mask)
+            return self._merge_fallback_result(
+                fallback_result=fallback_result,
+                start_time=start,
+                primary_queries=0,
+                primary_elapsed_ms=0.0,
+                candidate_pool_size=0,
+                oracle_pool_hit=None,
+                predicted_weight_top=predicted_weight_top,
+                confidence_prob=confidence_prob,
+                predicted_overflow_prob=predicted_overflow_prob,
+                gate_reason="presearch_low_confidence",
+                trace=[],
+                diagnostics={
+                    "search_mode": "direct_fallback",
+                    "policy_action": "presearch_low_confidence_fallback",
+                    "allowed_weights": [],
+                    "top_segment_ids": [],
+                    "pool_positions_top10": [],
+                    "primary_budget": 0,
+                    "primary_max_weight": 0,
+                    "presearch_gate": True,
+                    "predicted_overflow_prob": predicted_overflow_prob,
+                },
+            )
+
         search_mode = "standard"
+        policy_action = "ai_search"
         pool_size = int(self.ai_pool_size)
         max_weight = int(self.ai_max_weight)
         budget = int(self.ai_budget)
         top_segments = int(self.top_segments)
         top_bits_extra = int(self.top_bits_extra)
 
-        if predicted_overflow_prob >= float(self.overflow_direct_fallback_threshold):
-            gate_reason = "presearch_overflow_direct"
-            diagnostics = {
-                "search_mode": "direct_fallback",
-                "allowed_weights": [],
-                "top_segment_ids": [],
-                "pool_positions_top10": [],
-                "primary_budget": 0,
-                "primary_max_weight": 0,
-                "presearch_gate": True,
-                "predicted_overflow_prob": predicted_overflow_prob,
-            }
-            fallback_result = self.fallback_decoder.decode(llr=llr, hard_bits=hard_bits, truth_error_mask=truth_error_mask)
-            return self._merge_fallback_result(
-                fallback_result=fallback_result,
-                hard_bits=hard_bits,
-                start_time=start,
-                primary_queries=0,
-                primary_elapsed_ms=0.0,
-                candidate_pool_size=0,
-                oracle_pool_hit=None,
-                predicted_weight_top=predicted_weight_top,
-                confidence_prob=confidence_prob,
-                predicted_overflow_prob=predicted_overflow_prob,
-                gate_reason=gate_reason,
-                trace=[],
-                diagnostics=diagnostics,
-            )
-
-        if confidence_prob < float(self.confidence_presearch_threshold):
-            gate_reason = "presearch_low_confidence"
-            diagnostics = {
-                "search_mode": "direct_fallback",
-                "allowed_weights": [],
-                "top_segment_ids": [],
-                "pool_positions_top10": [],
-                "primary_budget": 0,
-                "primary_max_weight": 0,
-                "presearch_gate": True,
-                "predicted_overflow_prob": predicted_overflow_prob,
-            }
-            fallback_result = self.fallback_decoder.decode(llr=llr, hard_bits=hard_bits, truth_error_mask=truth_error_mask)
-            return self._merge_fallback_result(
-                fallback_result=fallback_result,
-                hard_bits=hard_bits,
-                start_time=start,
-                primary_queries=0,
-                primary_elapsed_ms=0.0,
-                candidate_pool_size=0,
-                oracle_pool_hit=None,
-                predicted_weight_top=predicted_weight_top,
-                confidence_prob=confidence_prob,
-                predicted_overflow_prob=predicted_overflow_prob,
-                gate_reason=gate_reason,
-                trace=[],
-                diagnostics=diagnostics,
-            )
-
         if predicted_overflow_prob >= float(self.overflow_expand_threshold):
             search_mode = "expanded_overflow"
+            policy_action = "expanded_ai_search"
             pool_size = int(self.adaptive_pool_size)
             max_weight = int(self.adaptive_max_weight)
             budget = int(self.adaptive_budget)
@@ -306,6 +363,7 @@ class NeuroSymbolicGRAND:
         queries = 0
         diagnostics = {
             "search_mode": search_mode,
+            "policy_action": policy_action,
             "allowed_weights": sorted(int(x) for x in allowed_weights),
             "top_segment_ids": top_segment_ids.astype(int).tolist(),
             "pool_positions_top10": pool_positions[:10].astype(int).tolist(),
@@ -365,11 +423,9 @@ class NeuroSymbolicGRAND:
 
         primary_elapsed_ms = (time.perf_counter() - primary_start) * 1e3
         if self.always_fallback_after_ai_fail or confidence_prob < float(self.confidence_threshold):
-            gate_reason = "postsearch_exhausted"
             fallback_result = self.fallback_decoder.decode(llr=llr, hard_bits=hard_bits, truth_error_mask=truth_error_mask)
             return self._merge_fallback_result(
                 fallback_result=fallback_result,
-                hard_bits=hard_bits,
                 start_time=start,
                 primary_queries=queries,
                 primary_elapsed_ms=primary_elapsed_ms,
@@ -378,9 +434,9 @@ class NeuroSymbolicGRAND:
                 predicted_weight_top=predicted_weight_top,
                 confidence_prob=confidence_prob,
                 predicted_overflow_prob=predicted_overflow_prob,
-                gate_reason=gate_reason,
+                gate_reason="postsearch_exhausted",
                 trace=trace,
-                diagnostics={**diagnostics, "ai_success": False, "fallback_success": bool(fallback_result.success)},
+                diagnostics={**diagnostics, "policy_action": "postsearch_fallback", "ai_success": False, "fallback_success": bool(fallback_result.success)},
             )
 
         total_elapsed_ms = (time.perf_counter() - start) * 1e3
@@ -402,5 +458,5 @@ class NeuroSymbolicGRAND:
             fallback_elapsed_ms=0.0,
             gate_reason="ai_exhausted_no_fallback",
             predicted_overflow_prob=predicted_overflow_prob,
-            diagnostics={**diagnostics, "ai_success": False, "fallback_success": False},
+            diagnostics={**diagnostics, "policy_action": "ai_fail_no_fallback", "ai_success": False, "fallback_success": False},
         )

@@ -1,0 +1,16 @@
+{
+  "export_dir": "outputs/nsgrand_fir_v3_full/repo_export",
+  "key_findings": [
+    "Best query reduction occurs at profile=A and snr_db=-4.0 with reduction=100.00%",
+    "Largest BLER increase for nsgrand relative to baseline is at profile=A and snr_db=-4.0, delta=0.000000",
+    "Largest BLER decrease for nsgrand relative to baseline is at profile=E and snr_db=2.0, delta=-0.204167",
+    "Highest paired-sample nsgrand win rate against baseline is at profile=E and snr_db=2.0 with win_rate=0.2100",
+    "Highest paired-sample nsgrand win rate against strong_symbolic is at profile=E and snr_db=2.0 with win_rate=0.1783",
+    "Most common nsgrand policy action is presearch_skip_hopeless with count=13657"
+  ],
+  "num_eval_points": 54,
+  "num_paired_records": 21600,
+  "num_raw_records": 64800,
+  "num_strong_pairwise_records": 21600,
+  "report_dir": "outputs/nsgrand_fir_v3_full/reports"
+}

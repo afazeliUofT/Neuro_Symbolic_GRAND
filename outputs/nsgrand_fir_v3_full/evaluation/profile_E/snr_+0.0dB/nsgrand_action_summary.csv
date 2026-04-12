@@ -1,0 +1,6 @@
+policy_action,gate_reason,stage,search_mode,count,bler,avg_queries,avg_elapsed_ms,fallback_rate
+presearch_skip_hopeless,presearch_skip_hopeless,skip_hopeless,skip_hopeless,1174,1.0,0.0,2.154457149233866,0.0
+expanded_ai_search,ai_success,ai,expanded_overflow,16,0.5625,62.6875,77.11906003532931,0.0
+ai_search,ai_success,ai,standard,8,0.125,17.125,6.825867109000683,0.0
+postsearch_fallback,postsearch_exhausted,fallback,expanded_overflow,1,0.0,2893.0,136.1369958613068,1.0
+postsearch_fallback,postsearch_exhausted,fallback_fail,expanded_overflow,1,1.0,4899.0,151.4071268029511,1.0

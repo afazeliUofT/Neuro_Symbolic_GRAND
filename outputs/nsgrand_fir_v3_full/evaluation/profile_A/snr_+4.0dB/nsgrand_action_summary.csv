@@ -1,0 +1,8 @@
+policy_action,gate_reason,stage,search_mode,count,bler,avg_queries,avg_elapsed_ms,fallback_rate
+ai_search,ai_success,ai,standard,698,0.011461318051575931,3.5630372492836675,4.046450488143908,0.0
+presearch_skip_hopeless,presearch_skip_hopeless,skip_hopeless,skip_hopeless,271,1.0,0.0,5.533438474902148,0.0
+expanded_ai_search,ai_success,ai,expanded_overflow,98,0.07142857142857142,25.183673469387756,78.9371344964115,0.0
+hard_decision,hard_decision,hard_decision,hard_decision,84,0.0,0.0,0.00950894762007963,0.0
+postsearch_fallback,postsearch_exhausted,fallback_fail,expanded_overflow,25,1.0,4899.0,140.10373040102422,1.0
+postsearch_fallback,postsearch_exhausted,fallback,standard,14,0.0,855.0714285714286,40.170836478604805,1.0
+postsearch_fallback,postsearch_exhausted,fallback_fail,standard,10,1.0,3548.1,66.45036404952407,1.0
