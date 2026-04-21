@@ -1,0 +1,25 @@
+project:
+  name: hybrid_bp_nsg_nr5g_v10_tail
+  seed: 31415
+  output_dir: outputs/hybrid_bp_nsg_v10_tail
+code:
+  family: sionna_nr_ldpc
+  k: 256
+  n: 512
+  align_to_pcm_length: true
+  strict_pcm_check: true
+  seed: 31415
+eval:
+  workers: 8
+  mp_start_method: spawn
+  max_tasks_per_child: 1
+  generation_heartbeat_s: 120
+  batch_size: 12
+  max_samples_per_point_tail: 250000
+  target_frame_errors_tail: 200
+  min_frame_errors_to_report: 30
+  stop_decoders: [hybrid_bp_nsg, bp_nms_20, bp_nms_50]
+  tail_snr_db_grid: [8, 9, 10, 11, 12, 13, 14]
+  profiles: [A, C, E]
+report:
+  primary_baseline: bp_nms_20

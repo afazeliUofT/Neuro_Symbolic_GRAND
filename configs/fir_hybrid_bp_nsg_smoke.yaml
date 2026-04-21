@@ -1,0 +1,78 @@
+project:
+  name: hybrid_bp_nsg_nr5g_v10_smoke
+  seed: 31415
+  output_dir: outputs/hybrid_bp_nsg_v10_smoke
+code:
+  family: sionna_nr_ldpc
+  k: 256
+  n: 512
+  align_to_pcm_length: true
+  strict_pcm_check: true
+  seed: 31415
+data:
+  train_samples: 2400
+  val_samples: 600
+  train_shards: 24
+  val_shards: 6
+  workers: 8
+  generation_batch_size: 64
+  failed_snr_db_grid: [0,1,2,3,4,5,6]
+  failed_snr_probs: [0.24,0.20,0.16,0.13,0.11,0.09,0.07]
+  snr_min_db: 0.0
+  snr_max_db: 6.0
+  bp_collect_iterations: 20
+  sample_failed_only: true
+train:
+  batch_size: 128
+  epochs: 4
+  lr: 0.0010
+  torch_threads: 16
+  early_stopping_patience: 3
+model:
+  graph_hidden_dim: 96
+  graph_layers: 4
+  transformer_dim: 96
+  transformer_heads: 4
+  transformer_layers: 3
+  top_k_tokens: 32
+  num_segments: 8
+  max_weight_class: 14
+  rerank_list_size: 8
+bp:
+  main_iterations: 20
+  strong_iterations: 50
+  hybrid_main_algorithm: nms
+  hybrid_main_iterations: 20
+  hybrid_micro_algorithm: nms
+  micro_iterations: 6
+rescue:
+  pool_size: 16
+  expanded_pool_size: 24
+  standard_budget: 80
+  expanded_budget: 192
+  direct_budget: 48
+  micro_candidate_cap: 4
+benchmarks:
+  evaluate_bp: true
+  bp_iteration_list: [20]
+  evaluate_nms: true
+  nms_iteration_list: [20, 50]
+  evaluate_wbf_post: false
+  evaluate_orb_rescue: true
+  evaluate_cdf_rescue: false
+  evaluate_segmented_rescue: true
+  evaluate_hybrid: true
+eval:
+  workers: 8
+  batch_size: 12
+  max_samples_per_point: 4000
+  max_samples_per_point_tail: 8000
+  target_frame_errors: 40
+  target_frame_errors_tail: 40
+  min_frame_errors_to_report: 10
+  stop_decoders: [hybrid_bp_nsg, bp_nms_20, bp_nms_50]
+  snr_db_grid: [0, 2, 4, 6]
+  tail_snr_db_grid: [8, 10]
+  profiles: [A, C]
+report:
+  primary_baseline: bp_nms_20

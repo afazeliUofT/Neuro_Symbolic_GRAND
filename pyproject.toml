@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hybrid-bp-nsg"
+version = "0.1.0"
+description = "Hybrid BP + AI-guided GRAND rescue stage for short LDPC-like codes over Sionna channels"
+requires-python = ">=3.12"
+
+[tool.setuptools.packages.find]
+include = ["hybrid_bp_nsg*"]

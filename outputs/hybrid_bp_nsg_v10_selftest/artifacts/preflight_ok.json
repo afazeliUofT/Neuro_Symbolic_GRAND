@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "summary": {
+    "family": "sionna_nr_ldpc",
+    "requested_n": 512,
+    "requested_k": 256,
+    "n_internal": 576,
+    "n_transmitted": 512,
+    "k": 256,
+    "m": 320,
+    "rate": 0.5,
+    "edges": 1888,
+    "avg_check_degree": 5.9,
+    "max_check_degree": 8,
+    "min_check_degree": 4,
+    "avg_variable_degree": 3.2777777777777777,
+    "num_punctured_internal_positions": 64,
+    "num_transmitted_internal_positions": 512,
+    "bg": "bg2"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "train_samples": 256,
+  "val_samples": 64,
+  "epochs_completed": 1,
+  "best_epoch": 1,
+  "best_val_loss": 2.6468976736068726,
+  "checkpoint_path": "outputs/hybrid_bp_nsg_v10_selftest/checkpoints/rescue_net.pt",
+  "latest_checkpoint_path": "outputs/hybrid_bp_nsg_v10_selftest/checkpoints/rescue_net_latest.pt",
+  "history_path": "outputs/hybrid_bp_nsg_v10_selftest/training/training_history.csv"
+}
