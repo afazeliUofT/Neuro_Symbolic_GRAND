@@ -34,6 +34,7 @@ hybrid_bp_nsg/utils/env.py
 hybrid_bp_nsg/utils/io.py
 hybrid_bp_nsg/utils/logging.py
 hybrid_bp_nsg/utils/math_utils.py
+hybrid_bp_nsg/utils/tf_gpu.py
 hybrid_bp_nsg_channel_aligned.egg-info/PKG-INFO
 hybrid_bp_nsg_channel_aligned.egg-info/SOURCES.txt
 hybrid_bp_nsg_channel_aligned.egg-info/dependency_links.txt

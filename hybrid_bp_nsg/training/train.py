@@ -1,87 +1,100 @@
 from __future__ import annotations
 
 import csv
+import json
 from pathlib import Path
 from typing import Dict, Tuple
 
 import numpy as np
-import torch
-from torch import nn
-from torch.utils.data import DataLoader
 
 from ..codes.factory import build_code
-from ..models.rescue_net import RescueNet
+from ..models.rescue_net import build_rescue_net_from_shapes
 from ..training.dataset import NPZShardDataset, infer_shapes
 from ..utils.io import ensure_dir, write_json
 from ..utils.logging import get_logger
+from ..utils.tf_gpu import configure_tensorflow
 
 
-def _bit_rank_loss(bit_logits: torch.Tensor, bit_labels: torch.Tensor) -> torch.Tensor:
-    # Encourage positive target bits to rank above negatives without all-pairs cost.
+def _to_tf_batch(tf, batch: Dict[str, np.ndarray]) -> Dict[str, object]:
+    float_keys = ["var_features", "check_features", "global_features", "candidate_features",
+                  "bit_labels", "segment_labels", "standard_reachable", "expanded_reachable",
+                  "rescueable", "candidate_labels", "candidate_valid"]
+    int_keys = ["heuristic_order", "weight_label"]
+    out = {}
+    for k in float_keys:
+        if k in batch:
+            out[k] = tf.convert_to_tensor(batch[k], dtype=tf.float32)
+    for k in int_keys:
+        if k in batch:
+            out[k] = tf.convert_to_tensor(batch[k], dtype=tf.int32)
+    return out
+
+
+def _weighted_bce(tf, logits, labels, pos_weight: float):
+    logits = tf.cast(logits, tf.float32)
+    labels = tf.cast(labels, tf.float32)
+    return tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(labels=labels, logits=logits, pos_weight=float(pos_weight)))
+
+
+def _bit_rank_loss(tf, bit_logits, bit_labels):
+    bit_logits = tf.cast(bit_logits, tf.float32)
+    bit_labels = tf.cast(bit_labels, tf.float32)
     pos = bit_labels > 0.5
-    neg = ~pos
-    losses = []
-    for b in range(bit_logits.shape[0]):
-        if pos[b].any() and neg[b].any():
-            p = bit_logits[b][pos[b]].mean()
-            # Hard negative average: top 16 negative logits.
-            neg_logits = bit_logits[b][neg[b]]
-            k = min(16, neg_logits.numel())
-            n = torch.topk(neg_logits, k=k).values.mean()
-            losses.append(torch.relu(1.0 - p + n))
-    if not losses:
-        return bit_logits.new_tensor(0.0)
-    return torch.stack(losses).mean()
+    neg = tf.logical_not(pos)
+    pos_count = tf.reduce_sum(tf.cast(pos, tf.float32), axis=1)
+    neg_count = tf.reduce_sum(tf.cast(neg, tf.float32), axis=1)
+    pos_sum = tf.reduce_sum(tf.where(pos, bit_logits, tf.zeros_like(bit_logits)), axis=1)
+    pos_mean = pos_sum / tf.maximum(pos_count, 1.0)
+    neg_logits = tf.where(neg, bit_logits, tf.fill(tf.shape(bit_logits), tf.constant(-1e9, dtype=tf.float32)))
+    k = min(16, int(bit_logits.shape[-1]) if bit_logits.shape[-1] is not None else 16)
+    neg_top = tf.nn.top_k(neg_logits, k=k).values
+    neg_mean = tf.reduce_mean(neg_top, axis=1)
+    valid = tf.logical_and(pos_count > 0, neg_count > 0)
+    rank = tf.nn.relu(1.0 - pos_mean + neg_mean)
+    return tf.reduce_sum(tf.where(valid, rank, tf.zeros_like(rank))) / tf.maximum(tf.reduce_sum(tf.cast(valid, tf.float32)), 1.0)
 
 
-class MultiTaskLoss(nn.Module):
-    def __init__(self, cfg: Dict[str, object]):
-        super().__init__()
-        lw = cfg["train"]["loss_weights"]
-        self.loss_weights = {k: float(v) for k, v in lw.items()}
-        bit_pos_w = float(cfg["train"].get("bit_pos_weight", 4.0))
-        reach_pos_w = float(cfg["train"].get("reach_pos_weight", 4.0))
-        self.bit_bce = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bit_pos_w))
-        self.seg_bce = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(reach_pos_w))
-        self.cls_ce = nn.CrossEntropyLoss()
-        self.bin_bce = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(reach_pos_w))
+def _multitask_loss(tf, cfg: Dict[str, object], model, out: Dict[str, object], batch: Dict[str, object]) -> Tuple[object, Dict[str, object]]:
+    lw = {k: float(v) for k, v in cfg["train"]["loss_weights"].items()}
+    bit_pos_w = float(cfg["train"].get("bit_pos_weight", 4.0))
+    reach_pos_w = float(cfg["train"].get("reach_pos_weight", 4.0))
 
-    def forward(self, model: RescueNet, out: Dict[str, torch.Tensor], batch: Dict[str, torch.Tensor]) -> Tuple[torch.Tensor, Dict[str, float]]:
-        losses = {}
-        losses["bit"] = self.bit_bce(out["bit_logits"], batch["bit_labels"])
-        losses["segment"] = self.seg_bce(out["segment_logits"], batch["segment_labels"])
-        losses["weight"] = self.cls_ce(out["weight_logits"], batch["weight_label"].long().view(-1))
-        losses["rank"] = _bit_rank_loss(out["bit_logits"], batch["bit_labels"])
-        losses["standard_reachable"] = self.bin_bce(out["standard_logits"], batch["standard_reachable"].view(-1))
-        losses["expanded_reachable"] = self.bin_bce(out["expanded_logits"], batch["expanded_reachable"].view(-1))
-        losses["rescueable"] = self.bin_bce(out["rescue_logits"], batch["rescueable"].view(-1))
+    losses = {}
+    losses["bit"] = _weighted_bce(tf, out["bit_logits"], batch["bit_labels"], bit_pos_w)
+    losses["segment"] = _weighted_bce(tf, out["segment_logits"], batch["segment_labels"], reach_pos_w)
+    losses["weight"] = tf.reduce_mean(tf.keras.losses.sparse_categorical_crossentropy(
+        tf.reshape(tf.cast(batch["weight_label"], tf.int32), [-1]),
+        tf.cast(out["weight_logits"], tf.float32),
+        from_logits=True,
+    ))
+    losses["rank"] = _bit_rank_loss(tf, out["bit_logits"], batch["bit_labels"])
+    losses["standard_reachable"] = _weighted_bce(tf, out["standard_logits"], tf.reshape(batch["standard_reachable"], [-1]), reach_pos_w)
+    losses["expanded_reachable"] = _weighted_bce(tf, out["expanded_logits"], tf.reshape(batch["expanded_reachable"], [-1]), reach_pos_w)
+    losses["rescueable"] = _weighted_bce(tf, out["rescue_logits"], tf.reshape(batch["rescueable"], [-1]), reach_pos_w)
 
-        # Candidate rerank loss only when there is a positive candidate.
-        cand_labels = batch.get("candidate_labels")
-        cand_valid = batch.get("candidate_valid")
-        if cand_labels is not None and cand_valid is not None and "candidate_features" in batch:
-            positive_exists = (cand_labels * cand_valid).sum(dim=1) > 0
-            if positive_exists.any():
-                scores = model.reranker(out["packet_embedding"], batch["candidate_features"])
-                masked_scores = scores.masked_fill(cand_valid <= 0, -1e9)
-                target_idx = torch.argmax(cand_labels, dim=1)
-                losses["rerank"] = nn.CrossEntropyLoss()(masked_scores[positive_exists], target_idx[positive_exists].long())
-            else:
-                losses["rerank"] = out["bit_logits"].new_tensor(0.0)
-        else:
-            losses["rerank"] = out["bit_logits"].new_tensor(0.0)
+    if "candidate_features" in batch and "candidate_labels" in batch and "candidate_valid" in batch:
+        cand_scores = model.reranker(out["packet_embedding"], batch["candidate_features"], training=True)
+        cand_valid = tf.cast(batch["candidate_valid"], tf.float32)
+        cand_labels = tf.cast(batch["candidate_labels"], tf.float32)
+        positive_exists = tf.reduce_sum(cand_labels * cand_valid, axis=1) > 0.0
+        masked_scores = tf.where(cand_valid > 0.0, tf.cast(cand_scores, tf.float32), tf.fill(tf.shape(cand_scores), tf.constant(-1e9, dtype=tf.float32)))
+        target_idx = tf.argmax(cand_labels, axis=1, output_type=tf.int32)
 
-        total = out["bit_logits"].new_tensor(0.0)
-        metrics = {}
-        for k, v in losses.items():
-            total = total + self.loss_weights.get(k, 0.0) * v
-            metrics[k] = float(v.detach().cpu())
-        metrics["total"] = float(total.detach().cpu())
-        return total, metrics
+        def positive_loss():
+            return tf.reduce_mean(tf.keras.losses.sparse_categorical_crossentropy(
+                tf.boolean_mask(target_idx, positive_exists),
+                tf.boolean_mask(masked_scores, positive_exists),
+                from_logits=True,
+            ))
 
+        losses["rerank"] = tf.cond(tf.reduce_any(positive_exists), positive_loss, lambda: tf.constant(0.0, dtype=tf.float32))
+    else:
+        losses["rerank"] = tf.constant(0.0, dtype=tf.float32)
 
-def _move(batch: Dict[str, torch.Tensor], device: torch.device) -> Dict[str, torch.Tensor]:
-    return {k: v.to(device) for k, v in batch.items()}
+    total = tf.constant(0.0, dtype=tf.float32)
+    for k, v in losses.items():
+        total = total + float(lw.get(k, 0.0)) * tf.cast(v, tf.float32)
+    return total, losses
 
 
 def train_model(cfg: Dict[str, object]) -> None:
@@ -90,92 +103,134 @@ def train_model(cfg: Dict[str, object]) -> None:
     train_dir = out_dir / "datasets" / "train"
     val_dir = out_dir / "datasets" / "val"
     ckpt_dir = ensure_dir(out_dir / "checkpoints")
-    hist_path = ensure_dir(out_dir / "training") / "training_history.csv"
+    training_dir = ensure_dir(out_dir / "training")
+    hist_path = training_dir / "training_history.csv"
     write_json(cfg, out_dir / "artifacts" / "resolved_config.json")
+
+    tf, gpus = configure_tensorflow(
+        require_gpu=bool(cfg["train"].get("require_gpu", False)),
+        mixed_precision=bool(cfg["train"].get("mixed_precision", True)),
+    )
+    logger.info("TensorFlow version=%s GPUs=%s mixed_policy=%s", tf.__version__, gpus, tf.keras.mixed_precision.global_policy())
 
     shapes = infer_shapes(train_dir)
     code = build_code(cfg["code"])
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    logger.info("Training on %s with shapes=%s", device, shapes)
+    model = build_rescue_net_from_shapes(shapes, cfg, code)
 
-    model = RescueNet(
-        num_var_features=shapes["num_var_features"],
-        num_check_features=shapes["num_check_features"],
-        num_global_features=shapes["num_global_features"],
-        n=shapes["n"],
-        m=shapes["m"],
-        num_segments=int(cfg["model"]["num_segments"]),
-        max_weight_class=int(cfg["model"]["max_weight_class"]),
-        hidden_dim=int(cfg["model"]["graph_hidden_dim"]),
-        graph_layers=int(cfg["model"]["graph_layers"]),
-        top_k_tokens=int(cfg["model"]["top_k_tokens"]),
-        transformer_heads=int(cfg["model"].get("transformer_heads", 4)),
-        transformer_layers=int(cfg["model"].get("transformer_layers", 1)),
-        dropout=float(cfg["train"].get("dropout", 0.05)),
-        candidate_feature_dim=shapes.get("candidate_feature_dim", 8),
-    ).to(device)
-    optim = torch.optim.AdamW(model.parameters(), lr=float(cfg["train"]["lr"]), weight_decay=float(cfg["train"].get("weight_decay", 1e-5)))
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=max(1, int(cfg["train"]["epochs"])))
+    train_ds = NPZShardDataset(train_dir, preload=bool(cfg["train"].get("preload_dataset", True)))
+    val_ds = NPZShardDataset(val_dir, preload=bool(cfg["train"].get("preload_dataset", True)))
+    batch_size = int(cfg["train"]["batch_size"])
+    rng = np.random.default_rng(int(cfg["project"].get("seed", 1234)) + 4242)
+
+    lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
+        initial_learning_rate=float(cfg["train"]["lr"]),
+        decay_steps=max(1, int(cfg["train"]["epochs"]) * max(1, len(train_ds) // max(1, batch_size))),
+        alpha=float(cfg["train"].get("lr_alpha", 0.05)),
+    )
+    optimizer = tf.keras.optimizers.AdamW(learning_rate=lr_schedule, weight_decay=float(cfg["train"].get("weight_decay", 1e-5)))
+
+    # Build variables once on a real batch.
+    first_batch_np = next(train_ds.iter_batches(batch_size=min(batch_size, len(train_ds)), shuffle=False))
+    first_batch = _to_tf_batch(tf, first_batch_np)
+    _ = model({
+        "var_features": first_batch["var_features"],
+        "check_features": first_batch["check_features"],
+        "global_features": first_batch["global_features"],
+        "heuristic_order": first_batch["heuristic_order"],
+        "candidate_features": first_batch["candidate_features"],
+    }, training=False)
+
+    ckpt = tf.train.Checkpoint(model=model, optimizer=optimizer)
+    manager = tf.train.CheckpointManager(ckpt, str(ckpt_dir / "tf_ckpt"), max_to_keep=3)
+    meta_path = ckpt_dir / "rescue_net_tf_meta.json"
+    weights_path = ckpt_dir / "rescue_net_tf.weights.h5"
     start_epoch = 1
-    latest = ckpt_dir / "rescue_net_latest.pt"
-    if bool(cfg["train"].get("resume", True)) and latest.exists():
-        ckpt = torch.load(latest, map_location=device)
-        model.load_state_dict(ckpt["model_state"])
-        optim.load_state_dict(ckpt["optim_state"])
-        if "scheduler_state" in ckpt:
-            scheduler.load_state_dict(ckpt["scheduler_state"])
-        start_epoch = int(ckpt.get("epoch", 0)) + 1
-        logger.info("Resumed from %s at epoch %d", latest, start_epoch)
+    if bool(cfg["train"].get("resume", True)) and manager.latest_checkpoint:
+        ckpt.restore(manager.latest_checkpoint).expect_partial()
+        if meta_path.exists():
+            try:
+                start_epoch = int(json.loads(meta_path.read_text()).get("epoch", 0)) + 1
+            except Exception:
+                start_epoch = 1
+        logger.info("Resumed TensorFlow checkpoint %s at epoch %d", manager.latest_checkpoint, start_epoch)
+    elif bool(cfg["train"].get("resume", True)) and weights_path.exists():
+        model.load_weights(str(weights_path))
+        if meta_path.exists():
+            try:
+                start_epoch = int(json.loads(meta_path.read_text()).get("epoch", 0)) + 1
+            except Exception:
+                start_epoch = 1
+        logger.info("Resumed Keras weights %s at epoch %d", weights_path, start_epoch)
 
-    train_ds = NPZShardDataset(train_dir)
-    val_ds = NPZShardDataset(val_dir)
-    train_loader = DataLoader(train_ds, batch_size=int(cfg["train"]["batch_size"]), shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_ds, batch_size=int(cfg["train"]["batch_size"]), shuffle=False, num_workers=0)
+    grad_clip = float(cfg["train"].get("grad_clip", 0.0))
 
-    criterion = MultiTaskLoss(cfg)
-    h_dense = torch.tensor(code.h.astype(np.float32), dtype=torch.float32, device=device)
-    deg_v = torch.tensor(np.maximum(code.deg_v.astype(np.float32), 1.0), dtype=torch.float32, device=device)
-    deg_c = torch.tensor(np.maximum(code.deg_c.astype(np.float32), 1.0), dtype=torch.float32, device=device)
+    @tf.function(reduce_retracing=True)
+    def train_step(batch):
+        with tf.GradientTape() as tape:
+            out = model({
+                "var_features": batch["var_features"],
+                "check_features": batch["check_features"],
+                "global_features": batch["global_features"],
+                "heuristic_order": batch["heuristic_order"],
+                "candidate_features": batch["candidate_features"],
+            }, training=True)
+            loss, losses = _multitask_loss(tf, cfg, model, out, batch)
+            # Keras mixed-precision optimizers handle loss scaling internally in TF 2.19.
+        grads = tape.gradient(loss, model.trainable_variables)
+        if grad_clip > 0:
+            grads, _ = tf.clip_by_global_norm(grads, grad_clip)
+        optimizer.apply_gradients(zip(grads, model.trainable_variables))
+        return loss
+
+    @tf.function(reduce_retracing=True)
+    def val_step(batch):
+        out = model({
+            "var_features": batch["var_features"],
+            "check_features": batch["check_features"],
+            "global_features": batch["global_features"],
+            "heuristic_order": batch["heuristic_order"],
+            "candidate_features": batch["candidate_features"],
+        }, training=False)
+        loss, _ = _multitask_loss(tf, cfg, model, out, batch)
+        pred_w = tf.argmax(out["weight_logits"], axis=-1, output_type=tf.int32)
+        weight_acc = tf.reduce_mean(tf.cast(tf.equal(pred_w, tf.reshape(tf.cast(batch["weight_label"], tf.int32), [-1])), tf.float32))
+        rescue_pred = tf.cast(tf.sigmoid(tf.cast(out["rescue_logits"], tf.float32)) > 0.5, tf.float32)
+        rescue_acc = tf.reduce_mean(tf.cast(tf.equal(rescue_pred, tf.reshape(tf.cast(batch["rescueable"], tf.float32), [-1])), tf.float32))
+        std_p = tf.sigmoid(tf.cast(out["standard_logits"], tf.float32))
+        brier = tf.reduce_mean(tf.square(std_p - tf.reshape(tf.cast(batch["standard_reachable"], tf.float32), [-1])))
+        return loss, weight_acc, rescue_acc, brier
 
     exists = hist_path.exists()
     with hist_path.open("a", newline="", encoding="utf-8") as f:
-        fieldnames = ["epoch", "train_loss", "val_loss", "val_weight_acc", "val_rescue_acc", "val_std_brier", "lr", "train_samples_seen", "val_samples_seen"]
+        fieldnames = ["epoch", "train_loss", "val_loss", "val_weight_acc", "val_rescue_acc", "val_std_brier",
+                      "lr", "train_samples_seen", "val_samples_seen", "framework", "num_gpus"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if not exists:
             writer.writeheader()
 
         for epoch in range(start_epoch, int(cfg["train"]["epochs"]) + 1):
-            model.train()
             train_losses = []
-            for batch in train_loader:
-                batch = _move(batch, device)
-                optim.zero_grad(set_to_none=True)
-                out = model(batch["var_features"], batch["check_features"], batch["global_features"], batch["heuristic_order"], h_dense, deg_v, deg_c)
-                loss, _ = criterion(model, out, batch)
-                loss.backward()
-                if float(cfg["train"].get("grad_clip", 0.0)) > 0:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), float(cfg["train"]["grad_clip"]))
-                optim.step()
-                train_losses.append(float(loss.detach().cpu()))
-            scheduler.step()
+            for batch_np in train_ds.iter_batches(batch_size=batch_size, shuffle=True, rng=rng):
+                batch = _to_tf_batch(tf, batch_np)
+                train_losses.append(float(train_step(batch).numpy()))
 
-            model.eval()
             val_losses = []
             weight_accs = []
             rescue_accs = []
             briers = []
-            with torch.no_grad():
-                for batch in val_loader:
-                    batch = _move(batch, device)
-                    out = model(batch["var_features"], batch["check_features"], batch["global_features"], batch["heuristic_order"], h_dense, deg_v, deg_c)
-                    loss, _ = criterion(model, out, batch)
-                    val_losses.append(float(loss.detach().cpu()))
-                    pred_w = out["weight_logits"].argmax(dim=-1)
-                    weight_accs.append(float((pred_w == batch["weight_label"].long().view(-1)).float().mean().cpu()))
-                    rescue_pred = (torch.sigmoid(out["rescue_logits"]) > 0.5).float()
-                    rescue_accs.append(float((rescue_pred == batch["rescueable"].view(-1)).float().mean().cpu()))
-                    std_p = torch.sigmoid(out["standard_logits"])
-                    briers.append(float(torch.mean((std_p - batch["standard_reachable"].view(-1)) ** 2).cpu()))
+            for batch_np in val_ds.iter_batches(batch_size=batch_size, shuffle=False):
+                batch = _to_tf_batch(tf, batch_np)
+                loss, wa, ra, br = val_step(batch)
+                val_losses.append(float(loss.numpy()))
+                weight_accs.append(float(wa.numpy()))
+                rescue_accs.append(float(ra.numpy()))
+                briers.append(float(br.numpy()))
+
+            lr_val = optimizer.learning_rate
+            try:
+                lr_now = float(lr_val.numpy())
+            except Exception:
+                lr_now = float(cfg["train"]["lr"])
 
             record = {
                 "epoch": epoch,
@@ -184,24 +239,26 @@ def train_model(cfg: Dict[str, object]) -> None:
                 "val_weight_acc": float(np.mean(weight_accs)) if weight_accs else float("nan"),
                 "val_rescue_acc": float(np.mean(rescue_accs)) if rescue_accs else float("nan"),
                 "val_std_brier": float(np.mean(briers)) if briers else float("nan"),
-                "lr": float(scheduler.get_last_lr()[0]),
+                "lr": lr_now,
                 "train_samples_seen": len(train_ds),
                 "val_samples_seen": len(val_ds),
+                "framework": "tensorflow",
+                "num_gpus": len(gpus),
             }
             writer.writerow(record)
             f.flush()
-            logger.info("Epoch %d | train_loss=%.4f val_loss=%.4f val_weight_acc=%.4f val_rescue_acc=%.4f",
-                        epoch, record["train_loss"], record["val_loss"], record["val_weight_acc"], record["val_rescue_acc"])
+            logger.info("Epoch %d | train_loss=%.4f val_loss=%.4f val_weight_acc=%.4f val_rescue_acc=%.4f gpu=%d",
+                        epoch, record["train_loss"], record["val_loss"], record["val_weight_acc"], record["val_rescue_acc"], len(gpus))
 
-            ckpt = {
-                "epoch": epoch,
-                "cfg": cfg,
-                "shapes": shapes,
-                "model_state": model.state_dict(),
-                "optim_state": optim.state_dict(),
-                "scheduler_state": scheduler.state_dict(),
-            }
-            torch.save(ckpt, latest)
-            torch.save(ckpt, ckpt_dir / "rescue_net.pt")
+            manager.save(checkpoint_number=epoch)
+            model.save_weights(str(weights_path))
+            write_json({"epoch": epoch, "cfg": cfg, "shapes": shapes, "framework": "tensorflow", "weights": str(weights_path)},
+                       meta_path)
 
-    write_json({"epochs": int(cfg["train"]["epochs"]), "checkpoint": str(ckpt_dir / "rescue_net.pt")}, out_dir / "training" / "training_summary.json")
+    write_json({
+        "epochs": int(cfg["train"]["epochs"]),
+        "framework": "tensorflow",
+        "checkpoint": str(weights_path),
+        "tf_checkpoint": manager.latest_checkpoint,
+        "num_gpus": len(gpus),
+    }, training_dir / "training_summary.json")

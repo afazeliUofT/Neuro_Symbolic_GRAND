@@ -1,63 +1,102 @@
-# Hybrid BP + Channel-Aligned AI/Tanner-GRAND Rescue — v11.1
+# Hybrid BP + Channel-Aligned TensorFlow AI/Tanner-GRAND Rescue — v11.2
 
-This is a replacement package for the previous `Neuro_Symbolic_GRAND` pipeline.
+This is the FIR-specific TensorFlow/Keras GPU package derived from v11.1.
 
-The main conceptual change is that the rescue stage is now **channel-aligned**:
+The research-side fix from v11.1 is preserved:
 
-* The old package trained and searched for the mask `BP_final_hard XOR true_codeword`.
-  On your failed BP states this mask had mean weight about 88–89 bits, so a low/medium-weight
-  GRAND search could only reach a tiny fraction of failures.
-* v11 trains and searches for the **channel noise / channel-basis correction**
-  `GRAND_base_hard XOR true_codeword`, where `GRAND_base_hard` is the channel hard decision
-  on transmitted positions and the BP posterior decision on punctured positions.
+* The old package trained and searched for the mask `BP_final_hard XOR true_codeword`. On the failed BP states this residual had mean weight about 88–89 bits, so a low/medium-weight GRAND search could reach only a tiny fraction of failures.
+* v11 trains and searches for the **channel noise / channel-basis correction** `GRAND_base_hard XOR true_codeword`, where `GRAND_base_hard` is the channel hard decision on transmitted positions and the BP posterior decision on punctured positions.
 * The rescue decoder applies candidate masks to this GRAND base, not to the failed BP hard output.
-* v11 fixes the AI rank-prior indexing bug and adds a Tanner-syndrome OSD repair stage:
-  it solves `H[:, support] e = syndrome(base)` over GF(2) on increasingly large low-cost supports.
-  This provides valid codeword candidates without enumerating impossible high-weight masks.
+* The AI rank-prior indexing bug is fixed.
+* A Tanner-syndrome OSD repair stage solves `H[:, support] e = syndrome(base)` over GF(2) on increasingly large low-cost supports.
 
-## Install / run
+v11.2 changes the implementation side:
+
+* The neural rescue model, training loop, checkpointing, and AI inference path are TensorFlow/Keras based.
+* PyTorch is no longer required for training/evaluation.
+* The Slurm scripts request FIR GPUs using explicit H100 GPU types and partitions seen in the FIR probe.
+* A GPU preflight script, `scripts/check_tf_gpu.py`, verifies that TensorFlow sees the allocated GPU before training or evaluation starts.
+
+## Why TensorFlow in v11.2
+
+The FIR probe showed that the active `.venv` contains TensorFlow 2.19.1, Keras 3.14.0, Torch 2.11.0, and Sionna 1.2.2/no-RT. TensorFlow is CUDA-built, and the installed Sionna LDPC encoder accepts NumPy/TensorFlow tensors but not Torch tensors. Therefore, the correct FIR-native implementation for this environment is TensorFlow/Keras.
+
+## Install
+
+Use the `.venv` that already contains TensorFlow and Sionna on FIR.
 
 ```bash
 cd /home/rsadve1/scratch
 rm -rf Neuro_Symbolic_GRAND
-unzip Hybrid_GRAND_v11_1_channel_aligned_INSTALLFIX.zip -d Neuro_Symbolic_GRAND
+unzip Hybrid_GRAND_v11_2_TF_H100_GPU.zip -d Neuro_Symbolic_GRAND
 cd Neuro_Symbolic_GRAND
 
-# Use your existing FIR environment or create one.
-# The original SLURM scripts assume .venv exists; adapt module loads as needed.
+source .venv/bin/activate
 python -m pip install -e . --no-deps
-python scripts/check_runtime_deps.py || true
+export PYTHONPATH="$PWD:${PYTHONPATH:-}"
 
-export PYTHONPATH="$PWD:${PYTHONPATH}"
-python -m hybrid_bp_nsg.cli selftest --config configs/fir_hybrid_bp_nsg_selftest.yaml
-python -m hybrid_bp_nsg.cli pipeline --config configs/fir_hybrid_bp_nsg_smoke.yaml
+python scripts/check_runtime_deps.py || true
+python scripts/check_tf_gpu.py || true      # login node normally has no GPU
 ```
 
-For a full 5G run:
+## Recommended run order
+
+Selftest is CPU/PEG and should run before GPU jobs:
+
+```bash
+sbatch slurm/fir_hybrid_bp_nsg_selftest.sbatch
+```
+
+Full 5G generation is CPU-heavy and does not request GPU:
 
 ```bash
 sbatch slurm/fir_hybrid_bp_nsg_generate.sbatch
+```
+
+Training and evaluation request one full H100:
+
+```bash
 sbatch slurm/fir_hybrid_bp_nsg_train.sbatch
 sbatch slurm/fir_hybrid_bp_nsg_evaluate_report.sbatch
 ```
 
-or run a resumable all-in-one job:
+Smoke GPU run:
+
+```bash
+sbatch slurm/fir_hybrid_bp_nsg_smoke.sbatch
+```
+
+A single all-in-one GPU run is also provided:
 
 ```bash
 sbatch slurm/fir_hybrid_bp_nsg_pipeline.sbatch
 ```
 
-## FIR installation note
-
-This v11.1 package intentionally uses **no mandatory pip dependencies** in `pyproject.toml`. The previous v11.0 zip declared `sionna>=0.19`, which lets pip consider the new Sionna 2.x line and older Sionna 0.x/1.x releases at the same time. On Compute Canada this can trigger very long resolver backtracking and PyYAML source-build failures before the research code even runs.
-
-Use:
+If the full-H100 queue is slow or unavailable, MIG 40GB alternatives are included:
 
 ```bash
-python -m pip install -e . --no-deps
+sbatch slurm/fir_hybrid_bp_nsg_train_gpu_mig40gb.sbatch
+sbatch slurm/fir_hybrid_bp_nsg_evaluate_report_gpu_mig40gb.sbatch
 ```
 
-The Slurm scripts in this zip already use `--no-deps`. Install Sionna/TensorFlow/PyTorch through your known-good FIR environment or modules. For this project, the code supports the legacy TensorFlow-based Sionna 0.19.x import paths and also tries the newer `sionna.phy` import path.
+## FIR Slurm GPU choices
+
+The probe showed GPU partitions such as `gpubase_bygpu_b1`, `gpubase_bygpu_b3`, and `gpubase_bygpu_b4`, and GPU types including:
+
+```text
+h100
+nvidia_h100_80gb_hbm3_3g.40gb
+nvidia_h100_80gb_hbm3_2g.20gb
+nvidia_h100_80gb_hbm3_1g.10gb
+```
+
+v11.2 uses:
+
+* `h100:1` for the main train/evaluate/pipeline Slurms.
+* `nvidia_h100_80gb_hbm3_3g.40gb:1` for the MIG alternatives.
+* `gpubase_bygpu_b3` for 24-hour train/evaluate jobs.
+* `gpubase_bygpu_b4` for the 48-hour all-in-one pipeline job.
+* `gpubase_bygpu_b1` for the short smoke job.
 
 ## Output directories
 
@@ -69,31 +108,6 @@ outputs/hybrid_bp_nsg_v11_channel_aligned_full/
 
 The smoke and selftest configs write to separate output directories.
 
-## What changed relative to v10
+## Notes
 
-1. **Correct target basis**  
-   Training labels now target the GRAND base correction instead of the failed BP residual.
-
-2. **Correct candidate basis**  
-   Direct GRAND, AI-GRAND, and OSD repair candidates are applied to the channel/BP-puncture base.
-
-3. **Puncture-aware 5G internal codeword reconstruction**  
-   `encode_internal()` fills punctured systematic positions from the input message instead of leaving
-   them at zero. Random nonzero syndrome validation is performed when `strict_pcm_check: true`.
-
-4. **Rank-prior bug fix**  
-   The AI bit-cost rank prior uses the inverse heuristic-rank vector per variable index.
-
-5. **No aggressive skip gate by default**  
-   After BP failure, rescue is attempted by default. The network can still rank bits and choose
-   search mode, but it is not allowed to skip almost everything.
-
-6. **Tanner-syndrome OSD repair**  
-   Valid candidates are generated by solving syndrome equations on low-cost supports, which attacks
-   graph/trapping failures directly instead of requiring the exact BP residual to be low weight.
-
-## Important caveat
-
-This package is a research implementation. It is designed to make the second stage address the
-actual bottleneck exposed by your probes. It should be evaluated against `bp_nms_20` and `bp_nms_50`
-using the included scripts before drawing final BLER conclusions.
+This package still compares against `bp_nms_20` and `bp_nms_50`. The TensorFlow rewrite is not a new decoding theory by itself; it makes the neural component and Sionna stack align with FIR's actual runtime and makes GPU allocation explicit and verifiable.

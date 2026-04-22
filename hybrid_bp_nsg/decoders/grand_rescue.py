@@ -8,9 +8,9 @@ import time
 import numpy as np
 
 try:
-    import torch
+    import tensorflow as tf
 except Exception:  # pragma: no cover
-    torch = None
+    tf = None
 
 from ..codes.gf2 import gf2_solve_support
 from ..codes.peg_ldpc import LDPCCode
@@ -289,19 +289,7 @@ class ResidualGrandRescueDecoder:
         self.cfg = rescue_cfg
         self.mode = str(mode)
         self.rescue_net = rescue_net
-        self.device = torch.device(device) if torch is not None else None
-        self._h_dense_torch = None
-        self._deg_v_torch = None
-        self._deg_c_torch = None
-
-    def _torch_graph_buffers(self):
-        if torch is None:
-            raise RuntimeError("PyTorch is required for AI rescue mode.")
-        if self._h_dense_torch is None:
-            self._h_dense_torch = torch.tensor(self.code.h.astype(np.float32), dtype=torch.float32, device=self.device)
-            self._deg_v_torch = torch.tensor(np.maximum(self.code.deg_v.astype(np.float32), 1.0), dtype=torch.float32, device=self.device)
-            self._deg_c_torch = torch.tensor(np.maximum(self.code.deg_c.astype(np.float32), 1.0), dtype=torch.float32, device=self.device)
-        return self._h_dense_torch, self._deg_v_torch, self._deg_c_torch
+        self.device = str(device or ("/GPU:0" if tf is not None and tf.config.list_physical_devices("GPU") else "/CPU:0"))
 
     def _heuristic_policy(self, llr: np.ndarray, feature_pack: Dict[str, np.ndarray]) -> Dict[str, object]:
         vf = feature_pack["var_features"]
@@ -349,28 +337,24 @@ class ResidualGrandRescueDecoder:
         }
 
     def _ai_policy(self, llr: np.ndarray, feature_pack: Dict[str, np.ndarray], snr_db: float, profile: str) -> Dict[str, object]:
-        if self.rescue_net is None or torch is None:
+        if self.rescue_net is None or tf is None:
             return self._heuristic_policy(llr, feature_pack)
-        self.rescue_net.eval()
-        h_dense, deg_v, deg_c = self._torch_graph_buffers()
-        with torch.no_grad():
+
+        with tf.device(self.device):
             batch = {
-                "var_features": torch.tensor(feature_pack["var_features"][None, ...], dtype=torch.float32, device=self.device),
-                "check_features": torch.tensor(feature_pack["check_features"][None, ...], dtype=torch.float32, device=self.device),
-                "global_features": torch.tensor(feature_pack["global_features"][None, ...], dtype=torch.float32, device=self.device),
-                "heuristic_order": torch.tensor(feature_pack["heuristic_order"][None, ...], dtype=torch.long, device=self.device),
+                "var_features": tf.convert_to_tensor(feature_pack["var_features"][None, ...], dtype=tf.float32),
+                "check_features": tf.convert_to_tensor(feature_pack["check_features"][None, ...], dtype=tf.float32),
+                "global_features": tf.convert_to_tensor(feature_pack["global_features"][None, ...], dtype=tf.float32),
+                "heuristic_order": tf.convert_to_tensor(feature_pack["heuristic_order"][None, ...], dtype=tf.int32),
             }
-            out = self.rescue_net(
-                batch["var_features"], batch["check_features"], batch["global_features"],
-                batch["heuristic_order"], h_dense, deg_v, deg_c
-            )
-            bit_prob = torch.sigmoid(out["bit_logits"]).cpu().numpy()[0]
-            seg_prob = torch.sigmoid(out["segment_logits"]).cpu().numpy()[0]
-            std_p = float(torch.sigmoid(out["standard_logits"]).cpu().numpy()[0])
-            exp_p = float(torch.sigmoid(out["expanded_logits"]).cpu().numpy()[0])
-            rescue_p = float(torch.sigmoid(out["rescue_logits"]).cpu().numpy()[0])
-            weight_prob = torch.softmax(out["weight_logits"], dim=-1).cpu().numpy()[0]
-            packet_emb = out["packet_embedding"].cpu()
+            out = self.rescue_net(batch, training=False)
+            bit_prob = tf.sigmoid(tf.cast(out["bit_logits"], tf.float32)).numpy()[0]
+            seg_prob = tf.sigmoid(tf.cast(out["segment_logits"], tf.float32)).numpy()[0]
+            std_p = float(tf.sigmoid(tf.cast(out["standard_logits"], tf.float32)).numpy()[0])
+            exp_p = float(tf.sigmoid(tf.cast(out["expanded_logits"], tf.float32)).numpy()[0])
+            rescue_p = float(tf.sigmoid(tf.cast(out["rescue_logits"], tf.float32)).numpy()[0])
+            weight_prob = tf.nn.softmax(tf.cast(out["weight_logits"], tf.float32), axis=-1).numpy()[0]
+            packet_emb = out["packet_embedding"]
 
         vf = feature_pack["var_features"]
         seg_idx = feature_pack["segment_index"]
@@ -500,12 +484,12 @@ class ResidualGrandRescueDecoder:
             micro_cap = int(self.cfg.get("micro_candidate_cap", 4))
             if rescue_p >= micro_thr and failed_for_micro:
                 shortlist = failed_for_micro
-                if policy.get("candidate_net") is not None and policy.get("packet_emb") is not None and torch is not None:
+                if policy.get("candidate_net") is not None and policy.get("packet_emb") is not None and tf is not None:
                     cand_feats_np = np.stack([x[3] for x in failed_for_micro], axis=0).astype(np.float32)
-                    cand_feats = torch.tensor(cand_feats_np[None, ...], dtype=torch.float32, device=self.device)
-                    packet_emb = policy["packet_emb"].to(self.device)
-                    with torch.no_grad():
-                        micro_scores = policy["candidate_net"](packet_emb, cand_feats).cpu().numpy()[0]
+                    with tf.device(self.device):
+                        cand_feats = tf.convert_to_tensor(cand_feats_np[None, ...], dtype=tf.float32)
+                        packet_emb = policy["packet_emb"]
+                        micro_scores = policy["candidate_net"](packet_emb, cand_feats, training=False).numpy()[0]
                     order = np.argsort(-(micro_scores + float(self.cfg.get("rerank_prior_scale", 0.10)) * np.array([-x[1] for x in failed_for_micro], dtype=np.float32)))
                     shortlist = [failed_for_micro[i] for i in order[:micro_cap]]
                 else:
@@ -575,12 +559,11 @@ class ResidualGrandRescueDecoder:
             return RescueResult(False, main_result.hard.copy(), main_result.hard.copy(), queries, elapsed_ms,
                                 "rescue_fail", used_micro, 0, gate, True, main_result)
 
-        if policy.get("candidate_net") is not None and policy.get("packet_emb") is not None and torch is not None:
-            cand_feats = torch.tensor(np.stack([v.cand_features for v in valid], axis=0)[None, ...],
-                                      dtype=torch.float32, device=self.device)
-            packet_emb = policy["packet_emb"].to(self.device)
-            with torch.no_grad():
-                scores = policy["candidate_net"](packet_emb, cand_feats).cpu().numpy()[0]
+        if policy.get("candidate_net") is not None and policy.get("packet_emb") is not None and tf is not None:
+            with tf.device(self.device):
+                cand_feats = tf.convert_to_tensor(np.stack([v.cand_features for v in valid], axis=0)[None, ...], dtype=tf.float32)
+                packet_emb = policy["packet_emb"]
+                scores = policy["candidate_net"](packet_emb, cand_feats, training=False).numpy()[0]
             final_scores = (
                 scores
                 + float(self.cfg.get("rerank_prior_scale", 0.10)) * np.array([-v.score for v in valid], dtype=np.float32)

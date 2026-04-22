@@ -42,6 +42,9 @@
     "reach_pos_weight": 4.0,
     "grad_clip": 1.0,
     "resume": true,
+    "require_gpu": false,
+    "mixed_precision": false,
+    "preload_dataset": true,
     "loss_weights": {
       "bit": 1.0,
       "segment": 0.2,
@@ -151,7 +154,9 @@
     ],
     "profiles": [
       "A"
-    ]
+    ],
+    "require_gpu": false,
+    "mixed_precision": false
   },
   "_config_path": "configs/fir_hybrid_bp_nsg_selftest.yaml"
 }

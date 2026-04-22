@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import csv
 import gzip
+import json
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 
@@ -11,22 +12,41 @@ from ..channels.simulator import simulate_frame
 from ..codes.factory import build_code
 from ..decoders.bp import BeliefPropagationDecoder
 from ..decoders.hybrid import HybridBPNSGDecoder
-from ..models.rescue_net import RescueNet
+from ..models.rescue_net import build_rescue_net_from_shapes
 from ..training.dataset import infer_shapes
 from ..utils.io import ensure_dir, write_csv, write_json
 from ..utils.logging import get_logger
+from ..utils.tf_gpu import configure_tensorflow, tensorflow_device_string
 
 
-def _load_rescue_net(cfg: Dict[str, object], code, device: str = "cpu"):
-    try:
-        import torch
-    except Exception:
-        return None
-    ckpt_path = Path(cfg["project"]["output_dir"]) / "checkpoints" / "rescue_net.pt"
-    if not ckpt_path.exists():
-        return None
-    ckpt = torch.load(ckpt_path, map_location=device)
-    shapes = ckpt.get("shapes")
+def _dummy_build_model(tf, model, shapes: Dict[str, int]) -> None:
+    b = 1
+    model({
+        "var_features": tf.zeros((b, int(shapes["n"]), int(shapes["num_var_features"])), dtype=tf.float32),
+        "check_features": tf.zeros((b, int(shapes["m"]), int(shapes["num_check_features"])), dtype=tf.float32),
+        "global_features": tf.zeros((b, int(shapes["num_global_features"])), dtype=tf.float32),
+        "heuristic_order": tf.zeros((b, int(shapes["n"])), dtype=tf.int32),
+        "candidate_features": tf.zeros((b, max(1, int(shapes.get("num_candidates", shapes.get("rerank_list_size", 12)))), int(shapes.get("candidate_feature_dim", 8))), dtype=tf.float32),
+    }, training=False)
+
+
+def _load_rescue_net(cfg: Dict[str, object], code):
+    tf, gpus = configure_tensorflow(
+        require_gpu=bool(cfg.get("eval", {}).get("require_gpu", False)),
+        mixed_precision=bool(cfg.get("eval", {}).get("mixed_precision", False)),
+    )
+    ckpt_dir = Path(cfg["project"]["output_dir"]) / "checkpoints"
+    weights_path = ckpt_dir / "rescue_net_tf.weights.h5"
+    meta_path = ckpt_dir / "rescue_net_tf_meta.json"
+    if not weights_path.exists():
+        return None, tf, gpus
+
+    shapes = None
+    if meta_path.exists():
+        try:
+            shapes = json.loads(meta_path.read_text(encoding="utf-8")).get("shapes")
+        except Exception:
+            shapes = None
     if shapes is None:
         try:
             shapes = infer_shapes(Path(cfg["project"]["output_dir"]) / "datasets" / "train")
@@ -39,25 +59,10 @@ def _load_rescue_net(cfg: Dict[str, object], code, device: str = "cpu"):
                 "m": code.m,
                 "candidate_feature_dim": 8,
             }
-    model = RescueNet(
-        num_var_features=int(shapes["num_var_features"]),
-        num_check_features=int(shapes["num_check_features"]),
-        num_global_features=int(shapes["num_global_features"]),
-        n=code.n,
-        m=code.m,
-        num_segments=int(cfg["model"]["num_segments"]),
-        max_weight_class=int(cfg["model"]["max_weight_class"]),
-        hidden_dim=int(cfg["model"]["graph_hidden_dim"]),
-        graph_layers=int(cfg["model"]["graph_layers"]),
-        top_k_tokens=int(cfg["model"]["top_k_tokens"]),
-        transformer_heads=int(cfg["model"].get("transformer_heads", 4)),
-        transformer_layers=int(cfg["model"].get("transformer_layers", 1)),
-        dropout=float(cfg["train"].get("dropout", 0.05)),
-        candidate_feature_dim=int(shapes.get("candidate_feature_dim", 8)),
-    ).to(device)
-    model.load_state_dict(ckpt["model_state"])
-    model.eval()
-    return model
+    model = build_rescue_net_from_shapes(shapes, cfg, code)
+    _dummy_build_model(tf, model, shapes)
+    model.load_weights(str(weights_path))
+    return model, tf, gpus
 
 
 def _percentile(vals: List[float], q: float) -> float:
@@ -71,15 +76,19 @@ def evaluate(cfg: Dict[str, object]) -> None:
     out_dir = ensure_dir(Path(cfg["project"]["output_dir"]))
     eval_root = ensure_dir(out_dir / "evaluation")
     write_json(cfg, out_dir / "artifacts" / "resolved_config.json")
+    # Configure TensorFlow before Sionna/code construction so GPU memory growth is set early.
+    tf, gpus = configure_tensorflow(
+        require_gpu=bool(cfg.get("eval", {}).get("require_gpu", False)),
+        mixed_precision=bool(cfg.get("eval", {}).get("mixed_precision", False)),
+    )
     code = build_code(cfg["code"])
 
-    import torch
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    rescue_net = _load_rescue_net(cfg, code, device=device)
+    rescue_net, _, gpus = _load_rescue_net(cfg, code)
+    device = tensorflow_device_string()
     if rescue_net is None:
-        logger.info("No trained rescue_net.pt found; hybrid uses heuristic channel-aligned Tanner-GRAND policy.")
+        logger.info("No trained rescue_net_tf.weights.h5 found; hybrid uses heuristic channel-aligned Tanner-GRAND policy.")
     else:
-        logger.info("Loaded rescue network on %s", device)
+        logger.info("Loaded TensorFlow rescue network on %s with GPUs=%s", device, gpus)
 
     bp20 = BeliefPropagationDecoder(
         code,
@@ -151,7 +160,6 @@ def evaluate(cfg: Dict[str, object]) -> None:
                 stats["hybrid_bp_nsg"]["latency"].append(float(hr.elapsed_ms))
                 raw_rows.append({"sample_idx": num, "profile": profile, "snr_db": snr, "decoder": "hybrid_bp_nsg", "block_error": eh, "queries": int(hr.queries), "action": hr.action, "main_success": int(hr.main_success), "rescue_used": int(hr.rescue_invoked), "micro_bp_used": int(hr.used_micro_bp), "latency_ms": float(hr.elapsed_ms)})
 
-                # Stop after min samples if the target decoders have enough errors.
                 if num >= samples_target:
                     stop = True
                     for dec in cfg["eval"].get("stop_decoders", []):
@@ -177,6 +185,8 @@ def evaluate(cfg: Dict[str, object]) -> None:
                     "micro_bp_rate": float(st["micro"]) / samples,
                     "main_success_rate": float(st["main_success"]) / samples,
                     "avg_latency_ms": float(np.mean(st["latency"])) if st["latency"] else 0.0,
+                    "framework": "tensorflow",
+                    "num_gpus": len(gpus),
                 }
                 summary_rows.append(row)
                 all_summaries.append(row)

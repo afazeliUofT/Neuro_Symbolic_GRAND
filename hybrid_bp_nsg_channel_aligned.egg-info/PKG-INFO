@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: hybrid-bp-nsg-channel-aligned
-Version: 11.1.0
-Summary: Channel-aligned hybrid BP + AI/Tanner-guided GRAND rescue for 5G LDPC
+Version: 11.2.0
+Summary: FIR TensorFlow GPU channel-aligned hybrid BP + AI/Tanner-guided GRAND rescue for 5G LDPC
 Requires-Python: >=3.10
 Provides-Extra: legacy-sionna
 Requires-Dist: sionna==0.19.2; extra == "legacy-sionna"

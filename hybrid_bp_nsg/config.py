@@ -33,6 +33,9 @@ DEFAULTS: Dict[str, Any] = {
         "reach_pos_weight": 4.0,
         "grad_clip": 1.0,
         "resume": True,
+        "require_gpu": False,
+        "mixed_precision": False,
+        "preload_dataset": True,
         "loss_weights": {
             "bit": 1.0,
             "segment": 0.2,
@@ -105,6 +108,8 @@ DEFAULTS: Dict[str, Any] = {
         "stop_decoders": ["hybrid_bp_nsg", "bp_nms_20", "bp_nms_50"],
         "snr_db_grid": [0, 1, 2, 3],
         "profiles": ["A"],
+        "require_gpu": False,
+        "mixed_precision": False,
     },
 }
 

@@ -31,6 +31,9 @@ train:
   reach_pos_weight: 8.0
   grad_clip: 1.0
   resume: true
+  require_gpu: false
+  mixed_precision: false
+  preload_dataset: true
   loss_weights:
     bit: 1.00
     segment: 0.25

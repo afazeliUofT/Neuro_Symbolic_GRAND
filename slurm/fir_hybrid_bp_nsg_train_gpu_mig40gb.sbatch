@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=hyb-grand-v112-smoke
-#SBATCH --time=02:00:00
-#SBATCH --partition=gpubase_bygpu_b1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=48G
-#SBATCH --gpus-per-node=h100:1
+#SBATCH --job-name=hyb-grand-v112-train-mig40
+#SBATCH --time=24:00:00
+#SBATCH --partition=gpubase_bygpu_b3
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --gpus-per-node=nvidia_h100_80gb_hbm3_3g.40gb:1
 #SBATCH --output=slurm-%x-%j.out
 
 set -euo pipefail
@@ -39,4 +39,4 @@ export XLA_FLAGS="${XLA_FLAGS:-}"
 python -m pip install -e . --no-deps --quiet
 python scripts/check_tf_gpu.py --require-gpu
 
-python -m hybrid_bp_nsg.cli pipeline --config configs/fir_hybrid_bp_nsg_smoke.yaml
+python -m hybrid_bp_nsg.cli train --config configs/fir_hybrid_bp_nsg_full.yaml

@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import gzip
 import json
+import numpy as np
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
@@ -13,11 +14,23 @@ def ensure_dir(path: str | Path) -> Path:
     return p
 
 
+def _json_default(x):
+    if isinstance(x, (np.integer,)):
+        return int(x)
+    if isinstance(x, (np.floating,)):
+        return float(x)
+    if isinstance(x, np.ndarray):
+        return x.tolist()
+    if isinstance(x, Path):
+        return str(x)
+    raise TypeError(f"Object of type {type(x).__name__} is not JSON serializable")
+
+
 def write_json(obj, path: str | Path) -> None:
     path = Path(path)
     ensure_dir(path.parent)
     with path.open("w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, sort_keys=False)
+        json.dump(obj, f, indent=2, sort_keys=False, default=_json_default)
 
 
 def read_json(path: str | Path):

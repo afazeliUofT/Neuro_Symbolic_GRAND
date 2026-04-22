@@ -1,38 +1,79 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Any, Dict, Optional
 
-import torch
-from torch import nn
-import torch.nn.functional as F
+import numpy as np
+
+try:  # TensorFlow is intentionally imported lazily/optionally for HPC-safe installs.
+    import tensorflow as tf
+except Exception:  # pragma: no cover
+    tf = None  # type: ignore
 
 
-class CandidateReranker(nn.Module):
-    def __init__(self, packet_dim: int, candidate_feature_dim: int = 8, hidden_dim: int = 128):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(packet_dim + candidate_feature_dim, hidden_dim),
-            nn.GELU(),
-            nn.LayerNorm(hidden_dim),
-            nn.Linear(hidden_dim, hidden_dim // 2),
-            nn.GELU(),
-            nn.Linear(hidden_dim // 2, 1),
+def require_tf():
+    if tf is None:  # pragma: no cover
+        raise RuntimeError(
+            "TensorFlow is required for v11.2 TensorFlow/Keras rescue training/inference. "
+            "Activate the FIR .venv that contains tensorflow before running train/evaluate."
         )
-
-    def forward(self, packet_embedding: torch.Tensor, candidate_features: torch.Tensor) -> torch.Tensor:
-        # packet_embedding: [B,D], candidate_features: [B,C,F]
-        b, c, _ = candidate_features.shape
-        pkt = packet_embedding[:, None, :].expand(b, c, packet_embedding.shape[-1])
-        x = torch.cat([pkt, candidate_features], dim=-1)
-        return self.net(x).squeeze(-1)
+    return tf
 
 
-class RescueNet(nn.Module):
-    """Code-aware graph network for channel-aligned rescue ranking.
+class CandidateReranker(tf.keras.Model if tf is not None else object):  # type: ignore[misc]
+    def __init__(self, packet_dim: int, candidate_feature_dim: int = 8, hidden_dim: int = 128, name: str = "candidate_reranker"):
+        require_tf()
+        super().__init__(name=name)
+        self.packet_dim = int(packet_dim)
+        self.candidate_feature_dim = int(candidate_feature_dim)
+        self.hidden_dim = int(hidden_dim)
+        self.d1 = tf.keras.layers.Dense(hidden_dim, activation="gelu")
+        self.n1 = tf.keras.layers.LayerNormalization()
+        self.d2 = tf.keras.layers.Dense(max(8, hidden_dim // 2), activation="gelu")
+        self.out = tf.keras.layers.Dense(1)
 
-    The network is deliberately code-aware but modest: it exchanges messages through H,
-    predicts per-bit correction probability on the GRAND base, predicts target weight,
-    and scores candidate masks. It is not used as a skip gate by default.
+    def call(self, packet_embedding, candidate_features, training: bool = False):
+        b = tf.shape(candidate_features)[0]
+        c = tf.shape(candidate_features)[1]
+        pkt = tf.tile(packet_embedding[:, None, :], [1, c, 1])
+        x = tf.concat([pkt, tf.cast(candidate_features, tf.float32)], axis=-1)
+        x = self.d1(x)
+        x = self.n1(x)
+        x = self.d2(x)
+        return tf.squeeze(self.out(x), axis=-1)
+
+
+class TransformerBlock(tf.keras.layers.Layer if tf is not None else object):  # type: ignore[misc]
+    def __init__(self, hidden_dim: int, num_heads: int = 4, dropout: float = 0.05, name: str | None = None):
+        require_tf()
+        super().__init__(name=name)
+        self.hidden_dim = int(hidden_dim)
+        self.num_heads = max(1, int(num_heads))
+        key_dim = max(8, int(hidden_dim) // self.num_heads)
+        self.norm1 = tf.keras.layers.LayerNormalization()
+        self.attn = tf.keras.layers.MultiHeadAttention(num_heads=self.num_heads, key_dim=key_dim, dropout=float(dropout))
+        self.drop1 = tf.keras.layers.Dropout(float(dropout))
+        self.norm2 = tf.keras.layers.LayerNormalization()
+        self.ff1 = tf.keras.layers.Dense(4 * int(hidden_dim), activation="gelu")
+        self.ff2 = tf.keras.layers.Dense(int(hidden_dim))
+        self.drop2 = tf.keras.layers.Dropout(float(dropout))
+
+    def call(self, x, training: bool = False):
+        y = self.norm1(x)
+        y = self.attn(y, y, training=training)
+        x = x + self.drop1(y, training=training)
+        y = self.norm2(x)
+        y = self.ff2(self.ff1(y))
+        x = x + self.drop2(y, training=training)
+        return x
+
+
+class RescueNet(tf.keras.Model if tf is not None else object):  # type: ignore[misc]
+    """TensorFlow/Keras code-aware graph network for channel-aligned GRAND rescue.
+
+    This replaces the PyTorch network in v11.1 because the FIR probes show that:
+      * TensorFlow 2.19.1 is installed and CUDA-enabled in the project venv.
+      * Sionna 1.2.2 accepts TensorFlow tensors but not Torch tensors.
+      * The correct Sionna import path is sionna.phy.fec.ldpc.*.
     """
 
     def __init__(
@@ -51,8 +92,13 @@ class RescueNet(nn.Module):
         transformer_layers: int = 2,
         dropout: float = 0.05,
         candidate_feature_dim: int = 8,
+        h_dense: Optional[np.ndarray] = None,
+        deg_v: Optional[np.ndarray] = None,
+        deg_c: Optional[np.ndarray] = None,
+        name: str = "tf_rescue_net",
     ):
-        super().__init__()
+        require_tf()
+        super().__init__(name=name)
         self.n = int(n)
         self.m = int(m)
         self.num_segments = int(num_segments)
@@ -60,112 +106,137 @@ class RescueNet(nn.Module):
         self.hidden_dim = int(hidden_dim)
         self.graph_layers = int(graph_layers)
         self.top_k_tokens = int(top_k_tokens)
+        self.candidate_feature_dim = int(candidate_feature_dim)
 
-        self.var_in = nn.Sequential(
-            nn.Linear(num_var_features, hidden_dim),
-            nn.GELU(),
-            nn.LayerNorm(hidden_dim),
-            nn.Dropout(dropout),
-        )
-        self.check_in = nn.Sequential(
-            nn.Linear(num_check_features, hidden_dim),
-            nn.GELU(),
-            nn.LayerNorm(hidden_dim),
-            nn.Dropout(dropout),
-        )
-        self.global_in = nn.Sequential(
-            nn.Linear(num_global_features, hidden_dim),
-            nn.GELU(),
-            nn.LayerNorm(hidden_dim),
-        )
+        self.var_dense = tf.keras.layers.Dense(hidden_dim, activation="gelu")
+        self.var_norm = tf.keras.layers.LayerNormalization()
+        self.var_drop = tf.keras.layers.Dropout(float(dropout))
 
-        self.v_updates = nn.ModuleList([
-            nn.Sequential(nn.Linear(2 * hidden_dim, hidden_dim), nn.GELU(), nn.Linear(hidden_dim, hidden_dim))
-            for _ in range(graph_layers)
-        ])
-        self.c_updates = nn.ModuleList([
-            nn.Sequential(nn.Linear(2 * hidden_dim, hidden_dim), nn.GELU(), nn.Linear(hidden_dim, hidden_dim))
-            for _ in range(graph_layers)
-        ])
-        self.v_norms = nn.ModuleList([nn.LayerNorm(hidden_dim) for _ in range(graph_layers)])
-        self.c_norms = nn.ModuleList([nn.LayerNorm(hidden_dim) for _ in range(graph_layers)])
-        self.dropout = nn.Dropout(dropout)
+        self.check_dense = tf.keras.layers.Dense(hidden_dim, activation="gelu")
+        self.check_norm = tf.keras.layers.LayerNormalization()
+        self.check_drop = tf.keras.layers.Dropout(float(dropout))
 
-        enc_layer = nn.TransformerEncoderLayer(
-            d_model=hidden_dim,
-            nhead=max(1, int(transformer_heads)),
-            dim_feedforward=4 * hidden_dim,
-            dropout=dropout,
-            batch_first=True,
-            activation="gelu",
-            norm_first=True,
-        )
-        self.token_encoder = nn.TransformerEncoder(enc_layer, num_layers=max(1, int(transformer_layers)))
+        self.global_dense = tf.keras.layers.Dense(hidden_dim, activation="gelu")
+        self.global_norm = tf.keras.layers.LayerNormalization()
 
-        self.bit_head = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim // 2),
-            nn.GELU(),
-            nn.Linear(hidden_dim // 2, 1),
-        )
-        packet_dim = hidden_dim * 3
-        self.packet_proj = nn.Sequential(
-            nn.Linear(packet_dim, hidden_dim),
-            nn.GELU(),
-            nn.LayerNorm(hidden_dim),
-        )
-        self.segment_head = nn.Linear(hidden_dim, num_segments)
-        self.weight_head = nn.Linear(hidden_dim, max_weight_class + 2)
-        self.standard_head = nn.Linear(hidden_dim, 1)
-        self.expanded_head = nn.Linear(hidden_dim, 1)
-        self.rescue_head = nn.Linear(hidden_dim, 1)
+        self.v_updates = []
+        self.c_updates = []
+        self.v_norms = []
+        self.c_norms = []
+        self.dropouts = []
+        for i in range(self.graph_layers):
+            self.v_updates.append(tf.keras.Sequential([
+                tf.keras.layers.Dense(hidden_dim, activation="gelu"),
+                tf.keras.layers.Dense(hidden_dim),
+            ], name=f"v_update_{i}"))
+            self.c_updates.append(tf.keras.Sequential([
+                tf.keras.layers.Dense(hidden_dim, activation="gelu"),
+                tf.keras.layers.Dense(hidden_dim),
+            ], name=f"c_update_{i}"))
+            self.v_norms.append(tf.keras.layers.LayerNormalization(name=f"v_norm_{i}"))
+            self.c_norms.append(tf.keras.layers.LayerNormalization(name=f"c_norm_{i}"))
+            self.dropouts.append(tf.keras.layers.Dropout(float(dropout)))
+
+        self.token_blocks = [
+            TransformerBlock(hidden_dim, transformer_heads, dropout, name=f"token_block_{i}")
+            for i in range(max(1, int(transformer_layers)))
+        ]
+
+        self.bit_d1 = tf.keras.layers.Dense(max(8, hidden_dim // 2), activation="gelu")
+        self.bit_out = tf.keras.layers.Dense(1)
+
+        self.packet_d1 = tf.keras.layers.Dense(hidden_dim, activation="gelu")
+        self.packet_norm = tf.keras.layers.LayerNormalization()
+
+        self.segment_head = tf.keras.layers.Dense(num_segments)
+        self.weight_head = tf.keras.layers.Dense(max_weight_class + 2)
+        self.standard_head = tf.keras.layers.Dense(1)
+        self.expanded_head = tf.keras.layers.Dense(1)
+        self.rescue_head = tf.keras.layers.Dense(1)
         self.reranker = CandidateReranker(hidden_dim, candidate_feature_dim=candidate_feature_dim, hidden_dim=hidden_dim)
 
-    def forward(
-        self,
-        var_features: torch.Tensor,
-        check_features: torch.Tensor,
-        global_features: torch.Tensor,
-        heuristic_order: torch.Tensor,
-        h_dense: torch.Tensor,
-        deg_v: torch.Tensor,
-        deg_c: torch.Tensor,
-    ) -> Dict[str, torch.Tensor]:
-        # Shapes: var [B,N,Fv], check [B,M,Fc], H [M,N]
-        v = self.var_in(var_features)
-        c = self.check_in(check_features)
-        h = h_dense.to(v.device).float()
-        dv = deg_v.to(v.device).float().clamp_min(1.0)
-        dc = deg_c.to(v.device).float().clamp_min(1.0)
+        self.set_graph(h_dense, deg_v, deg_c)
 
-        for vu, cu, vn, cn in zip(self.v_updates, self.c_updates, self.v_norms, self.c_norms):
-            c_to_v = torch.einsum("mn,bmh->bnh", h, c) / dv[None, :, None]
-            v_to_c = torch.einsum("mn,bnh->bmh", h, v) / dc[None, :, None]
-            v = vn(v + self.dropout(vu(torch.cat([v, c_to_v], dim=-1))))
-            c = cn(c + self.dropout(cu(torch.cat([c, v_to_c], dim=-1))))
+    def set_graph(self, h_dense: Optional[np.ndarray], deg_v: Optional[np.ndarray], deg_c: Optional[np.ndarray]) -> None:
+        if h_dense is None:
+            h_dense = np.zeros((self.m, self.n), dtype=np.float32)
+        if deg_v is None:
+            deg_v = np.ones((self.n,), dtype=np.float32)
+        if deg_c is None:
+            deg_c = np.ones((self.m,), dtype=np.float32)
+        self.h_dense = tf.constant(np.asarray(h_dense, dtype=np.float32))
+        self.deg_v = tf.constant(np.maximum(np.asarray(deg_v, dtype=np.float32), 1.0))
+        self.deg_c = tf.constant(np.maximum(np.asarray(deg_c, dtype=np.float32), 1.0))
 
-        bit_logits = self.bit_head(v).squeeze(-1)
+    def call(self, inputs: Dict[str, Any], training: bool = False) -> Dict[str, Any]:
+        var_features = tf.cast(inputs["var_features"], tf.float32)
+        check_features = tf.cast(inputs["check_features"], tf.float32)
+        global_features = tf.cast(inputs["global_features"], tf.float32)
+        heuristic_order = tf.cast(inputs["heuristic_order"], tf.int32)
 
-        # Top-k suspicious tokens plus global token.
-        bsz, n, hid = v.shape
-        k = min(self.top_k_tokens, n)
-        idx = heuristic_order[:, :k].long().clamp(0, n - 1)
-        gather_idx = idx[:, :, None].expand(bsz, k, hid)
-        tokens = torch.gather(v, 1, gather_idx)
-        tokens = self.token_encoder(tokens)
+        v = self.var_drop(self.var_norm(self.var_dense(var_features)), training=training)
+        c = self.check_drop(self.check_norm(self.check_dense(check_features)), training=training)
+        h = tf.cast(self.h_dense, tf.float32)
+        dv = tf.cast(self.deg_v, tf.float32)
+        dc = tf.cast(self.deg_c, tf.float32)
 
-        mean_pool = v.mean(dim=1)
-        max_pool = v.max(dim=1).values
-        token_pool = tokens.mean(dim=1)
-        g = self.global_in(global_features)
-        packet = self.packet_proj(torch.cat([mean_pool + g, max_pool, token_pool], dim=-1))
+        for vu, cu, vn, cn, drop in zip(self.v_updates, self.c_updates, self.v_norms, self.c_norms, self.dropouts):
+            c_to_v = tf.einsum("mn,bmh->bnh", h, c) / dv[None, :, None]
+            v_to_c = tf.einsum("mn,bnh->bmh", h, v) / dc[None, :, None]
+            v = vn(v + drop(vu(tf.concat([v, c_to_v], axis=-1), training=training), training=training))
+            c = cn(c + drop(cu(tf.concat([c, v_to_c], axis=-1), training=training), training=training))
 
-        return {
+        bit_logits = tf.squeeze(self.bit_out(self.bit_d1(v)), axis=-1)
+
+        bsz = tf.shape(v)[0]
+        n = tf.shape(v)[1]
+        hid = tf.shape(v)[2]
+        k = tf.minimum(tf.cast(self.top_k_tokens, tf.int32), n)
+        idx = tf.clip_by_value(heuristic_order[:, :k], 0, n - 1)
+        tokens = tf.gather(v, idx, batch_dims=1)
+        for block in self.token_blocks:
+            tokens = block(tokens, training=training)
+
+        mean_pool = tf.reduce_mean(v, axis=1)
+        max_pool = tf.reduce_max(v, axis=1)
+        token_pool = tf.reduce_mean(tokens, axis=1)
+        g = self.global_norm(self.global_dense(global_features))
+        packet = self.packet_norm(self.packet_d1(tf.concat([mean_pool + g, max_pool, token_pool], axis=-1)))
+
+        out = {
             "bit_logits": bit_logits,
             "segment_logits": self.segment_head(packet),
             "weight_logits": self.weight_head(packet),
-            "standard_logits": self.standard_head(packet).squeeze(-1),
-            "expanded_logits": self.expanded_head(packet).squeeze(-1),
-            "rescue_logits": self.rescue_head(packet).squeeze(-1),
+            "standard_logits": tf.squeeze(self.standard_head(packet), axis=-1),
+            "expanded_logits": tf.squeeze(self.expanded_head(packet), axis=-1),
+            "rescue_logits": tf.squeeze(self.rescue_head(packet), axis=-1),
             "packet_embedding": packet,
-            "candidate_scores": torch.empty((var_features.shape[0], 0), device=var_features.device),
         }
+        if "candidate_features" in inputs:
+            out["candidate_scores"] = self.reranker(packet, inputs["candidate_features"], training=training)
+        else:
+            out["candidate_scores"] = tf.zeros((bsz, 0), dtype=tf.float32)
+        return out
+
+
+def build_rescue_net_from_shapes(shapes: Dict[str, int], cfg: Dict[str, Any], code) -> RescueNet:
+    """Build and graph-initialize the Keras RescueNet from dataset shapes and code."""
+    return RescueNet(
+        num_var_features=int(shapes["num_var_features"]),
+        num_check_features=int(shapes["num_check_features"]),
+        num_global_features=int(shapes["num_global_features"]),
+        n=int(code.n),
+        m=int(code.m),
+        num_segments=int(cfg["model"]["num_segments"]),
+        max_weight_class=int(cfg["model"]["max_weight_class"]),
+        hidden_dim=int(cfg["model"]["graph_hidden_dim"]),
+        graph_layers=int(cfg["model"]["graph_layers"]),
+        top_k_tokens=int(cfg["model"]["top_k_tokens"]),
+        transformer_heads=int(cfg["model"].get("transformer_heads", 4)),
+        transformer_layers=int(cfg["model"].get("transformer_layers", 1)),
+        dropout=float(cfg["train"].get("dropout", 0.05)),
+        candidate_feature_dim=int(shapes.get("candidate_feature_dim", 8)),
+        h_dense=code.h.astype(np.float32),
+        deg_v=np.maximum(code.deg_v.astype(np.float32), 1.0),
+        deg_c=np.maximum(code.deg_c.astype(np.float32), 1.0),
+    )
