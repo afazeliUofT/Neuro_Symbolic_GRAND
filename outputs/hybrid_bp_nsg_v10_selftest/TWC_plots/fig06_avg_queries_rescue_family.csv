@@ -1,2 +1,0 @@
-decoder,snr_db,samples,frame_errors,avg_latency_ms,avg_queries,bler
-hybrid_bp_nsg,0.0,24,7,68.62864770907133,9.333333333333334,0.2916666666666667

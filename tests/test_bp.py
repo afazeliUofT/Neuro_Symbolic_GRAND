@@ -1,15 +1,13 @@
 import numpy as np
-
 from hybrid_bp_nsg.codes.peg_ldpc import build_peg_ldpc
 from hybrid_bp_nsg.decoders.bp import BeliefPropagationDecoder
 
-
-def test_bp_noiseless_decodes():
-    code = build_peg_ldpc(n=32, k=16, variable_degree=3, seed=456, peg_restarts=10)
-    msg = np.zeros(code.k, dtype=np.uint8)
-    cw = code.encode(msg)
-    llr = (1.0 - 2.0 * cw.astype(np.float32)) * 8.0
-    dec = BeliefPropagationDecoder(code, algorithm='spa', max_iters=20)
-    res = dec.decode(llr)
-    assert res.success
-    assert np.array_equal(res.hard, cw)
+def test_bp_clean_codeword():
+    code=build_peg_ldpc(k=16,n=32,seed=5)
+    msg=np.zeros(code.k,dtype=np.uint8)
+    c=code.encode_internal(msg)
+    llr=8*(1-2*c.astype(np.float32))
+    dec=BeliefPropagationDecoder(code,max_iters=5)
+    r=dec.decode(llr)
+    assert r.success
+    assert np.all(r.hard==c)

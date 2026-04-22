@@ -1,157 +1,109 @@
 project:
-  name: hybrid_bp_nsg_nr5g_v10_selftest
-  seed: 31415
-  output_dir: outputs/hybrid_bp_nsg_v10_selftest
+  name: hybrid_bp_nsg_v11_selftest
+  seed: 123
+  output_dir: outputs/hybrid_bp_nsg_v11_selftest
+
 code:
-  family: sionna_nr_ldpc
-  k: 256
-  n: 512
-  align_to_pcm_length: true
-  strict_pcm_check: true
-  seed: 31415
-channel:
-  backend: sionna_tdl
-  allow_fallback: true
-  profile_family: TDL
-  train_profiles:
-  - A
-  eval_profiles:
-  - A
-  delay_spread_s: 1.0e-07
-  carrier_frequency_hz: 3.5e9
-  subcarrier_spacing_hz: 1.5e4
-  min_speed_mps: 0.0
-  max_speed_mps: 3.0
-  normalization: true
+  family: peg_ldpc
+  k: 32
+  n: 64
+  dv: 3
+  dc: 6
+  seed: 123
+
 data:
-  train_samples: 256
-  val_samples: 64
-  train_shards: 1
-  val_shards: 1
-  workers: 1
-  mp_start_method: spawn
-  max_tasks_per_child: 1
-  generation_heartbeat_s: 60
-  snr_min_db: 0.0
-  snr_max_db: 2.0
-  bp_collect_iterations: 10
+  train_samples: 64
+  val_samples: 32
+  shard_size: 32
   sample_failed_only: false
+  bp_collect_iterations: 10
+  failed_snr_db_grid: [0, 1, 2]
+  failed_snr_probs: [0.45, 0.35, 0.20]
+  profiles: ["A"]
+
 train:
-  batch_size: 32
   epochs: 1
+  batch_size: 16
   lr: 0.001
-  torch_threads: 2
-  early_stopping_patience: 1
-  dropout: 0.08
-  bit_pos_weight: 14.0
+  dropout: 0.05
+  bit_pos_weight: 4.0
+  reach_pos_weight: 4.0
+  grad_clip: 1.0
+  resume: true
   loss_weights:
     bit: 1.0
-    segment: 0.25
-    weight: 0.45
-    standard_reachable: 0.3
-    expanded_reachable: 0.32
-    rescueable: 0.55
-    rerank: 0.65
-    rank: 0.25
+    segment: 0.2
+    weight: 0.2
+    standard_reachable: 0.2
+    expanded_reachable: 0.2
+    rescueable: 0.2
+    rerank: 0.2
+    rank: 0.1
+
 model:
-  graph_hidden_dim: 64
-  graph_layers: 3
-  transformer_dim: 64
-  transformer_heads: 4
-  transformer_layers: 2
+  graph_hidden_dim: 32
+  graph_layers: 2
+  transformer_heads: 2
+  transformer_layers: 1
   top_k_tokens: 16
-  num_segments: 8
-  max_weight_class: 12
-  rerank_list_size: 6
+  num_segments: 4
+  max_weight_class: 16
+  rerank_list_size: 8
+
 bp:
-  algorithm: spa
-  main_iterations: 20
-  strong_iterations: 50
   hybrid_main_algorithm: nms
-  hybrid_main_iterations: 20
-  hybrid_micro_algorithm: nms
+  hybrid_main_iterations: 10
+  strong_iterations: 20
+  micro_iterations: 4
   nms_alpha: 0.8
-  llr_clip: 18.0
   early_stop: true
-  micro_iterations: 6
-  micro_flip_scale: 1.22
+
 rescue:
-  enable: true
-  gating_threshold: 0.34
-  expanded_threshold: 0.48
-  hopeless_threshold: 0.05
-  rescue_threshold: 0.22
-  micro_trigger_threshold: 0.42
-  pool_size: 12
-  expanded_pool_size: 18
-  top_k_bits: 12
+  mode: ai
+  target_basis: channel_with_bp_punctures
+  always_rescue_after_bp_fail: true
+  try_bp_basis_fallback: true
+  gating_threshold: -1.0
+  expanded_threshold: 0.2
+  hopeless_threshold: -1.0
+  rescue_threshold: 0.05
+  micro_trigger_threshold: 0.2
+  pool_size: 16
+  expanded_pool_size: 32
+  top_k_bits: 24
   top_k_oscillation: 8
-  top_k_unsat: 8
-  max_standard_weight: 5
-  max_expanded_weight: 10
-  standard_budget: 48
-  expanded_budget: 96
-  direct_budget: 32
-  micro_candidate_cap: 4
-  cluster_templates: true
-  component_bonus: -0.35
-  segment_bonus_scale: 0.35
-  component_focus_scale: 0.18
-  oscillation_focus_scale: 0.1
-  likely_weight_topk: 6
-  weight_penalties:
-  - 0.0
-  - 0.0
-  - 0.1
-  - 0.28
-  - 0.55
-  - 0.9
-  - 1.25
-  - 1.65
-  - 2.0
-  - 2.35
-  - 2.7
-  rerank_prior_scale: 0.14
-  rerank_use_net: true
-  rerank_extra_queries: 16
+  top_k_unsat: 12
+  max_standard_weight: 6
+  max_expanded_weight: 14
+  standard_budget: 200
+  expanded_budget: 600
+  direct_budget: 400
+  combo_pool_w_le3: 18
+  combo_pool_w_gt3: 12
+  enable_osd_repair: true
+  osd_support_sizes: [24, 32, 48, 64]
+  osd_jitter_passes: 1
+  enable_greedy_repair: true
+  greedy_repair_steps: 16
+  greedy_repair_candidates: 4
   enable_micro_bp: true
-  skip_if_main_gap_small: false
-  main_margin_threshold: 0.12
-benchmarks:
-  evaluate_bp: false
-  bp_iteration_list:
-  - 20
-  evaluate_nms: true
-  nms_iteration_list:
-  - 20
-  evaluate_wbf_post: false
-  evaluate_orb_rescue: false
-  evaluate_cdf_rescue: false
-  evaluate_segmented_rescue: false
-  evaluate_hybrid: true
+  micro_candidate_cap: 4
+  likely_weight_topk: 6
+  rerank_extra_queries: 16
+  rerank_use_net: true
+  component_bonus: -0.25
+  segment_bonus_scale: 0.05
+  component_focus_scale: 0.05
+  oscillation_focus_scale: 0.03
+  rerank_prior_scale: 0.10
+  micro_flip_scale: 1.10
+  weight_penalties: [0.0, 0.0, 0.08, 0.20, 0.38, 0.60, 0.85, 1.12, 1.45, 1.80, 2.20, 2.65, 3.15, 3.70, 4.30, 4.95, 5.65, 6.40]
+
 eval:
-  workers: 1
-  mp_start_method: spawn
-  max_tasks_per_child: 1
-  generation_heartbeat_s: 60
-  batch_size: 8
-  max_samples_per_point: 128
-  max_samples_per_point_tail: 512
-  target_frame_errors: 6
-  target_frame_errors_tail: 12
-  min_frame_errors_to_report: 1
-  stop_decoders:
-  - hybrid_bp_nsg
-  - bp_nms_20
-  snr_db_grid:
-  - 0
-  tail_snr_db_grid:
-  - 2
-  profiles:
-  - A
-  saturated_bler_threshold: 0.995
-plots:
-  paper_width_in: 7.2
-  paper_height_in: 4.8
-report:
-  primary_baseline: bp_nms_20
+  samples_per_point: 40
+  tail_samples_per_point: 100
+  target_frame_errors: 10
+  max_samples_per_point: 200
+  stop_decoders: ["hybrid_bp_nsg", "bp_nms_20", "bp_nms_50"]
+  snr_db_grid: [0]
+  profiles: ["A"]

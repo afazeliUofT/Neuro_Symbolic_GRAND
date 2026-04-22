@@ -1,165 +1,140 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from dataclasses import dataclass, field
+from typing import Callable, Optional
+
 import numpy as np
 
-from .gf2 import gf2_rank, h_to_generator, syndrome
+from .gf2 import gf2_nullspace, gf2_rank
 
 
 @dataclass
 class LDPCCode:
     h: np.ndarray
-    g: np.ndarray
-    n: int
     k: int
-    m: int
-    variable_degree: int
-    seed: int
-    edge_vars: np.ndarray
-    edge_checks: np.ndarray
-    var_edges: List[np.ndarray]
-    check_edges: List[np.ndarray]
-    deg_v: np.ndarray
-    deg_c: np.ndarray
+    n: int
+    family: str = "generic_ldpc"
+    rate: float | None = None
+    g: np.ndarray | None = None
+    encoder: Optional[Callable[[np.ndarray], np.ndarray]] = None
+    rm_pattern: np.ndarray | None = None
+    bg: str | None = None
+    metadata: dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        self.h = (np.asarray(self.h, dtype=np.uint8) & 1)
+        self.m, self.n = self.h.shape
+        self.k = int(self.k)
+        self.rate = float(self.rate if self.rate is not None else self.k / max(1, self.n))
+        self.deg_v = np.asarray(self.h.sum(axis=0), dtype=np.float32)
+        self.deg_c = np.asarray(self.h.sum(axis=1), dtype=np.float32)
+        if self.rm_pattern is not None:
+            self.rm_pattern = np.asarray(self.rm_pattern, dtype=np.int8)
+            if self.rm_pattern.size != self.n:
+                raise ValueError("rm_pattern length must equal internal n")
+        if self.g is not None:
+            self.g = (np.asarray(self.g, dtype=np.uint8) & 1)
 
     @property
-    def rate(self) -> float:
-        return self.k / self.n
+    def tx_positions(self) -> np.ndarray:
+        if self.rm_pattern is None:
+            return np.arange(self.n, dtype=np.int32)
+        return np.flatnonzero(self.rm_pattern == 1).astype(np.int32)
+
+    @property
+    def punctured_positions(self) -> np.ndarray:
+        if self.rm_pattern is None:
+            return np.zeros(0, dtype=np.int32)
+        return np.flatnonzero(self.rm_pattern == 0).astype(np.int32)
+
+    @property
+    def transmitted_n(self) -> int:
+        return int(self.tx_positions.size)
+
+    def syndrome(self, bits: np.ndarray) -> np.ndarray:
+        bits = np.asarray(bits, dtype=np.uint8)
+        return (self.h @ bits.reshape(-1).astype(np.uint8)) % 2
+
+    def is_codeword(self, bits: np.ndarray) -> bool:
+        return int(self.syndrome(bits).sum()) == 0
+
+    def encode_internal(self, message: np.ndarray) -> np.ndarray:
+        msg = np.asarray(message, dtype=np.uint8)
+        squeeze = msg.ndim == 1
+        if squeeze:
+            msg = msg[None, :]
+        if self.encoder is not None:
+            out = self.encoder(msg)
+            out = (np.asarray(out, dtype=np.uint8) & 1)
+            return out[0] if squeeze else out
+        if self.g is None:
+            self.g = gf2_nullspace(self.h)
+            if self.g.shape[0] < self.k:
+                raise RuntimeError(f"Nullspace dimension {self.g.shape[0]} < k={self.k}")
+            if self.g.shape[0] > self.k:
+                self.g = self.g[: self.k]
+        out = (msg[:, : self.k].astype(np.uint8) @ self.g[: self.k].astype(np.uint8)) % 2
+        return out[0].astype(np.uint8) if squeeze else out.astype(np.uint8)
 
     def encode(self, message: np.ndarray) -> np.ndarray:
-        message = np.asarray(message, dtype=np.uint8)
-        if message.ndim == 1:
-            if message.size != self.k:
-                raise ValueError(f"Expected message length {self.k}, got {message.size}")
-            return (message @ self.g) % 2
-        if message.ndim == 2:
-            if message.shape[1] != self.k:
-                raise ValueError(f"Expected message shape (*,{self.k}), got {message.shape}")
-            return (message @ self.g) % 2
-        raise ValueError("message must be 1D or 2D")
+        internal = self.encode_internal(message)
+        if internal.ndim == 1:
+            return internal[self.tx_positions]
+        return internal[:, self.tx_positions]
 
-    def syndrome(self, word: np.ndarray) -> np.ndarray:
-        return syndrome(self.h, word)
+    def expand_llr(self, llr_tx: np.ndarray, info_llr: np.ndarray | None = None) -> np.ndarray:
+        llr_tx = np.asarray(llr_tx, dtype=np.float32)
+        squeeze = llr_tx.ndim == 1
+        if squeeze:
+            llr_tx = llr_tx[None, :]
+        out = np.zeros((llr_tx.shape[0], self.n), dtype=np.float32)
+        tx_pos = self.tx_positions
+        if llr_tx.shape[1] != tx_pos.size:
+            raise ValueError(f"expected {tx_pos.size} transmitted LLRs, got {llr_tx.shape[1]}")
+        out[:, tx_pos] = llr_tx
+        if info_llr is not None:
+            info_llr = np.asarray(info_llr, dtype=np.float32)
+            if info_llr.ndim == 1:
+                info_llr = info_llr[None, :]
+            punc = self.punctured_positions
+            punc_info = punc[punc < min(self.k, info_llr.shape[1])]
+            if punc_info.size:
+                out[:, punc_info] = info_llr[:, punc_info]
+        return out[0] if squeeze else out
 
-
-def _next_checks_bfs(var_neighbors: List[List[int]], check_neighbors: List[List[int]], v: int) -> set[int]:
-    reached_checks = set()
-    frontier_vars = {v}
-    frontier_checks = set()
-    visited_vars = {v}
-    visited_checks = set()
-    while True:
-        next_checks = set()
-        for vv in frontier_vars:
-            for cc in var_neighbors[vv]:
-                if cc not in visited_checks:
-                    next_checks.add(cc)
-        if not next_checks:
-            break
-        frontier_checks = next_checks
-        visited_checks |= next_checks
-        reached_checks |= next_checks
-        next_vars = set()
-        for cc in frontier_checks:
-            for vv in check_neighbors[cc]:
-                if vv not in visited_vars:
-                    next_vars.add(vv)
-        if not next_vars:
-            break
-        frontier_vars = next_vars
-        visited_vars |= next_vars
-        if len(reached_checks) == len(check_neighbors):
-            break
-    return reached_checks
+    def info_bits(self, internal_bits: np.ndarray) -> np.ndarray:
+        arr = np.asarray(internal_bits, dtype=np.uint8)
+        return arr[..., : self.k]
 
 
-def build_peg_ldpc(n: int, k: int, variable_degree: int = 3, check_degree_hint: int = 6, seed: int = 31415,
-                   peg_restarts: int = 20) -> LDPCCode:
-    m = n - k
+def _random_regular_h(k: int, n: int, dv: int, seed: int) -> np.ndarray:
     rng = np.random.default_rng(seed)
-    best_h = None
-    best_score = None
-    for restart in range(peg_restarts):
-        var_neighbors: List[List[int]] = [[] for _ in range(n)]
-        check_neighbors: List[List[int]] = [[] for _ in range(m)]
-        check_deg = np.zeros(m, dtype=np.int32)
-        for v in range(n):
-            for e_idx in range(variable_degree):
-                connected = set(var_neighbors[v])
-                if e_idx == 0:
-                    min_deg = int(check_deg.min())
-                    candidates = [c for c in range(m) if check_deg[c] == min_deg and c not in connected]
-                else:
-                    reached = _next_checks_bfs(var_neighbors, check_neighbors, v)
-                    candidates = [c for c in range(m) if c not in reached and c not in connected]
-                    if not candidates:
-                        min_deg = int(np.min([check_deg[c] for c in range(m) if c not in connected]))
-                        candidates = [c for c in range(m) if c not in connected and check_deg[c] == min_deg]
-                if not candidates:
-                    candidates = [c for c in range(m) if c not in connected]
-                degs = np.array([check_deg[c] for c in candidates])
-                min_deg = degs.min()
-                pool = [c for c in candidates if check_deg[c] == min_deg]
-                chosen = int(rng.choice(pool))
-                var_neighbors[v].append(chosen)
-                check_neighbors[chosen].append(v)
-                check_deg[chosen] += 1
+    m = n - k
+    if m <= 0:
+        raise ValueError("n must be larger than k")
+    best = None
+    for attempt in range(200):
         h = np.zeros((m, n), dtype=np.uint8)
-        for v, checks in enumerate(var_neighbors):
-            h[checks, v] = 1
+        for v in range(n):
+            rows = rng.choice(m, size=min(dv, m), replace=False)
+            h[rows, v] = 1
+        # Ensure no empty checks.
+        for r in np.flatnonzero(h.sum(axis=1) == 0):
+            h[r, int(rng.integers(0, n))] = 1
         rank = gf2_rank(h)
-        score = (rank, -int(np.var(check_deg)), -int(np.max(check_deg)), int(np.min(check_deg)))
-        if best_score is None or score > best_score:
-            best_score = score
-            best_h = h.copy()
+        if best is None or rank > gf2_rank(best):
+            best = h
         if rank == m:
-            break
-    if best_h is None:
-        raise RuntimeError("Failed to build LDPC parity-check matrix")
-    h = best_h
-    if gf2_rank(h) < m:
-        raise RuntimeError("Constructed H is not full rank; increase peg_restarts or change seed")
-    g = h_to_generator(h)
-    if g.shape[0] != k:
-        raise RuntimeError(f"Expected generator with {k} rows, got {g.shape[0]}")
-    edge_vars = []
-    edge_checks = []
-    var_edges: List[List[int]] = [[] for _ in range(n)]
-    check_edges: List[List[int]] = [[] for _ in range(m)]
-    edge_idx = 0
-    for c in range(m):
-        for v in np.flatnonzero(h[c]):
-            edge_vars.append(v)
-            edge_checks.append(c)
-            var_edges[v].append(edge_idx)
-            check_edges[c].append(edge_idx)
-            edge_idx += 1
-    return LDPCCode(
-        h=h,
-        g=g,
-        n=n,
-        k=k,
-        m=m,
-        variable_degree=variable_degree,
-        seed=seed,
-        edge_vars=np.array(edge_vars, dtype=np.int32),
-        edge_checks=np.array(edge_checks, dtype=np.int32),
-        var_edges=[np.array(x, dtype=np.int32) for x in var_edges],
-        check_edges=[np.array(x, dtype=np.int32) for x in check_edges],
-        deg_v=np.array([len(x) for x in var_edges], dtype=np.int32),
-        deg_c=np.array([len(x) for x in check_edges], dtype=np.int32),
-    )
+            return h
+    return best
 
 
-def code_summary(code: LDPCCode) -> Dict[str, int | float]:
-    return {
-        "n": code.n,
-        "k": code.k,
-        "m": code.m,
-        "rate": code.rate,
-        "edges": int(code.edge_vars.size),
-        "avg_check_degree": float(code.deg_c.mean()),
-        "max_check_degree": int(code.deg_c.max()),
-        "min_check_degree": int(code.deg_c.min()),
-    }
+def build_peg_ldpc(k: int = 32, n: int = 64, dv: int = 3, dc: int | None = None, seed: int = 1234, **_) -> LDPCCode:
+    # This is a compact random regular LDPC builder used for selftests and environments
+    # where Sionna is not installed. It is not intended to reproduce a standard code.
+    h = _random_regular_h(int(k), int(n), int(dv), int(seed))
+    g = gf2_nullspace(h)
+    if g.shape[0] < int(k):
+        raise RuntimeError(f"generated H has nullspace dimension {g.shape[0]}, expected at least k={k}")
+    g = g[: int(k)]
+    return LDPCCode(h=h, k=int(k), n=int(n), family="peg_ldpc", rate=float(k) / float(n), g=g)

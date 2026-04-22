@@ -1,16 +1,13 @@
-#!/bin/bash
-#SBATCH --account=def-rsadve
-#SBATCH --job-name=hyb_bp_nsg_v10_gen
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=96G
+#!/usr/bin/env bash
+#SBATCH --job-name=hyb-grand-v11
 #SBATCH --time=16:00:00
-#SBATCH --output=slurm-hyb-bp-nsg-gen-%j.out
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --output=slurm-%x-%j.out
+
 set -euo pipefail
-ROOT=/home/rsadve1/scratch/Neuro_Symbolic_GRAND
-cd "$ROOT"
-source .venv/bin/activate
-export PYTHONPATH="$ROOT:${PYTHONPATH:-}"
-export CUDA_VISIBLE_DEVICES=""
-export TF_CPP_MIN_LOG_LEVEL=2
-python -m hybrid_bp_nsg.cli --config configs/fir_hybrid_bp_nsg_full.yaml generate
-bash scripts/status.sh outputs/hybrid_bp_nsg_v10_full
+cd "${SLURM_SUBMIT_DIR:-$PWD}"
+if [ -d ".venv" ]; then source .venv/bin/activate; fi
+export PYTHONPATH="$PWD:${PYTHONPATH:-}"
+python -m pip install -e . --no-deps --quiet
+python -m hybrid_bp_nsg.cli generate --config configs/fir_hybrid_bp_nsg_full.yaml

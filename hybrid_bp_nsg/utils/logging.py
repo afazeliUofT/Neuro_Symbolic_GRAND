@@ -1,21 +1,14 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
+import sys
 
 
-def get_logger(name: str, log_file: str | Path | None = None) -> logging.Logger:
+def get_logger(name: str = "hybrid_bp_nsg", level: int = logging.INFO) -> logging.Logger:
     logger = logging.getLogger(name)
-    if logger.handlers:
-        return logger
-    logger.setLevel(logging.INFO)
-    fmt = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s", "%Y-%m-%d %H:%M:%S")
-    sh = logging.StreamHandler()
-    sh.setFormatter(fmt)
-    logger.addHandler(sh)
-    if log_file is not None:
-        Path(log_file).parent.mkdir(parents=True, exist_ok=True)
-        fh = logging.FileHandler(log_file)
-        fh.setFormatter(fmt)
-        logger.addHandler(fh)
+    if not logger.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s"))
+        logger.addHandler(handler)
+    logger.setLevel(level)
     return logger

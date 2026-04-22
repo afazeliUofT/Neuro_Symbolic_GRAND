@@ -1,11 +1,17 @@
-#!/bin/bash
-set -euo pipefail
-ROOT="${1:-outputs/hybrid_bp_nsg_v10_full}"
-echo "Status for $ROOT"
-echo "Generated train shards: $(find "$ROOT/datasets/train" -name 'train_shard_*.npz' 2>/dev/null | wc -l | tr -d ' ')"
-echo "Generated val shards:   $(find "$ROOT/datasets/val" -name 'val_shard_*.npz' 2>/dev/null | wc -l | tr -d ' ')"
-[ -f "$ROOT/training/training_history_partial.csv" ] && tail -n 5 "$ROOT/training/training_history_partial.csv" || true
-[ -f "$ROOT/training/training_summary.json" ] && cat "$ROOT/training/training_summary.json" || true
-echo "Completed eval points: $(find "$ROOT/evaluation" -name summary.csv 2>/dev/null | wc -l | tr -d ' ')"
-[ -f "$ROOT/reports/report.md" ] && echo "Report exists: $ROOT/reports/report.md" || true
-[ -f "$ROOT/TWC_plots/manifest.csv" ] && echo "TWC plots manifest exists: $ROOT/TWC_plots/manifest.csv" || true
+#!/usr/bin/env bash
+set -u
+OUT="${1:-outputs/hybrid_bp_nsg_v11_channel_aligned_full}"
+echo "Output dir: $OUT"
+echo "--- artifacts ---"
+find "$OUT/artifacts" -maxdepth 1 -type f -print 2>/dev/null | sort || true
+echo "--- dataset shards ---"
+echo "train: $(find "$OUT/datasets/train" -name '*.npz' 2>/dev/null | wc -l | tr -d ' ')"
+echo "val:   $(find "$OUT/datasets/val" -name '*.npz' 2>/dev/null | wc -l | tr -d ' ')"
+echo "--- checkpoints ---"
+ls -lh "$OUT/checkpoints" 2>/dev/null || true
+echo "--- training history tail ---"
+tail -n 5 "$OUT/training/training_history.csv" 2>/dev/null || true
+echo "--- completed evaluation points ---"
+find "$OUT/evaluation" -name summary.csv 2>/dev/null | sort || true
+echo "--- report ---"
+ls -lh "$OUT/reports" 2>/dev/null || true

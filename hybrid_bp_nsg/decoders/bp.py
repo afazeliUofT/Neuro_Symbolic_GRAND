@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+
 import numpy as np
 
 from ..codes.peg_ldpc import LDPCCode
-from ..utils.math_utils import clip_llr
 
 
 @dataclass
@@ -15,133 +15,124 @@ class BPDecodeResult:
     posterior_llr: np.ndarray
     syndrome: np.ndarray
     iterations_used: int
-    elapsed_ms: float
     trace: Optional[Dict[str, np.ndarray]] = None
 
 
 class BeliefPropagationDecoder:
-    def __init__(self, code: LDPCCode, algorithm: str = "spa", max_iters: int = 20,
-                 nms_alpha: float = 0.8, llr_clip: float = 18.0, early_stop: bool = True):
+    """Flooding normalized min-sum / sum-product LDPC decoder.
+
+    The implementation is intentionally explicit and robust for moderate-length research
+    codes such as the 5G internal n=576 graph used here.
+    """
+
+    def __init__(
+        self,
+        code: LDPCCode,
+        max_iters: int = 20,
+        algorithm: str = "nms",
+        nms_alpha: float = 0.8,
+        early_stop: bool = True,
+    ):
         self.code = code
-        self.algorithm = algorithm.lower()
         self.max_iters = int(max_iters)
+        self.algorithm = str(algorithm).lower()
         self.nms_alpha = float(nms_alpha)
-        self.llr_clip = float(llr_clip)
         self.early_stop = bool(early_stop)
+        self._build_edges()
+
+    def _build_edges(self) -> None:
+        h = self.code.h
+        rows, cols = np.nonzero(h)
+        self.e_check = rows.astype(np.int32)
+        self.e_var = cols.astype(np.int32)
+        self.num_edges = int(len(rows))
+        self.check_edges: List[np.ndarray] = [np.flatnonzero(self.e_check == c).astype(np.int32) for c in range(self.code.m)]
+        self.var_edges: List[np.ndarray] = [np.flatnonzero(self.e_var == v).astype(np.int32) for v in range(self.code.n)]
 
     def decode(self, llr: np.ndarray, max_iters: Optional[int] = None, collect_trace: bool = False) -> BPDecodeResult:
-        import time
-        start = time.perf_counter()
-        llr = clip_llr(np.asarray(llr, dtype=np.float32), self.llr_clip)
-        max_iters = self.max_iters if max_iters is None else int(max_iters)
-        E = self.code.edge_vars.size
-        v2c = llr[self.code.edge_vars].astype(np.float32).copy()
-        c2v = np.zeros(E, dtype=np.float32)
+        llr = np.asarray(llr, dtype=np.float32).reshape(-1)
+        if llr.size != self.code.n:
+            raise ValueError(f"expected internal LLR length {self.code.n}, got {llr.size}")
+        max_iters = int(max_iters or self.max_iters)
+        q = llr[self.e_var].astype(np.float32).copy()  # variable-to-check
+        r = np.zeros_like(q, dtype=np.float32)          # check-to-variable
         posterior = llr.copy()
         hard = (posterior < 0).astype(np.uint8)
-        syn = (self.code.h @ hard) % 2
-        trace: Dict[str, List[np.ndarray]] = {
-            "posterior_llr": [],
-            "hard": [],
-            "syndrome": [],
-        } if collect_trace else {}
+        syndrome = self.code.syndrome(hard)
+
+        trace_llr = []
+        trace_hard = []
+        trace_syn = []
         if collect_trace:
-            trace["posterior_llr"].append(posterior.copy())
-            trace["hard"].append(hard.copy())
-            trace["syndrome"].append(syn.copy())
-        if syn.sum() == 0:
-            elapsed_ms = (time.perf_counter() - start) * 1e3
-            return BPDecodeResult(True, hard, posterior, syn, 0, elapsed_ms,
-                                  self._stack_trace(trace) if collect_trace else None)
+            trace_llr.append(posterior.copy())
+            trace_hard.append(hard.copy())
+            trace_syn.append(syndrome.copy())
+
+        success = int(syndrome.sum()) == 0
+        it_used = 0
+        if success and self.early_stop:
+            return BPDecodeResult(True, hard, posterior, syndrome, 0, {
+                "posterior_llr": np.asarray(trace_llr, dtype=np.float32),
+                "hard": np.asarray(trace_hard, dtype=np.uint8),
+                "syndrome": np.asarray(trace_syn, dtype=np.uint8),
+            } if collect_trace else None)
 
         for it in range(1, max_iters + 1):
-            # Check update
-            if self.algorithm == "spa":
-                for c, edges in enumerate(self.code.check_edges):
-                    msgs = np.clip(v2c[edges], -18.0, 18.0)
-                    tanh_vals = np.tanh(msgs / 2.0)
-                    abs_vals = np.clip(np.abs(tanh_vals), 1e-12, 1 - 1e-12)
-                    sign_prod = np.prod(np.sign(tanh_vals))
-                    prod_abs = np.prod(abs_vals)
-                    for idx_local, e in enumerate(edges):
-                        val = sign_prod * np.sign(tanh_vals[idx_local]) * (prod_abs / abs_vals[idx_local])
-                        c2v[e] = 2.0 * np.arctanh(np.clip(val, -0.999999, 0.999999))
-            elif self.algorithm in {"nms", "minsum", "normalized_minsum"}:
-                for c, edges in enumerate(self.code.check_edges):
-                    msgs = v2c[edges]
-                    signs = np.sign(msgs)
-                    signs[signs == 0] = 1.0
-                    abs_msgs = np.abs(msgs)
-                    order = np.argsort(abs_msgs)
-                    min1 = abs_msgs[order[0]]
-                    min2 = abs_msgs[order[1]] if abs_msgs.size > 1 else min1
-                    sign_prod = np.prod(signs)
-                    for idx_local, e in enumerate(edges):
-                        mag = min2 if idx_local == order[0] else min1
-                        c2v[e] = self.nms_alpha * sign_prod * signs[idx_local] * mag
-            else:
-                raise ValueError(f"Unsupported BP algorithm: {self.algorithm}")
+            # Check-node update.
+            for edges in self.check_edges:
+                if edges.size == 0:
+                    continue
+                vals = q[edges]
+                signs = np.sign(vals)
+                signs[signs == 0] = 1.0
+                abs_vals = np.abs(vals)
+                prod_sign = np.prod(signs)
+                if edges.size == 1:
+                    mins = np.array([0.0], dtype=np.float32)
+                    out_sign = np.array([prod_sign], dtype=np.float32)
+                else:
+                    order = np.argsort(abs_vals)
+                    min1 = abs_vals[order[0]]
+                    min2 = abs_vals[order[1]]
+                    mins = np.full(edges.size, min1, dtype=np.float32)
+                    mins[order[0]] = min2
+                    out_sign = prod_sign * signs
+                if self.algorithm in {"nms", "normalized_min_sum", "normalized-min-sum"}:
+                    r[edges] = self.nms_alpha * out_sign * mins
+                elif self.algorithm in {"ms", "minsum", "min_sum"}:
+                    r[edges] = out_sign * mins
+                else:
+                    # Sum-product check update with clipping for stability.
+                    t = np.tanh(np.clip(vals, -20.0, 20.0) / 2.0)
+                    for j, e in enumerate(edges):
+                        prod = np.prod(np.delete(t, j)) if edges.size > 1 else 1.0
+                        prod = float(np.clip(prod, -0.999999, 0.999999))
+                        r[e] = 2.0 * np.arctanh(prod)
 
-            # Variable update / posterior
-            for v, edges in enumerate(self.code.var_edges):
-                total = llr[v] + np.sum(c2v[edges])
-                posterior[v] = total
-                for e in edges:
-                    v2c[e] = total - c2v[e]
-
+            # Variable-node update and posterior.
+            posterior = llr.copy()
+            np.add.at(posterior, self.e_var, r)
             hard = (posterior < 0).astype(np.uint8)
-            syn = (self.code.h @ hard) % 2
+            syndrome = self.code.syndrome(hard)
+            success = int(syndrome.sum()) == 0
+            it_used = it
+
             if collect_trace:
-                trace["posterior_llr"].append(posterior.copy())
-                trace["hard"].append(hard.copy())
-                trace["syndrome"].append(syn.copy())
-            if self.early_stop and syn.sum() == 0:
-                elapsed_ms = (time.perf_counter() - start) * 1e3
-                return BPDecodeResult(True, hard, posterior.copy(), syn.copy(), it, elapsed_ms,
-                                      self._stack_trace(trace) if collect_trace else None)
-        elapsed_ms = (time.perf_counter() - start) * 1e3
-        return BPDecodeResult(False, hard, posterior.copy(), syn.copy(), max_iters, elapsed_ms,
-                              self._stack_trace(trace) if collect_trace else None)
+                trace_llr.append(posterior.copy())
+                trace_hard.append(hard.copy())
+                trace_syn.append(syndrome.copy())
 
-    @staticmethod
-    def _stack_trace(trace: Dict[str, List[np.ndarray]]) -> Dict[str, np.ndarray]:
-        if not trace:
-            return {}
-        out: Dict[str, np.ndarray] = {}
-        for key, values in trace.items():
-            out[key] = np.stack(values, axis=0)
-        return out
+            # q_e = posterior[v] - r_e
+            q = posterior[self.e_var] - r
 
-
-class WeightedBitFlippingPostProcessor:
-    def __init__(self, code: LDPCCode, max_steps: int = 10, damp: float = 0.2):
-        self.code = code
-        self.max_steps = int(max_steps)
-        self.damp = float(damp)
-
-    def decode(self, llr: np.ndarray, initial_hard: np.ndarray) -> BPDecodeResult:
-        import time
-        start = time.perf_counter()
-        llr = np.asarray(llr, dtype=np.float32)
-        hard = np.asarray(initial_hard, dtype=np.uint8).copy()
-        for step in range(1, self.max_steps + 1):
-            syn = (self.code.h @ hard) % 2
-            if syn.sum() == 0:
-                elapsed_ms = (time.perf_counter() - start) * 1e3
-                posterior = llr * (1.0 - 2.0 * hard)
-                return BPDecodeResult(True, hard.copy(), posterior, syn, step - 1, elapsed_ms)
-            scores = np.zeros(self.code.n, dtype=np.float32)
-            unsat_checks = np.flatnonzero(syn)
-            if unsat_checks.size == 0:
+            if success and self.early_stop:
                 break
-            for c in unsat_checks:
-                vars_c = np.flatnonzero(self.code.h[c])
-                reliab = np.maximum(np.min(np.abs(llr[vars_c])), 1e-3)
-                scores[vars_c] += 1.0 / reliab
-            scores -= self.damp * np.abs(llr)
-            flip_idx = int(np.argmax(scores))
-            hard[flip_idx] ^= 1
-        syn = (self.code.h @ hard) % 2
-        elapsed_ms = (time.perf_counter() - start) * 1e3
-        posterior = llr * (1.0 - 2.0 * hard)
-        return BPDecodeResult(bool(syn.sum() == 0), hard.copy(), posterior, syn, self.max_steps, elapsed_ms)
+
+        trace = None
+        if collect_trace:
+            trace = {
+                "posterior_llr": np.asarray(trace_llr, dtype=np.float32),
+                "hard": np.asarray(trace_hard, dtype=np.uint8),
+                "syndrome": np.asarray(trace_syn, dtype=np.uint8),
+            }
+        return BPDecodeResult(bool(success), hard.astype(np.uint8), posterior.astype(np.float32), syndrome.astype(np.uint8), it_used, trace)

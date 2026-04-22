@@ -3,19 +3,16 @@ from __future__ import annotations
 import numpy as np
 
 
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 + np.exp(-x))
+def ebn0_db_to_noise_var(ebn0_db: float, rate: float = 1.0) -> float:
+    ebn0 = 10.0 ** (float(ebn0_db) / 10.0)
+    return 1.0 / max(1e-12, 2.0 * rate * ebn0)
 
 
-def softmax(x: np.ndarray, axis: int = -1) -> np.ndarray:
-    x = x - np.max(x, axis=axis, keepdims=True)
-    ex = np.exp(x)
-    return ex / np.sum(ex, axis=axis, keepdims=True)
-
-
-def clip_llr(x: np.ndarray, clip: float = 18.0) -> np.ndarray:
-    return np.clip(x, -clip, clip)
-
-
-def bpsk_from_bits(bits: np.ndarray) -> np.ndarray:
-    return 1.0 - 2.0 * bits.astype(np.float32)
+def stable_sigmoid(x):
+    x = np.asarray(x, dtype=np.float32)
+    out = np.empty_like(x)
+    pos = x >= 0
+    out[pos] = 1.0 / (1.0 + np.exp(-x[pos]))
+    ex = np.exp(x[~pos])
+    out[~pos] = ex / (1.0 + ex)
+    return out

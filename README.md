@@ -1,42 +1,39 @@
-# Hybrid BP + AI-guided GRAND rescue on Sionna 5G NR LDPC — v10 resumable package
+# Hybrid BP + Channel-Aligned AI/Tanner-GRAND Rescue — v11.1
 
-This standalone package implements PATH 2:
+This is a replacement package for the previous `Neuro_Symbolic_GRAND` pipeline.
 
-> A hybrid receiver where NMS/BP is the main LDPC decoder and a graph-aware AI-guided GRAND rescue stage is invoked only on residual LDPC failures.
+The main conceptual change is that the rescue stage is now **channel-aligned**:
 
-The package is designed for FIR/Compute Canada runs with a 16-hour wall-time limit. The major change in v10 is **safe resumption**:
+* The old package trained and searched for the mask `BP_final_hard XOR true_codeword`.
+  On your failed BP states this mask had mean weight about 88–89 bits, so a low/medium-weight
+  GRAND search could only reach a tiny fraction of failures.
+* v11 trains and searches for the **channel noise / channel-basis correction**
+  `GRAND_base_hard XOR true_codeword`, where `GRAND_base_hard` is the channel hard decision
+  on transmitted positions and the BP posterior decision on punctured positions.
+* The rescue decoder applies candidate masks to this GRAND base, not to the failed BP hard output.
+* v11 fixes the AI rank-prior indexing bug and adds a Tanner-syndrome OSD repair stage:
+  it solves `H[:, support] e = syndrome(base)` over GF(2) on increasingly large low-cost supports.
+  This provides valid codeword candidates without enumerating impossible high-weight masks.
 
-- generation resumes at shard granularity and skips already completed `.npz` shards;
-- training resumes from `checkpoints/rescue_net_latest.pt` with optimizer and scheduler state;
-- evaluation resumes at profile/SNR-point granularity and skips completed `summary.csv` + `raw_records.csv.gz` points;
-- reporting can be rerun at any time from completed evaluation outputs;
-- the full `pipeline` action is safe to submit repeatedly after wall-time cancellation.
-
-## Important output dirs
-
-```text
-outputs/hybrid_bp_nsg_v10_selftest/
-outputs/hybrid_bp_nsg_v10_smoke/
-outputs/hybrid_bp_nsg_v10_full/
-outputs/hybrid_bp_nsg_v10_tail/
-```
-
-## Run order
+## Install / run
 
 ```bash
-source .venv/bin/activate
+cd /home/rsadve1/scratch
+rm -rf Neuro_Symbolic_GRAND
+unzip Hybrid_GRAND_v11_1_channel_aligned_INSTALLFIX.zip -d Neuro_Symbolic_GRAND
+cd Neuro_Symbolic_GRAND
+
+# Use your existing FIR environment or create one.
+# The original SLURM scripts assume .venv exists; adapt module loads as needed.
+python -m pip install -e . --no-deps
+python scripts/check_runtime_deps.py || true
+
 export PYTHONPATH="$PWD:${PYTHONPATH}"
-pytest -q
-sbatch slurm/fir_hybrid_bp_nsg_selftest.sbatch
+python -m hybrid_bp_nsg.cli selftest --config configs/fir_hybrid_bp_nsg_selftest.yaml
+python -m hybrid_bp_nsg.cli pipeline --config configs/fir_hybrid_bp_nsg_smoke.yaml
 ```
 
-After selftest succeeds, run either the all-in-one resumable pipeline repeatedly:
-
-```bash
-sbatch slurm/fir_hybrid_bp_nsg_pipeline.sbatch
-```
-
-or run explicit stages:
+For a full 5G run:
 
 ```bash
 sbatch slurm/fir_hybrid_bp_nsg_generate.sbatch
@@ -44,56 +41,59 @@ sbatch slurm/fir_hybrid_bp_nsg_train.sbatch
 sbatch slurm/fir_hybrid_bp_nsg_evaluate_report.sbatch
 ```
 
-After full evaluation/report completes:
+or run a resumable all-in-one job:
 
 ```bash
-sbatch slurm/fir_hybrid_bp_nsg_tail_eval.sbatch
+sbatch slurm/fir_hybrid_bp_nsg_pipeline.sbatch
 ```
 
-## Checking status
+## FIR installation note
+
+This v11.1 package intentionally uses **no mandatory pip dependencies** in `pyproject.toml`. The previous v11.0 zip declared `sionna>=0.19`, which lets pip consider the new Sionna 2.x line and older Sionna 0.x/1.x releases at the same time. On Compute Canada this can trigger very long resolver backtracking and PyYAML source-build failures before the research code even runs.
+
+Use:
 
 ```bash
-bash scripts/status.sh outputs/hybrid_bp_nsg_v10_full
+python -m pip install -e . --no-deps
 ```
 
-This reports shard counts, partial training history, completed evaluation points, and whether reports/TWC plots exist.
+The Slurm scripts in this zip already use `--no-deps`. Install Sionna/TensorFlow/PyTorch through your known-good FIR environment or modules. For this project, the code supports the legacy TensorFlow-based Sionna 0.19.x import paths and also tries the newer `sionna.phy` import path.
 
-## Why generation can be long
+## Output directories
 
-The full training set is built from **failed NMS-20 states**. Since BP/NMS succeeds often, especially at high SNR, the generator may simulate many more packets than the number of kept training examples. v10 therefore uses smaller shards and a failure-biased training SNR distribution so progress is saved frequently.
-
-## Publication plots
-
-When the full report stage completes, it creates:
+The default full config writes to:
 
 ```text
-outputs/hybrid_bp_nsg_v10_full/TWC_plots/manifest.csv
-outputs/hybrid_bp_nsg_v10_full/TWC_plots/README.md
-outputs/hybrid_bp_nsg_v10_full/TWC_plots/*.png
-outputs/hybrid_bp_nsg_v10_full/TWC_plots/*.pdf
-outputs/hybrid_bp_nsg_v10_full/TWC_plots/*.csv
+outputs/hybrid_bp_nsg_v11_channel_aligned_full/
 ```
 
-`README.md` embeds the PNGs for direct GitHub viewing. All BLER curves use log scale.
+The smoke and selftest configs write to separate output directories.
 
-## Current hybrid iteration structure
+## What changed relative to v10
 
-- Hybrid main LDPC stage: NMS, max 20 iterations
-- Strong reference baseline: NMS, max 50 iterations
-- Hybrid micro-BP refinement: NMS, max 8 iterations on a tiny AI-ranked shortlist
-- Early syndrome stopping is enabled.
+1. **Correct target basis**  
+   Training labels now target the GRAND base correction instead of the failed BP residual.
 
-## Monte Carlo policy
+2. **Correct candidate basis**  
+   Direct GRAND, AI-GRAND, and OSD repair candidates are applied to the channel/BP-puncture base.
 
-The evaluation runs sequential Monte Carlo per profile/SNR point:
+3. **Puncture-aware 5G internal codeword reconstruction**  
+   `encode_internal()` fills punctured systematic positions from the input message instead of leaving
+   them at zero. Random nonzero syndrome validation is performed when `strict_pcm_check: true`.
 
-- stop when target frame errors are reached for target decoders, or when the sample cap is reached;
-- mark a BLER point as plot-eligible only if it has at least the configured minimum number of frame errors.
+4. **Rank-prior bug fix**  
+   The AI bit-cost rank prior uses the inverse heuristic-rank vector per variable index.
 
-## Notes on standard Sionna NR LDPC
+5. **No aggressive skip gate by default**  
+   After BP failure, rescue is attempted by default. The network can still rank bits and choose
+   search mode, but it is not allowed to skip almost everything.
 
-The code path uses Sionna's built-in NR LDPC encoder path and the corresponding internal graph representation. The actual instantiated code/graph dimensions are written to:
+6. **Tanner-syndrome OSD repair**  
+   Valid candidates are generated by solving syndrome equations on low-cost supports, which attacks
+   graph/trapping failures directly instead of requiring the exact BP residual to be low weight.
 
-```text
-outputs/.../artifacts/code_summary.json
-```
+## Important caveat
+
+This package is a research implementation. It is designed to make the second stage address the
+actual bottleneck exposed by your probes. It should be evaluated against `bp_nms_20` and `bp_nms_50`
+using the included scripts before drawing final BLER conclusions.

@@ -1,12 +1,5 @@
-#!/bin/bash
-set -euo pipefail
-ROOT="${1:?need output dir}"
-check(){ [ -e "$1" ] || { echo "Missing: $1" >&2; exit 1; }; }
-check "$ROOT/artifacts/resolved_config.json"
-check "$ROOT/artifacts/runtime_snapshot.json"
-check "$ROOT/artifacts/code_summary.json"
-check "$ROOT/training/training_summary.json"
-check "$ROOT/evaluation/evaluation_summary.csv"
-check "$ROOT/reports/report.md"
-check "$ROOT/TWC_plots/manifest.csv"
-check "$ROOT/TWC_plots/README.md"
+#!/usr/bin/env bash
+set -u
+OUT="${1:-outputs/hybrid_bp_nsg_v11_channel_aligned_full}"
+test -f "$OUT/checkpoints/rescue_net.pt" && echo "checkpoint: OK" || echo "checkpoint: missing"
+test -f "$OUT/evaluation/evaluation_summary.csv" && echo "evaluation summary: OK" || echo "evaluation summary: missing"

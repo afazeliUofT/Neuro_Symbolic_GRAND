@@ -3,10 +3,18 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hybrid-bp-nsg"
-version = "0.1.0"
-description = "Hybrid BP + AI-guided GRAND rescue stage for short LDPC-like codes over Sionna channels"
-requires-python = ">=3.12"
+name = "hybrid-bp-nsg-channel-aligned"
+version = "11.1.0"
+description = "Channel-aligned hybrid BP + AI/Tanner-guided GRAND rescue for 5G LDPC"
+requires-python = ">=3.10"
+# HPC-safe: do not force pip to resolve/install heavy numerical dependencies.
+# Use the existing FIR/Compute Canada environment, then run `pip install -e . --no-deps`.
+dependencies = []
+
+[project.optional-dependencies]
+# Optional convenience extras only. On FIR/Compute Canada, prefer module/venv-managed packages.
+legacy-sionna = ["sionna==0.19.2"]
+sionna2-no-rt = ["sionna-no-rt>=2.0,<2.1"]
 
 [tool.setuptools.packages.find]
 include = ["hybrid_bp_nsg*"]

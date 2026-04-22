@@ -1,0 +1,10 @@
+{
+  "family": "peg_ldpc",
+  "n_internal": 64,
+  "n_transmitted": 64,
+  "k": 32,
+  "m": 32,
+  "edges": 192,
+  "punctured": 0,
+  "metadata": {}
+}

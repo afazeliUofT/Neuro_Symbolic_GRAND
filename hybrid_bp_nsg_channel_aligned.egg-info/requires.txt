@@ -1,0 +1,6 @@
+
+[legacy-sionna]
+sionna==0.19.2
+
+[sionna2-no-rt]
+sionna-no-rt<2.1,>=2.0

@@ -1,194 +1,130 @@
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 from typing import Any, Dict
-import copy
-import yaml
 
-
-def _deep_update(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any]:
-    for k, v in src.items():
-        if isinstance(v, dict) and isinstance(dst.get(k), dict):
-            _deep_update(dst[k], v)
-        else:
-            dst[k] = v
-    return dst
+try:
+    import yaml
+except Exception:  # pragma: no cover
+    yaml = None
 
 
 DEFAULTS: Dict[str, Any] = {
-    "project": {
-        "name": "hybrid_bp_nsg_nr5g_v9_resumable",
-        "seed": 31415,
-        "output_dir": "outputs/hybrid_bp_nsg_v9_full",
-    },
-    "code": {
-        "family": "sionna_nr_ldpc",
-        "k": 256,
-        "n": 512,
-        "align_to_pcm_length": True,
-        "strict_pcm_check": True,
-        "seed": 31415,
-    },
-    "channel": {
-        "backend": "sionna_tdl",
-        "allow_fallback": True,
-        "profile_family": "TDL",
-        "train_profiles": ["A", "C", "E"],
-        "eval_profiles": ["A", "C", "E"],
-        "delay_spread_s": 1.0e-7,
-        "carrier_frequency_hz": 3.5e9,
-        "subcarrier_spacing_hz": 1.5e4,
-        "min_speed_mps": 0.0,
-        "max_speed_mps": 10.0,
-        "normalization": True,
-        "local_fallback_model": "rayleigh",
-    },
+    "project": {"seed": 1234, "output_dir": "outputs/hybrid_bp_nsg_v11"},
+    "code": {"family": "peg_ldpc", "k": 32, "n": 64, "seed": 1234},
     "data": {
-        "train_samples": 36000,
-        "val_samples": 7200,
-        "train_shards": 144,
-        "val_shards": 36,
-        "workers": 24,
-        "snr_min_db": 0.0,
-        "snr_max_db": 10.0,
-        "bp_collect_iterations": 20,
+        "train_samples": 1000,
+        "val_samples": 200,
+        "shard_size": 250,
         "sample_failed_only": True,
-        "failed_snr_db_grid": [0,1,2,3,4,5,6,7,8,9,10],
-        "failed_snr_probs": [0.20,0.17,0.14,0.12,0.10,0.08,0.07,0.05,0.03,0.02,0.01],
-        "generation_batch_size": 64,
-        "partial_flush_every": 0,
-        "min_records_per_shard": 1,
-        "max_failed_fraction": 0.75,
+        "bp_collect_iterations": 20,
+        "failed_snr_db_grid": [0, 1, 2, 3],
+        "failed_snr_probs": [0.4, 0.3, 0.2, 0.1],
+        "profiles": ["A"],
     },
     "train": {
-        "batch_size": 128,
-        "epochs": 48,
-        "lr": 1.0e-3,
-        "weight_decay": 1.0e-4,
-        "dropout": 0.08,
-        "device": "cpu",
-        "num_workers": 0,
-        "torch_threads": 32,
-        "lr_scheduler": "plateau",
-        "lr_factor": 0.5,
-        "lr_patience": 4,
-        "min_lr": 1.0e-5,
-        "early_stopping_patience": 10,
-        "bit_pos_weight": 14.0,
+        "epochs": 5,
+        "batch_size": 32,
+        "lr": 1e-3,
+        "weight_decay": 1e-5,
+        "dropout": 0.05,
+        "bit_pos_weight": 4.0,
+        "reach_pos_weight": 4.0,
+        "grad_clip": 1.0,
+        "resume": True,
         "loss_weights": {
-            "bit": 1.00,
-            "segment": 0.25,
-            "weight": 0.45,
-            "standard_reachable": 0.30,
-            "expanded_reachable": 0.32,
-            "rescueable": 0.55,
-            "rerank": 0.65,
-            "rank": 0.25,
+            "bit": 1.0,
+            "segment": 0.2,
+            "weight": 0.2,
+            "standard_reachable": 0.2,
+            "expanded_reachable": 0.2,
+            "rescueable": 0.2,
+            "rerank": 0.2,
+            "rank": 0.1,
         },
     },
     "model": {
-        "graph_hidden_dim": 128,
-        "graph_layers": 5,
-        "transformer_dim": 128,
-        "transformer_heads": 8,
-        "transformer_layers": 4,
-        "top_k_tokens": 64,
+        "graph_hidden_dim": 64,
+        "graph_layers": 3,
+        "transformer_heads": 4,
+        "transformer_layers": 1,
+        "top_k_tokens": 32,
         "num_segments": 8,
-        "max_weight_class": 16,
-        "rerank_hidden_dim": 64,
-        "rerank_list_size": 10,
+        "max_weight_class": 32,
+        "rerank_list_size": 8,
     },
     "bp": {
-        "algorithm": "spa",
-        "main_iterations": 20,
-        "strong_iterations": 50,
         "hybrid_main_algorithm": "nms",
         "hybrid_main_iterations": 20,
-        "hybrid_micro_algorithm": "nms",
+        "strong_iterations": 50,
         "micro_iterations": 8,
-        "micro_flip_scale": 1.22,
         "nms_alpha": 0.8,
-        "llr_clip": 18.0,
         "early_stop": True,
     },
     "rescue": {
-        "enable": True,
-        "gating_threshold": 0.34,
-        "expanded_threshold": 0.48,
-        "hopeless_threshold": 0.05,
-        "rescue_threshold": 0.22,
-        "micro_trigger_threshold": 0.42,
-        "pool_size": 20,
-        "expanded_pool_size": 32,
-        "top_k_bits": 24,
-        "top_k_oscillation": 12,
-        "top_k_unsat": 14,
-        "max_standard_weight": 6,
-        "max_expanded_weight": 14,
-        "standard_budget": 160,
-        "expanded_budget": 480,
-        "direct_budget": 96,
-        "micro_candidate_cap": 6,
-        "cluster_templates": True,
-        "component_bonus": -0.35,
-        "segment_bonus_scale": 0.35,
-        "component_focus_scale": 0.18,
-        "oscillation_focus_scale": 0.10,
-        "likely_weight_topk": 8,
-        "weight_penalties": [0.0, 0.0, 0.10, 0.28, 0.55, 0.90, 1.25, 1.65, 2.00, 2.35, 2.70],
-        "rerank_prior_scale": 0.14,
-        "rerank_use_net": True,
-        "rerank_extra_queries": 32,
+        "mode": "ai",
+        "target_basis": "channel_with_bp_punctures",
+        "always_rescue_after_bp_fail": True,
+        "try_bp_basis_fallback": True,
+        "gating_threshold": -1.0,
+        "expanded_threshold": 0.2,
+        "hopeless_threshold": -1.0,
+        "rescue_threshold": 0.05,
+        "micro_trigger_threshold": 0.2,
+        "pool_size": 48,
+        "expanded_pool_size": 160,
+        "top_k_bits": 96,
+        "top_k_oscillation": 32,
+        "top_k_unsat": 48,
+        "max_standard_weight": 10,
+        "max_expanded_weight": 32,
+        "standard_budget": 800,
+        "expanded_budget": 2400,
+        "direct_budget": 1600,
+        "combo_pool_w_le3": 24,
+        "combo_pool_w_gt3": 16,
+        "enable_osd_repair": True,
+        "osd_support_sizes": [96, 128, 192, 256, 320],
+        "osd_jitter_passes": 1,
+        "enable_greedy_repair": True,
+        "greedy_repair_steps": 32,
+        "greedy_repair_candidates": 6,
         "enable_micro_bp": True,
-        "skip_if_main_gap_small": False,
-        "main_margin_threshold": 0.12,
-    },
-    "benchmarks": {
-        "evaluate_bp": True,
-        "bp_iteration_list": [10, 20, 50],
-        "evaluate_nms": True,
-        "nms_iteration_list": [20, 50],
-        "evaluate_wbf_post": True,
-        "evaluate_orb_rescue": True,
-        "evaluate_cdf_rescue": True,
-        "evaluate_segmented_rescue": True,
-        "evaluate_hybrid": True,
+        "micro_candidate_cap": 6,
+        "likely_weight_topk": 8,
+        "rerank_extra_queries": 32,
+        "rerank_use_net": True,
+        "weight_penalties": [0.0, 0.0, 0.08, 0.20, 0.38, 0.60, 0.85, 1.12, 1.45, 1.80],
     },
     "eval": {
-        "workers": 24,
-        "torch_threads_per_worker": 1,
-        "batch_size": 16,
-        "samples_per_point": 4000,
-        "tail_samples_per_point": 30000,
-        "max_samples_per_point": 80000,
-        "max_samples_per_point_tail": 250000,
-        "target_frame_errors": 200,
-        "target_frame_errors_tail": 200,
-        "min_frame_errors_to_report": 30,
+        "samples_per_point": 1000,
+        "tail_samples_per_point": 5000,
+        "target_frame_errors": 100,
+        "max_samples_per_point": 10000,
         "stop_decoders": ["hybrid_bp_nsg", "bp_nms_20", "bp_nms_50"],
-        "snr_db_grid": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        "tail_snr_db_grid": [8, 9, 10, 11, 12, 13, 14],
-        "profiles": ["A", "C", "E"],
-        "saturated_bler_threshold": 0.995,
-    },
-    "report": {
-        "primary_baseline": "bp_nms_20",
-    },
-    "plots": {
-        "style": "default",
-        "paper_width_in": 7.2,
-        "paper_height_in": 4.8,
-        "dpi": 160,
+        "snr_db_grid": [0, 1, 2, 3],
+        "profiles": ["A"],
     },
 }
 
 
+def deep_update(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    out = copy.deepcopy(base)
+    for k, v in (override or {}).items():
+        if isinstance(v, dict) and isinstance(out.get(k), dict):
+            out[k] = deep_update(out[k], v)
+        else:
+            out[k] = copy.deepcopy(v)
+    return out
+
+
 def load_config(path: str | Path) -> Dict[str, Any]:
     path = Path(path)
+    if yaml is None:
+        raise RuntimeError("PyYAML is required to read YAML configs. Install with `pip install pyyaml`.")
     with path.open("r", encoding="utf-8") as f:
         user_cfg = yaml.safe_load(f) or {}
-    cfg = copy.deepcopy(DEFAULTS)
-    _deep_update(cfg, user_cfg)
+    cfg = deep_update(DEFAULTS, user_cfg)
     cfg["_config_path"] = str(path)
-    cfg["project"]["output_dir"] = str(Path(cfg["project"]["output_dir"]))
     return cfg

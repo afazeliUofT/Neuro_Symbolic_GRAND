@@ -1,7 +1,7 @@
 project:
-  name: hybrid_bp_nsg_nr5g_v10_spawn_full
+  name: hybrid_bp_nsg_nr5g_v11_channel_aligned_full
   seed: 31415
-  output_dir: outputs/hybrid_bp_nsg_v10_full
+  output_dir: outputs/hybrid_bp_nsg_v11_channel_aligned_full
 
 code:
   family: sionna_nr_ldpc
@@ -11,149 +11,108 @@ code:
   strict_pcm_check: true
   seed: 31415
 
-channel:
-  backend: sionna_tdl
-  allow_fallback: true
-  profile_family: TDL
-  train_profiles: [A, C, E]
-  eval_profiles: [A, C, E]
-  delay_spread_s: 1.0e-7
-  carrier_frequency_hz: 3.5e9
-  subcarrier_spacing_hz: 1.5e4
-  min_speed_mps: 0.0
-  max_speed_mps: 10.0
-  normalization: true
-
 data:
-  # Resumable failed-state training. Small shards are intentional: under 16h wall-time,
-  # completed shards are saved and the next run skips them.
   train_samples: 36000
   val_samples: 7200
-  train_shards: 144
-  val_shards: 36
-  workers: 8
-  mp_start_method: spawn
-  max_tasks_per_child: 1
-  generation_heartbeat_s: 120
-  generation_batch_size: 64
-  partial_flush_every: 0
-  min_records_per_shard: 1
-  snr_min_db: 0.0
-  snr_max_db: 10.0
-  # Failure-biased SNR sampling to avoid spending most generation time at very high-SNR points
-  # where NMS-20 rarely fails. High SNR still appears, but lower/mid SNR is emphasized.
-  failed_snr_db_grid: [0,1,2,3,4,5,6,7,8,9,10]
-  failed_snr_probs: [0.20,0.17,0.14,0.12,0.10,0.08,0.07,0.05,0.03,0.02,0.01]
-  bp_collect_iterations: 20
+  shard_size: 250
   sample_failed_only: true
+  bp_collect_iterations: 20
+  failed_snr_db_grid: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  failed_snr_probs: [0.20, 0.17, 0.14, 0.12, 0.10, 0.08, 0.07, 0.05, 0.03, 0.02, 0.01]
+  profiles: ["A", "C", "E"]
 
 train:
-  batch_size: 128
   epochs: 48
-  lr: 0.0010
-  torch_threads: 48
-  early_stopping_patience: 10
-  lr_patience: 4
-  min_lr: 0.00001
+  batch_size: 32
+  lr: 0.0008
+  weight_decay: 0.00001
   dropout: 0.08
-  bit_pos_weight: 14.0
+  bit_pos_weight: 6.0
+  reach_pos_weight: 8.0
+  grad_clip: 1.0
+  resume: true
   loss_weights:
     bit: 1.00
     segment: 0.25
-    weight: 0.45
-    standard_reachable: 0.30
-    expanded_reachable: 0.32
-    rescueable: 0.55
-    rerank: 0.65
-    rank: 0.25
+    weight: 0.35
+    standard_reachable: 0.20
+    expanded_reachable: 0.25
+    rescueable: 0.20
+    rerank: 0.30
+    rank: 0.15
 
 model:
   graph_hidden_dim: 128
   graph_layers: 5
-  transformer_dim: 128
-  transformer_heads: 8
-  transformer_layers: 4
+  transformer_heads: 4
+  transformer_layers: 2
   top_k_tokens: 64
   num_segments: 8
-  max_weight_class: 16
-  rerank_list_size: 10
+  max_weight_class: 48
+  rerank_list_size: 12
 
 bp:
-  algorithm: spa
-  main_iterations: 20
-  strong_iterations: 50
   hybrid_main_algorithm: nms
   hybrid_main_iterations: 20
-  hybrid_micro_algorithm: nms
-  nms_alpha: 0.8
-  llr_clip: 18.0
-  early_stop: true
+  strong_iterations: 50
   micro_iterations: 8
-  micro_flip_scale: 1.22
+  nms_alpha: 0.8
+  early_stop: true
 
 rescue:
-  enable: true
-  gating_threshold: 0.34
-  expanded_threshold: 0.48
-  hopeless_threshold: 0.05
-  rescue_threshold: 0.22
-  micro_trigger_threshold: 0.42
-  pool_size: 20
-  expanded_pool_size: 32
-  top_k_bits: 24
-  top_k_oscillation: 12
-  top_k_unsat: 14
-  max_standard_weight: 6
-  max_expanded_weight: 14
-  standard_budget: 160
-  expanded_budget: 480
-  direct_budget: 96
-  micro_candidate_cap: 6
-  cluster_templates: true
-  component_bonus: -0.35
-  segment_bonus_scale: 0.35
-  component_focus_scale: 0.18
-  oscillation_focus_scale: 0.10
-  likely_weight_topk: 8
-  weight_penalties: [0.0, 0.0, 0.10, 0.28, 0.55, 0.90, 1.25, 1.65, 2.00, 2.35, 2.70]
-  rerank_prior_scale: 0.14
-  rerank_use_net: true
-  rerank_extra_queries: 32
-  enable_micro_bp: true
-  skip_if_main_gap_small: false
-  main_margin_threshold: 0.12
+  mode: ai
+  target_basis: channel_with_bp_punctures
+  always_rescue_after_bp_fail: true
+  try_bp_basis_fallback: true
 
-benchmarks:
-  evaluate_bp: true
-  bp_iteration_list: [10, 20, 50]
-  evaluate_nms: true
-  nms_iteration_list: [20, 50]
-  evaluate_wbf_post: true
-  evaluate_orb_rescue: true
-  evaluate_cdf_rescue: true
-  evaluate_segmented_rescue: true
-  evaluate_hybrid: true
+  # Gating is kept for logging but not allowed to suppress the post-BP rescue by default.
+  gating_threshold: -1.0
+  expanded_threshold: 0.20
+  hopeless_threshold: -1.0
+  rescue_threshold: 0.05
+  micro_trigger_threshold: 0.20
+
+  pool_size: 64
+  expanded_pool_size: 192
+  top_k_bits: 128
+  top_k_oscillation: 32
+  top_k_unsat: 48
+  max_standard_weight: 10
+  max_expanded_weight: 32
+  standard_budget: 1200
+  expanded_budget: 3600
+  direct_budget: 2200
+  combo_pool_w_le3: 28
+  combo_pool_w_gt3: 18
+
+  # Tanner-syndrome OSD: solve H[:, support] e = syndrome(base) on low-cost supports.
+  enable_osd_repair: true
+  osd_support_sizes: [96, 128, 160, 192, 256, 320, 384, 448, 512]
+  osd_jitter_passes: 2
+
+  enable_greedy_repair: true
+  greedy_repair_steps: 48
+  greedy_repair_candidates: 8
+
+  enable_micro_bp: true
+  micro_candidate_cap: 8
+  likely_weight_topk: 10
+  rerank_extra_queries: 64
+  rerank_use_net: true
+
+  component_bonus: -0.35
+  segment_bonus_scale: 0.08
+  component_focus_scale: 0.10
+  oscillation_focus_scale: 0.05
+  rerank_prior_scale: 0.10
+  micro_flip_scale: 1.10
+  weight_penalties: [0.0, 0.0, 0.08, 0.20, 0.38, 0.60, 0.85, 1.12, 1.45, 1.80, 2.20, 2.65, 3.15, 3.70, 4.30, 4.95, 5.65, 6.40, 7.20, 8.05, 8.95, 9.90, 10.90, 11.95, 13.05, 14.20, 15.40, 16.65, 17.95, 19.30, 20.70, 22.15, 23.65, 25.20]
 
 eval:
-  workers: 8
-  mp_start_method: spawn
-  max_tasks_per_child: 1
-  generation_heartbeat_s: 120
-  batch_size: 16
-  max_samples_per_point: 80000
-  max_samples_per_point_tail: 250000
+  samples_per_point: 4000
+  tail_samples_per_point: 30000
   target_frame_errors: 200
-  target_frame_errors_tail: 200
-  min_frame_errors_to_report: 30
-  stop_decoders: [hybrid_bp_nsg, bp_nms_20, bp_nms_50]
-  snr_db_grid: [0,1,2,3,4,5,6,7,8,9,10]
-  tail_snr_db_grid: [8,9,10,11,12,13,14]
-  profiles: [A, C, E]
-  saturated_bler_threshold: 0.995
-
-plots:
-  paper_width_in: 7.2
-  paper_height_in: 4.8
-
-report:
-  primary_baseline: bp_nms_20
+  max_samples_per_point: 80000
+  stop_decoders: ["hybrid_bp_nsg", "bp_nms_20", "bp_nms_50"]
+  snr_db_grid: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  profiles: ["A", "C", "E"]

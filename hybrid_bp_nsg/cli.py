@@ -1,128 +1,98 @@
 from __future__ import annotations
 
 import argparse
-import os
-import socket
-from datetime import datetime, timezone
 from pathlib import Path
-import json
+
+import numpy as np
 
 from .config import load_config
-from .training.dataset import generate_supervised_dataset, split_complete
-from .training.train import train_rescue_model
-from .training.evaluation import evaluate_grid
-from .analysis.reporting import build_reports
-from .utils.io import ensure_dir, save_json
+from .utils.env import dependency_report
+from .utils.io import ensure_dir, write_json
 from .utils.logging import get_logger
 
 
-def _prepare_output(cfg):
-    output_dir = Path(cfg["project"]["output_dir"])
-    ensure_dir(output_dir / "artifacts")
-    save_json(cfg, output_dir / "artifacts" / "resolved_config.json")
-    runtime = {
-        "hostname": socket.gethostname(),
-        "utc_time": datetime.now(timezone.utc).isoformat(),
-        "cwd": os.getcwd(),
-        "pid": os.getpid(),
+def action_selftest(cfg):
+    from .codes.factory import build_code
+    from .channels.simulator import simulate_frame
+    from .decoders.bp import BeliefPropagationDecoder
+    from .decoders.hybrid import HybridBPNSGDecoder
+
+    logger = get_logger("selftest")
+    print(dependency_report())
+    out_dir = ensure_dir(Path(cfg["project"]["output_dir"]))
+    ensure_dir(out_dir / "artifacts")
+    write_json(cfg, out_dir / "artifacts" / "resolved_config.json")
+
+    code = build_code(cfg["code"])
+    summary = {
+        "family": code.family,
+        "n_internal": code.n,
+        "n_transmitted": code.transmitted_n,
+        "k": code.k,
+        "m": code.m,
+        "edges": int(code.h.sum()),
+        "punctured": int(code.punctured_positions.size),
+        "metadata": code.metadata,
     }
-    save_json(runtime, output_dir / "artifacts" / "runtime_snapshot.json")
-    return output_dir
+    write_json(summary, out_dir / "artifacts" / "code_summary.json")
+    logger.info("Code summary: %s", summary)
+
+    rng = np.random.default_rng(int(cfg["project"].get("seed", 123)))
+    for i in range(5):
+        msg = rng.integers(0, 2, size=code.k, dtype=np.uint8)
+        c = code.encode_internal(msg)
+        sw = int(code.syndrome(c).sum())
+        if sw != 0:
+            raise RuntimeError(f"encoder/internal PCM validation failed in selftest at sample {i}: syndrome weight {sw}")
+
+    bp = BeliefPropagationDecoder(code, max_iters=int(cfg["bp"]["hybrid_main_iterations"]), nms_alpha=float(cfg["bp"]["nms_alpha"]))
+    frame = simulate_frame(code, snr_db=2.0, profile="A", rng=rng)
+    r = bp.decode(frame.llr_internal, collect_trace=True)
+    logger.info("BP selftest success=%s iterations=%d syndrome_weight=%d", r.success, r.iterations_used, int(r.syndrome.sum()))
+
+    # Heuristic hybrid smoke decode without requiring a checkpoint.
+    cfg2 = dict(cfg)
+    cfg2["rescue"] = dict(cfg["rescue"])
+    cfg2["rescue"]["mode"] = "orb"
+    hyb = HybridBPNSGDecoder(code, cfg2, rescue_net=None, mode="orb")
+    hr = hyb.decode(frame.llr_internal, snr_db=2.0, profile="A", collect_trace=True)
+    logger.info("Hybrid selftest success=%s action=%s queries=%d", hr.success, hr.action, hr.queries)
+    logger.info("Selftest complete.")
 
 
-def _stage_complete(action: str, output_dir: Path, cfg) -> bool:
-    if action == "generate":
-        return (
-            (output_dir / "artifacts" / "code_summary.json").exists()
-            and split_complete(output_dir, "train", int(cfg["data"]["train_shards"]))
-            and split_complete(output_dir, "val", int(cfg["data"]["val_shards"]))
-        )
-    if action == "train":
-        return (output_dir / "checkpoints" / "rescue_net.pt").exists() and (output_dir / "training" / "training_summary.json").exists()
-    if action in {"evaluate", "tail_evaluate"}:
-        return (output_dir / "evaluation" / "evaluation_summary.csv").exists() and (output_dir / "evaluation" / "all_raw_records.csv.gz").exists()
-    if action == "report":
-        return (output_dir / "reports" / "report.md").exists() and (output_dir / "TWC_plots" / "manifest.csv").exists() and (output_dir / "TWC_plots" / "README.md").exists()
-    return False
-
-
-def _assert_stage_outputs(action: str, output_dir: Path, cfg) -> None:
-    if not _stage_complete(action, output_dir, cfg):
-        if action == "generate":
-            raise FileNotFoundError(
-                f"Stage generate incomplete: expected {cfg['data']['train_shards']} train shards, "
-                f"{cfg['data']['val_shards']} val shards, and artifacts/code_summary.json in {output_dir}"
-            )
-        raise FileNotFoundError(f"Stage {action} did not produce expected outputs in {output_dir}")
-
-
-def _mark_success(output_dir: Path, action: str) -> None:
-    save_json({"action": action, "ok": True, "utc_time": datetime.now(timezone.utc).isoformat()}, output_dir / "artifacts" / f"{action}_success.json")
-
-
-def _run_generate(cfg, output_dir, logger):
-    if _stage_complete("generate", output_dir, cfg):
-        logger.info("Generate stage already complete; skipping")
-    else:
-        generate_supervised_dataset(cfg, output_dir, logger)
-    _assert_stage_outputs("generate", output_dir, cfg)
-    _mark_success(output_dir, "generate")
-
-
-def _run_train(cfg, output_dir, logger):
-    if _stage_complete("train", output_dir, cfg):
-        logger.info("Train stage already complete; skipping")
-    else:
-        train_rescue_model(cfg, output_dir, logger)
-    _assert_stage_outputs("train", output_dir, cfg)
-    _mark_success(output_dir, "train")
-
-
-def _run_evaluate(cfg, output_dir, logger, tail=False):
-    action = "tail_evaluate" if tail else "evaluate"
-    if _stage_complete(action, output_dir, cfg):
-        logger.info("%s stage already complete; skipping", action)
-    else:
-        evaluate_grid(cfg, output_dir, logger, tail=tail)
-    _assert_stage_outputs(action, output_dir, cfg)
-    _mark_success(output_dir, action)
-
-
-def _run_report(cfg, output_dir, logger, tail_summary_path=None):
-    # Report is cheap; always regenerate when requested so plots reflect latest eval data.
-    build_reports(cfg, output_dir, logger, tail_summary_path=tail_summary_path)
-    _assert_stage_outputs("report", output_dir, cfg)
-    _mark_success(output_dir, "report")
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Hybrid BP + Neuro-Symbolic GRAND rescue pipeline")
-    parser.add_argument("--config", required=True, help="Path to YAML config")
-    parser.add_argument("action", choices=["generate", "train", "evaluate", "tail_evaluate", "report", "pipeline"])
-    parser.add_argument("--tail-summary-path", default=None)
+def main():
+    parser = argparse.ArgumentParser(description="Hybrid BP + Channel-Aligned AI/Tanner-GRAND rescue")
+    parser.add_argument("action", choices=["selftest", "generate", "train", "evaluate", "report", "pipeline", "plots"])
+    parser.add_argument("--config", "-c", default="configs/fir_hybrid_bp_nsg_selftest.yaml")
     args = parser.parse_args()
-
     cfg = load_config(args.config)
-    output_dir = _prepare_output(cfg)
-    logger = get_logger("hybrid_bp_nsg", output_dir / "logs" / f"{args.action}.log")
 
-    if args.action == "generate":
-        _run_generate(cfg, output_dir, logger)
+    if args.action == "selftest":
+        action_selftest(cfg)
+    elif args.action == "generate":
+        from .training.generation import generate_dataset
+        generate_dataset(cfg)
     elif args.action == "train":
-        _run_train(cfg, output_dir, logger)
+        from .training.train import train_model
+        train_model(cfg)
     elif args.action == "evaluate":
-        _run_evaluate(cfg, output_dir, logger, tail=False)
-    elif args.action == "tail_evaluate":
-        _run_evaluate(cfg, output_dir, logger, tail=True)
+        from .training.evaluation import evaluate
+        evaluate(cfg)
     elif args.action == "report":
-        _run_report(cfg, output_dir, logger, tail_summary_path=args.tail_summary_path)
+        from .analysis.reporting import make_report
+        make_report(cfg)
+    elif args.action == "plots":
+        from .plotting.twc_plots import make_plots
+        make_plots(cfg)
     elif args.action == "pipeline":
-        logger.info("Starting resumable pipeline. Re-running this command is safe after wall-time cancellation.")
-        _run_generate(cfg, output_dir, logger)
-        _run_train(cfg, output_dir, logger)
-        _run_evaluate(cfg, output_dir, logger, tail=False)
-        _run_report(cfg, output_dir, logger, tail_summary_path=args.tail_summary_path)
-        _mark_success(output_dir, "pipeline")
+        from .training.generation import generate_dataset
+        from .training.train import train_model
+        from .training.evaluation import evaluate
+        from .analysis.reporting import make_report
+        generate_dataset(cfg)
+        train_model(cfg)
+        evaluate(cfg)
+        make_report(cfg)
 
 
 if __name__ == "__main__":
