@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=hyb-grand-v112-pipe
+#SBATCH --job-name=hyb-grand-v113-pipe
 #SBATCH --time=48:00:00
 #SBATCH --partition=gpubase_bygpu_b4
 #SBATCH --cpus-per-task=64
@@ -38,6 +38,7 @@ export XLA_FLAGS="${XLA_FLAGS:-}"
 
 python -m pip install -e . --no-deps --quiet
 python scripts/check_tf_gpu.py --require-gpu
+python scripts/check_config.py configs/fir_hybrid_bp_nsg_full.yaml
 
 python -m hybrid_bp_nsg.cli generate --config configs/fir_hybrid_bp_nsg_full.yaml
 python -m hybrid_bp_nsg.cli train --config configs/fir_hybrid_bp_nsg_full.yaml

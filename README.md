@@ -1,4 +1,4 @@
-# Hybrid BP + Channel-Aligned TensorFlow AI/Tanner-GRAND Rescue — v11.2
+# Hybrid BP + Channel-Aligned TensorFlow AI/Tanner-GRAND Rescue — v11.3
 
 This is the FIR-specific TensorFlow/Keras GPU package derived from v11.1.
 
@@ -10,14 +10,17 @@ The research-side fix from v11.1 is preserved:
 * The AI rank-prior indexing bug is fixed.
 * A Tanner-syndrome OSD repair stage solves `H[:, support] e = syndrome(base)` over GF(2) on increasingly large low-cost supports.
 
-v11.2 changes the implementation side:
+v11.3 changes the implementation side and fixes the smoke/tail SNR sampling bug:
+
+* The smoke config now has matching `failed_snr_db_grid` and `failed_snr_probs` lengths. v11.2 had `[0, 2, 4]` paired with the 11-entry full-run probability vector, which makes NumPy raise `ValueError: a and p must have same size` during dataset generation.
+* The config loader now normalizes SNR sampling probabilities defensively for any shortened grid.
 
 * The neural rescue model, training loop, checkpointing, and AI inference path are TensorFlow/Keras based.
 * PyTorch is no longer required for training/evaluation.
 * The Slurm scripts request FIR GPUs using explicit H100 GPU types and partitions seen in the FIR probe.
 * A GPU preflight script, `scripts/check_tf_gpu.py`, verifies that TensorFlow sees the allocated GPU before training or evaluation starts.
 
-## Why TensorFlow in v11.2
+## Why TensorFlow in v11.3
 
 The FIR probe showed that the active `.venv` contains TensorFlow 2.19.1, Keras 3.14.0, Torch 2.11.0, and Sionna 1.2.2/no-RT. TensorFlow is CUDA-built, and the installed Sionna LDPC encoder accepts NumPy/TensorFlow tensors but not Torch tensors. Therefore, the correct FIR-native implementation for this environment is TensorFlow/Keras.
 
@@ -28,7 +31,7 @@ Use the `.venv` that already contains TensorFlow and Sionna on FIR.
 ```bash
 cd /home/rsadve1/scratch
 rm -rf Neuro_Symbolic_GRAND
-unzip Hybrid_GRAND_v11_2_TF_H100_GPU.zip -d Neuro_Symbolic_GRAND
+unzip Hybrid_GRAND_v11_3_TF_H100_GPU_SNRFIX.zip -d Neuro_Symbolic_GRAND
 cd Neuro_Symbolic_GRAND
 
 source .venv/bin/activate
@@ -90,7 +93,7 @@ nvidia_h100_80gb_hbm3_2g.20gb
 nvidia_h100_80gb_hbm3_1g.10gb
 ```
 
-v11.2 uses:
+v11.3 uses:
 
 * `h100:1` for the main train/evaluate/pipeline Slurms.
 * `nvidia_h100_80gb_hbm3_3g.40gb:1` for the MIG alternatives.

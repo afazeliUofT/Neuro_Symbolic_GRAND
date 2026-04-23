@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hybrid-bp-nsg-channel-aligned"
-version = "11.2.0"
+version = "11.3.0"
 description = "FIR TensorFlow GPU channel-aligned hybrid BP + AI/Tanner-guided GRAND rescue for 5G LDPC"
 requires-python = ">=3.10"
 # HPC-safe: do not force pip to resolve/install heavy numerical dependencies.

@@ -30,7 +30,8 @@
     ],
     "profiles": [
       "A"
-    ]
+    ],
+    "failed_snr_probs_note": "as_configured"
   },
   "train": {
     "epochs": 1,

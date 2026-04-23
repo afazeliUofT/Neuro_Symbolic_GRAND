@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=hyb-grand-v112-selftest
+#SBATCH --job-name=hyb-grand-v113-selftest
 #SBATCH --time=00:30:00
 #SBATCH --partition=cpubase_bycore_b1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=32
 #SBATCH --mem=16G
 #SBATCH --output=slurm-%x-%j.out
 
@@ -12,4 +12,5 @@ if [ -d ".venv" ]; then source .venv/bin/activate; else echo "ERROR: .venv not f
 export PYTHONPATH="$PWD:${PYTHONPATH:-}"
 python -m pip install -e . --no-deps --quiet
 python scripts/check_runtime_deps.py || true
+python scripts/check_config.py configs/fir_hybrid_bp_nsg_selftest.yaml
 python -m hybrid_bp_nsg.cli selftest --config configs/fir_hybrid_bp_nsg_selftest.yaml

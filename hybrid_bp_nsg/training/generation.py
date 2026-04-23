@@ -12,12 +12,19 @@ from ..decoders.bp import BeliefPropagationDecoder
 from ..training.features import build_rescue_features, build_training_labels
 from ..utils.io import ensure_dir, write_json
 from ..utils.logging import get_logger
+from ..config import normalize_snr_sampling
 
 
 def _choose_snr_profile(cfg: Dict[str, object], rng: np.random.Generator):
+    # Defensive normalization: load_config() already calls this, but this keeps
+    # direct programmatic calls safe and prevents NumPy's `a and p must have same
+    # size` failure if a shortened smoke/tail grid is paired with a full prior.
+    normalize_snr_sampling(cfg.setdefault("data", {}))
     grid = np.asarray(cfg["data"].get("failed_snr_db_grid", [0, 1, 2]), dtype=np.float32)
     probs = np.asarray(cfg["data"].get("failed_snr_probs", np.ones(len(grid))), dtype=np.float64)
-    probs = probs / probs.sum()
+    if probs.size != grid.size:
+        raise RuntimeError(f"internal config normalization failed: len(failed_snr_db_grid)={grid.size} len(failed_snr_probs)={probs.size}")
+    probs = probs / max(float(probs.sum()), 1e-12)
     snr = float(rng.choice(grid, p=probs))
     profiles = list(cfg["data"].get("profiles", ["A"]))
     profile = str(rng.choice(profiles))

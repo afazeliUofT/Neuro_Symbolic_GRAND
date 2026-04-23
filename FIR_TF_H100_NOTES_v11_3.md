@@ -1,4 +1,4 @@
-# v11.2 FIR TensorFlow/H100 notes
+# v11.3 FIR TensorFlow/H100 notes
 
 This package was created after reviewing the FIR TensorFlow/GPU probe pushed to GitHub.
 
@@ -23,3 +23,9 @@ Implementation changes relative to v11.1:
 * `scripts/check_tf_gpu.py` fails early if a GPU job does not expose a TensorFlow GPU.
 
 The decoder-side conceptual changes from v11.1 remain unchanged: channel-aligned GRAND basis, fixed rank prior, no aggressive skip gate, and Tanner-syndrome OSD repair.
+
+v11.3 hotfix after selftest/smoke push:
+
+* Fixed the smoke config: `failed_snr_db_grid` had 3 entries `[0, 2, 4]` but `failed_snr_probs` still had the 11-entry full-run prior. This triggers NumPy's `ValueError: a and p must have same size` during dataset generation.
+* Fixed the tail config in the same way.
+* Added `normalize_snr_sampling()` in `hybrid_bp_nsg/config.py` and a defensive call in `training/generation.py` so future shortened SNR grids are automatically paired with a same-length normalized probability vector.

@@ -18,7 +18,7 @@ data:
   sample_failed_only: true
   bp_collect_iterations: 20
   failed_snr_db_grid: [4, 5, 6, 7, 8, 9, 10]
-  failed_snr_probs: [0.20, 0.17, 0.14, 0.12, 0.10, 0.08, 0.07, 0.05, 0.03, 0.02, 0.01]
+  failed_snr_probs: [0.10, 0.08, 0.07, 0.05, 0.03, 0.02, 0.01]
   profiles: ["A", "C", "E"]
 
 train:

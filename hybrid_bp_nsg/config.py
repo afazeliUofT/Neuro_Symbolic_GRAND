@@ -124,6 +124,81 @@ def deep_update(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any
     return out
 
 
+def normalize_snr_sampling(data: Dict[str, Any]) -> None:
+    """Make failed-SNR sampling probabilities consistent with the configured grid.
+
+    v11.2 accidentally shipped smoke/tail configs where `failed_snr_db_grid`
+    was shortened but `failed_snr_probs` still had the 11-entry full-run vector.
+    NumPy then raises `ValueError: a and p must have same size` during
+    `rng.choice(grid, p=probs)`.  This normalizer both fixes old configs and
+    makes future shortened smoke/tail grids robust.
+
+    If the probability list is longer than the grid and the grid entries look
+    like integer SNR points, we interpret the probability vector as the full
+    dense 0,1,2,... prior and select the probabilities corresponding to the
+    requested grid.  Otherwise we crop/pad conservatively and normalize.
+    """
+    grid = list(data.get("failed_snr_db_grid", []) or [])
+    if not grid:
+        data["failed_snr_db_grid"] = [0.0]
+        data["failed_snr_probs"] = [1.0]
+        return
+
+    raw_probs = data.get("failed_snr_probs", None)
+    if raw_probs is None:
+        probs = [1.0 for _ in grid]
+        note = "uniform_default"
+    else:
+        probs = [float(x) for x in list(raw_probs)]
+        note = "as_configured"
+
+    if len(probs) != len(grid):
+        selected = None
+        # Common FIR case: full-run prior has entries for integer SNR 0..K,
+        # while smoke/tail uses a subset such as [0, 2, 4] or [4..10].
+        try:
+            idx = [int(round(float(x))) for x in grid]
+            if all(abs(float(g) - i) < 1e-6 and 0 <= i < len(probs) for g, i in zip(grid, idx)):
+                selected = [probs[i] for i in idx]
+                note = f"selected_from_dense_prior_len_{len(probs)}"
+        except Exception:
+            selected = None
+        if selected is None:
+            if len(probs) > len(grid):
+                selected = probs[:len(grid)]
+                note = f"cropped_from_len_{len(probs)}"
+            else:
+                selected = probs + [1.0 for _ in range(len(grid) - len(probs))]
+                note = f"padded_from_len_{len(probs)}"
+        probs = selected
+
+    # Ensure all entries are finite and non-negative, then normalize.
+    clean = []
+    for x in probs:
+        try:
+            v = float(x)
+        except Exception:
+            v = 0.0
+        if not (v >= 0.0) or v == float("inf") or v == float("-inf"):
+            v = 0.0
+        clean.append(v)
+    total = sum(clean)
+    if total <= 0.0:
+        clean = [1.0 / len(grid) for _ in grid]
+        note = "uniform_after_invalid_probs"
+    else:
+        clean = [float(x) / total for x in clean]
+
+    data["failed_snr_db_grid"] = [float(x) if isinstance(x, float) else x for x in grid]
+    data["failed_snr_probs"] = clean
+    data["failed_snr_probs_note"] = note
+
+
+def validate_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    normalize_snr_sampling(cfg.setdefault("data", {}))
+    return cfg
+
+
 def load_config(path: str | Path) -> Dict[str, Any]:
     path = Path(path)
     if yaml is None:
@@ -132,4 +207,4 @@ def load_config(path: str | Path) -> Dict[str, Any]:
         user_cfg = yaml.safe_load(f) or {}
     cfg = deep_update(DEFAULTS, user_cfg)
     cfg["_config_path"] = str(path)
-    return cfg
+    return validate_config(cfg)
