@@ -13,6 +13,13 @@ def _read_csv(path: Path):
         return list(csv.DictReader(f))
 
 
+def _f(r: dict, k: str, default: float = 0.0) -> float:
+    try:
+        return float(r.get(k, default))
+    except Exception:
+        return float(default)
+
+
 def make_report(cfg: Dict[str, object]) -> None:
     logger = get_logger("report")
     out_dir = Path(cfg["project"]["output_dir"])
@@ -24,10 +31,17 @@ def make_report(cfg: Dict[str, object]) -> None:
         logger.info("No evaluation summary rows found under %s", eval_root)
         return
     write_csv(eval_root / "evaluation_summary.csv", rows)
-    # Lightweight markdown report.
+
     report_dir = ensure_dir(out_dir / "reports")
-    md = ["# Hybrid BP + Channel-Aligned GRAND evaluation", "", "| profile | snr_db | decoder | samples | frame_errors | BLER | avg_queries | rescue_rate |", "|---|---:|---|---:|---:|---:|---:|---:|"]
+    md = [
+        "# Hybrid BP + PUSCH-aligned CRC-aware AI/Tanner-GRAND evaluation",
+        "",
+        "| profile | snr_db | decoder | BLER | avg_latency_ms | avg_queries | rescue_rate | crc_fail_rate | avg_crc_valid_candidates | avg_parity_valid_candidates |",
+        "|---|---:|---|---:|---:|---:|---:|---:|---:|---:|",
+    ]
     for r in rows:
-        md.append(f"| {r.get('profile','')} | {float(r.get('snr_db',0)):g} | {r.get('decoder','')} | {r.get('samples','')} | {r.get('frame_errors','')} | {float(r.get('bler',0)):.6g} | {float(r.get('avg_queries',0)):.3g} | {float(r.get('rescue_rate',0)):.3g} |")
+        md.append(
+            f"| {r.get('profile','')} | {_f(r,'snr_db'):g} | {r.get('decoder','')} | {_f(r,'bler'):.6g} | {_f(r,'avg_latency_ms'):.4g} | {_f(r,'avg_queries'):.4g} | {_f(r,'rescue_rate'):.4g} | {_f(r,'crc_fail_rate'):.4g} | {_f(r,'avg_crc_valid_candidates'):.4g} | {_f(r,'avg_parity_valid_candidates'):.4g} |"
+        )
     (report_dir / "README.md").write_text("\n".join(md) + "\n", encoding="utf-8")
     logger.info("Wrote %s and %s", eval_root / "evaluation_summary.csv", report_dir / "README.md")

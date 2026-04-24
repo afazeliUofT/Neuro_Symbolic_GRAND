@@ -16,14 +16,11 @@ class BPDecodeResult:
     syndrome: np.ndarray
     iterations_used: int
     trace: Optional[Dict[str, np.ndarray]] = None
+    crc_ok: bool = True
 
 
 class BeliefPropagationDecoder:
-    """Flooding normalized min-sum / sum-product LDPC decoder.
-
-    The implementation is intentionally explicit and robust for moderate-length research
-    codes such as the 5G internal n=576 graph used here.
-    """
+    """Flooding normalized min-sum / sum-product LDPC decoder."""
 
     def __init__(
         self,
@@ -49,16 +46,25 @@ class BeliefPropagationDecoder:
         self.check_edges: List[np.ndarray] = [np.flatnonzero(self.e_check == c).astype(np.int32) for c in range(self.code.m)]
         self.var_edges: List[np.ndarray] = [np.flatnonzero(self.e_var == v).astype(np.int32) for v in range(self.code.n)]
 
+    def _codeword_and_crc_ok(self, hard: np.ndarray) -> tuple[bool, bool]:
+        syndrome = self.code.syndrome(hard)
+        syn_ok = int(syndrome.sum()) == 0
+        if not syn_ok:
+            return False, False
+        crc_ok = self.code.crc_check_internal(hard)
+        return bool(syn_ok and crc_ok), bool(crc_ok)
+
     def decode(self, llr: np.ndarray, max_iters: Optional[int] = None, collect_trace: bool = False) -> BPDecodeResult:
         llr = np.asarray(llr, dtype=np.float32).reshape(-1)
         if llr.size != self.code.n:
             raise ValueError(f"expected internal LLR length {self.code.n}, got {llr.size}")
         max_iters = int(max_iters or self.max_iters)
-        q = llr[self.e_var].astype(np.float32).copy()  # variable-to-check
-        r = np.zeros_like(q, dtype=np.float32)          # check-to-variable
+        q = llr[self.e_var].astype(np.float32).copy()
+        r = np.zeros_like(q, dtype=np.float32)
         posterior = llr.copy()
         hard = (posterior < 0).astype(np.uint8)
         syndrome = self.code.syndrome(hard)
+        success, crc_ok = self._codeword_and_crc_ok(hard)
 
         trace_llr = []
         trace_hard = []
@@ -68,17 +74,15 @@ class BeliefPropagationDecoder:
             trace_hard.append(hard.copy())
             trace_syn.append(syndrome.copy())
 
-        success = int(syndrome.sum()) == 0
         it_used = 0
         if success and self.early_stop:
             return BPDecodeResult(True, hard, posterior, syndrome, 0, {
                 "posterior_llr": np.asarray(trace_llr, dtype=np.float32),
                 "hard": np.asarray(trace_hard, dtype=np.uint8),
                 "syndrome": np.asarray(trace_syn, dtype=np.uint8),
-            } if collect_trace else None)
+            } if collect_trace else None, crc_ok=crc_ok)
 
         for it in range(1, max_iters + 1):
-            # Check-node update.
             for edges in self.check_edges:
                 if edges.size == 0:
                     continue
@@ -102,19 +106,17 @@ class BeliefPropagationDecoder:
                 elif self.algorithm in {"ms", "minsum", "min_sum"}:
                     r[edges] = out_sign * mins
                 else:
-                    # Sum-product check update with clipping for stability.
                     t = np.tanh(np.clip(vals, -20.0, 20.0) / 2.0)
                     for j, e in enumerate(edges):
                         prod = np.prod(np.delete(t, j)) if edges.size > 1 else 1.0
                         prod = float(np.clip(prod, -0.999999, 0.999999))
                         r[e] = 2.0 * np.arctanh(prod)
 
-            # Variable-node update and posterior.
             posterior = llr.copy()
             np.add.at(posterior, self.e_var, r)
             hard = (posterior < 0).astype(np.uint8)
             syndrome = self.code.syndrome(hard)
-            success = int(syndrome.sum()) == 0
+            success, crc_ok = self._codeword_and_crc_ok(hard)
             it_used = it
 
             if collect_trace:
@@ -122,7 +124,6 @@ class BeliefPropagationDecoder:
                 trace_hard.append(hard.copy())
                 trace_syn.append(syndrome.copy())
 
-            # q_e = posterior[v] - r_e
             q = posterior[self.e_var] - r
 
             if success and self.early_stop:
@@ -135,4 +136,4 @@ class BeliefPropagationDecoder:
                 "hard": np.asarray(trace_hard, dtype=np.uint8),
                 "syndrome": np.asarray(trace_syn, dtype=np.uint8),
             }
-        return BPDecodeResult(bool(success), hard.astype(np.uint8), posterior.astype(np.float32), syndrome.astype(np.uint8), it_used, trace)
+        return BPDecodeResult(bool(success), hard.astype(np.uint8), posterior.astype(np.float32), syndrome.astype(np.uint8), it_used, trace, crc_ok=crc_ok)

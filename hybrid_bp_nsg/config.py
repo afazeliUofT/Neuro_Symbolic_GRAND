@@ -196,6 +196,16 @@ def normalize_snr_sampling(data: Dict[str, Any]) -> None:
 
 def validate_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
     normalize_snr_sampling(cfg.setdefault("data", {}))
+    code = cfg.setdefault("code", {})
+    fam = str(code.get("family", "")).lower()
+    if fam in {"sionna_nr_pusch_ldpc", "sionna_nr_pusch", "nr_pusch_ldpc"}:
+        if "num_coded_bits" in code:
+            code["n"] = int(code["num_coded_bits"])
+        if code.get("target_tb_size", None) is None:
+            code.pop("k", None)
+        else:
+            code["k"] = int(code["target_tb_size"])
+        code.pop("align_to_pcm_length", None)
     return cfg
 
 

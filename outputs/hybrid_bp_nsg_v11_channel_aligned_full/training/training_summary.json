@@ -1,7 +1,0 @@
-{
-  "epochs": 48,
-  "framework": "tensorflow",
-  "checkpoint": "outputs/hybrid_bp_nsg_v11_channel_aligned_full/checkpoints/rescue_net_tf.weights.h5",
-  "tf_checkpoint": "outputs/hybrid_bp_nsg_v11_channel_aligned_full/checkpoints/tf_ckpt/ckpt-48",
-  "num_gpus": 1
-}

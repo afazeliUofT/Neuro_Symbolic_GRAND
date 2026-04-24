@@ -1,4 +1,0 @@
-profile,snr_db,decoder,samples,frame_errors,bler,avg_queries,p95_queries,rescue_rate,micro_bp_rate,main_success_rate,avg_latency_ms,framework,num_gpus
-C,0.0,bp_nms_20,4000,2789,0.69725,0.0,0.0,0.0,0.0,0.30275,0.0,tensorflow,1
-C,0.0,bp_nms_50,4000,2030,0.5075,0.0,0.0,0.0,0.0,0.49275,0.0,tensorflow,1
-C,0.0,hybrid_bp_nsg,4000,2206,0.5515,1323.12725,4400.0,0.41975,0.0,0.30275,540.5071466515074,tensorflow,1

@@ -6,6 +6,13 @@ import numpy as np
 
 from ..codes.peg_ldpc import LDPCCode
 from ..decoders.bp import BPDecodeResult
+from ..rescue_search import (
+    candidate_feature_vector,
+    candidate_pool_from_feature_pack,
+    enumerate_mask_candidates,
+    greedy_syndrome_repair_candidates,
+    syndrome_osd_candidates,
+)
 
 PROFILE_TO_ID = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
 
@@ -53,11 +60,6 @@ def _connected_suspect_components(code: LDPCCode, syndrome: np.ndarray) -> List[
 
 
 def make_grand_base(code: LDPCCode, channel_llr: np.ndarray, bp_result: BPDecodeResult, basis: str = "channel_with_bp_punctures") -> np.ndarray:
-    """Return the hard vector to which GRAND noise masks are applied.
-
-    GRAND should guess channel noise/correction, not the final failed BP residual. For punctured
-    positions there is no channel observation, so the default uses BP posterior decisions there.
-    """
     basis = str(basis or "channel_with_bp_punctures").lower()
     llr = np.asarray(channel_llr, dtype=np.float32).reshape(-1)
     channel_hard = (llr < 0).astype(np.uint8)
@@ -79,67 +81,119 @@ def make_grand_base(code: LDPCCode, channel_llr: np.ndarray, bp_result: BPDecode
     raise ValueError(f"unknown GRAND target basis: {basis}")
 
 
-def _mask_features(mask: np.ndarray, feature_pack: Dict[str, np.ndarray]) -> np.ndarray:
-    idx = np.flatnonzero(mask)
-    vf = feature_pack["var_features"][idx] if idx.size > 0 else np.zeros((1, feature_pack["var_features"].shape[1]), dtype=np.float32)
-    return np.array([
-        idx.size,
-        float(np.sum(vf[:, 0])),
-        float(np.mean(vf[:, 0])),
-        float(np.max(vf[:, 0])),
-        float(np.sum(vf[:, 5])),
-        float(np.mean(vf[:, 6])),
-        float(np.sum(vf[:, 8])),
-        float(np.mean(vf[:, 8])),
-    ], dtype=np.float32)
+def _heuristic_bit_cost(code: LDPCCode, llr: np.ndarray, feature_pack: Dict[str, np.ndarray]) -> np.ndarray:
+    vf = feature_pack["var_features"]
+    abs_llr = np.abs(np.asarray(llr, dtype=np.float32))
+    rank_cost = np.linspace(0.0, 1.0, code.n, endpoint=False, dtype=np.float32)
+    inv_cost = np.empty_like(rank_cost)
+    inv_cost[feature_pack["heuristic_order"]] = rank_cost
+    channel_unreliability_bonus = -0.25 * (1.0 - np.clip(vf[:, 3], 0.0, 1.0))
+    syndrome_bonus = -0.18 * np.clip(vf[:, 11], 0.0, 1.0)
+    disagreement_bonus = -0.10 * vf[:, 13]
+    puncture_bonus = -0.05 * vf[:, 14]
+    bit_cost = np.log1p(inv_cost * 10.0)
+    bit_cost = bit_cost + 0.03 * abs_llr / max(1e-6, float(abs_llr.max())) + channel_unreliability_bonus + syndrome_bonus + disagreement_bonus + puncture_bonus
+    return bit_cost.astype(np.float32)
 
 
-def make_rerank_candidates(
+def build_candidate_bank(
     code: LDPCCode,
-    heuristic_order: np.ndarray,
-    target_mask: np.ndarray,
-    var_features: np.ndarray,
-    max_candidates: int = 8,
-    max_weight: int = 16,
+    llr_internal: np.ndarray,
+    feature_pack: Dict[str, np.ndarray],
+    rescue_cfg: Dict[str, object],
+    true_codeword: np.ndarray | None,
+    max_candidates: int,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    target_idx = np.flatnonzero(target_mask)
-    candidates: List[np.ndarray] = []
-    labels: List[int] = []
-    seen = set()
+    base_hard = np.asarray(feature_pack["grand_base_hard"], dtype=np.uint8)
+    bit_cost = _heuristic_bit_cost(code, llr_internal, feature_pack)
+    pool = candidate_pool_from_feature_pack(
+        feature_pack,
+        int(rescue_cfg.get("candidate_bank_pool_size", rescue_cfg.get("expanded_pool_size", 160))),
+        int(rescue_cfg.get("candidate_bank_top_k_bits", rescue_cfg.get("top_k_bits", 96))),
+        int(rescue_cfg.get("candidate_bank_top_k_unsat", rescue_cfg.get("top_k_unsat", 48))),
+        int(rescue_cfg.get("candidate_bank_top_k_oscillation", rescue_cfg.get("top_k_oscillation", 32))),
+        bit_cost=bit_cost,
+    )
+    max_exp = int(rescue_cfg.get("max_expanded_weight", 32))
+    weight_candidates = list(range(1, min(max_exp, int(rescue_cfg.get("candidate_bank_max_weight", 12))) + 1))
+    budget = int(rescue_cfg.get("candidate_bank_budget", 192))
+    cands = enumerate_mask_candidates(
+        pool=pool,
+        components=feature_pack["components"],
+        bit_cost=bit_cost,
+        weight_candidates=weight_candidates,
+        budget=budget,
+        weight_penalties=rescue_cfg.get("weight_penalties", [0.0, 0.0, 0.08, 0.20, 0.38, 0.60, 0.85, 1.12, 1.45, 1.80]),
+        combo_pool_w_le3=int(rescue_cfg.get("combo_pool_w_le3", 24)),
+        combo_pool_w_gt3=int(rescue_cfg.get("combo_pool_w_gt3", 16)),
+        component_bonus=float(rescue_cfg.get("component_bonus", -0.25)),
+    )
+    if bool(rescue_cfg.get("candidate_bank_enable_greedy", True)):
+        cands.extend(greedy_syndrome_repair_candidates(
+            code,
+            base_hard,
+            bit_cost,
+            max_steps=int(rescue_cfg.get("candidate_bank_greedy_steps", 24)),
+            max_candidates=int(rescue_cfg.get("candidate_bank_greedy_candidates", 4)),
+        ))
+    if bool(rescue_cfg.get("candidate_bank_enable_osd", True)):
+        cands.extend(syndrome_osd_candidates(
+            code,
+            base_hard,
+            bit_cost,
+            support_sizes=rescue_cfg.get("candidate_bank_osd_support_sizes", [64, 96, 128]),
+            jitter_passes=int(rescue_cfg.get("candidate_bank_osd_jitter_passes", 1)),
+        ))
+    cands.sort(key=lambda x: x[1])
 
-    def add_mask(mask_idx: np.ndarray, label: int) -> None:
-        idx_tuple = tuple(sorted(int(i) for i in np.asarray(mask_idx).reshape(-1).tolist()))
-        if not idx_tuple or idx_tuple in seen or len(candidates) >= max_candidates:
+    feats = np.zeros((max_candidates, 14), dtype=np.float32)
+    labels = np.zeros((max_candidates,), dtype=np.uint8)
+    valid = np.zeros((max_candidates,), dtype=np.uint8)
+
+    used = set()
+    row = 0
+
+    def try_add(codeword: np.ndarray, mask: np.ndarray, prior_score: float, source: str, label: int) -> None:
+        nonlocal row
+        if row >= max_candidates:
             return
-        seen.add(idx_tuple)
+        key = tuple(np.asarray(codeword, dtype=np.uint8).reshape(-1).tolist())
+        if key in used:
+            return
+        used.add(key)
+        crc_ok = code.crc_check_internal(codeword)
+        feats[row] = candidate_feature_vector(code, llr_internal, base_hard, codeword, mask, feature_pack, prior_score, crc_ok)
+        labels[row] = np.uint8(label)
+        valid[row] = 1
+        row += 1
+
+    # Base codeword candidate.
+    if code.is_codeword(base_hard):
+        lbl = int(true_codeword is not None and np.array_equal(base_hard, true_codeword))
+        try_add(base_hard.copy(), np.zeros(code.n, dtype=np.uint8), 0.0, "base_codeword", lbl)
+
+    for mask_idx, prior_score, source in cands:
+        if row >= max_candidates:
+            break
+        cand = base_hard.copy()
+        cand[np.asarray(mask_idx, dtype=np.int64)] ^= 1
+        if not code.is_codeword(cand):
+            continue
+        label = int(true_codeword is not None and np.array_equal(cand, true_codeword))
         mask = np.zeros(code.n, dtype=np.uint8)
-        mask[list(idx_tuple)] = 1
-        candidates.append(mask)
-        labels.append(int(label))
+        mask[np.asarray(mask_idx, dtype=np.int64)] = 1
+        try_add(cand, mask, float(prior_score), source, label)
 
-    if 0 < target_idx.size <= max_weight:
-        add_mask(target_idx, 1)
+    # Always inject an oracle positive candidate during training if it is missing.
+    if true_codeword is not None and row < max_candidates and not labels[:row].any():
+        true_codeword = np.asarray(true_codeword, dtype=np.uint8).reshape(-1)
+        mask = (base_hard ^ true_codeword).astype(np.uint8)
+        weight = int(mask.sum())
+        oracle_cap = int(rescue_cfg.get("oracle_candidate_max_weight", 128))
+        if weight <= oracle_cap:
+            try_add(true_codeword, mask, float(weight), "oracle_true", 1)
 
-    top = np.asarray(heuristic_order[: min(max(12, max_candidates + 4), code.n)], dtype=np.int16)
-    for i in range(min(6, top.size)):
-        add_mask(np.array([top[i]], dtype=np.int16), 0)
-    if top.size >= 2:
-        add_mask(np.array(top[:2], dtype=np.int16), 0)
-        add_mask(np.array([top[0], top[2 if top.size > 2 else 1]], dtype=np.int16), 0)
-    if top.size >= 3:
-        add_mask(np.array(top[:3], dtype=np.int16), 0)
-    if top.size >= 4:
-        add_mask(np.array(top[:4], dtype=np.int16), 0)
-
-    feat_list = [_mask_features(cand, {"var_features": var_features}) for cand in candidates]
-    cand_feats = np.zeros((max_candidates, 8), dtype=np.float32)
-    cand_labels = np.zeros(max_candidates, dtype=np.uint8)
-    cand_valid = np.zeros(max_candidates, dtype=np.uint8)
-    for i, feat in enumerate(feat_list[:max_candidates]):
-        cand_feats[i] = feat
-        cand_labels[i] = labels[i]
-        cand_valid[i] = 1
-    return cand_feats, cand_labels, cand_valid
+    return feats, labels, valid
 
 
 def build_rescue_features(
@@ -186,8 +240,6 @@ def build_rescue_features(
     for comp in components[:6]:
         component_score[comp] = np.maximum(component_score[comp], float(len(comp)))
 
-    # Channel-aligned suspicion: prioritize low channel reliability, base syndrome participation,
-    # BP unsatisfied-check participation, oscillation, and channel/BP disagreement.
     abs_ch = np.abs(llr)
     abs_final = np.abs(final_llr)
     unreliability = 1.0 - np.clip(_normalize(abs_ch), 0.0, 1.0)
@@ -283,10 +335,10 @@ def build_training_labels(
     bp_result: BPDecodeResult,
     rescue_cfg: Dict[str, object],
     model_cfg: Dict[str, object],
+    llr_internal: np.ndarray,
 ) -> Dict[str, np.ndarray]:
     true_codeword = np.asarray(true_codeword, dtype=np.uint8).reshape(-1)
     base_hard = np.asarray(feature_pack["grand_base_hard"], dtype=np.uint8)
-    # The v11 target is the channel-aligned GRAND-base correction.
     target_mask = (base_hard ^ true_codeword).astype(np.uint8)
     target_idx = np.flatnonzero(target_mask)
     bp_residual_mask = (np.asarray(bp_result.hard, dtype=np.uint8) ^ true_codeword).astype(np.uint8)
@@ -300,20 +352,21 @@ def build_training_labels(
     target_weight = int(target_idx.size)
     weight_label = min(target_weight, max_weight_class + 1)
     order = feature_pack["heuristic_order"]
-    top_std = set(int(x) for x in order[: int(rescue_cfg["pool_size"])])
-    top_exp = set(int(x) for x in order[: int(rescue_cfg["expanded_pool_size"])])
+    top_std = set(int(x) for x in order[: int(rescue_cfg["pool_size"])] )
+    top_exp = set(int(x) for x in order[: int(rescue_cfg["expanded_pool_size"])] )
     standard_reachable = int(0 < target_weight <= int(rescue_cfg["max_standard_weight"]) and all(int(i) in top_std for i in target_idx))
     expanded_reachable = int(0 < target_weight <= int(rescue_cfg["max_expanded_weight"]) and all(int(i) in top_exp for i in target_idx))
     rescueable = int((not standard_reachable) and expanded_reachable)
 
-    candidate_feats, candidate_labels, candidate_valid = make_rerank_candidates(
+    candidate_feats, candidate_labels, candidate_valid = build_candidate_bank(
         code=code,
-        heuristic_order=order,
-        target_mask=target_mask,
-        var_features=feature_pack["var_features"],
-        max_candidates=int(model_cfg.get("rerank_list_size", 8)),
-        max_weight=int(rescue_cfg["max_expanded_weight"]),
+        llr_internal=llr_internal,
+        feature_pack=feature_pack,
+        rescue_cfg=rescue_cfg,
+        true_codeword=true_codeword,
+        max_candidates=int(model_cfg.get("rerank_list_size", 12)),
     )
+
     return {
         "bit_labels": target_mask.astype(np.uint8),
         "segment_labels": seg_labels.astype(np.uint8),

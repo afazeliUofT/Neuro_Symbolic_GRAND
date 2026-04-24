@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=hyb-grand-v113-selftest
+#SBATCH --job-name=hyb-grand-v12-selftest
 #SBATCH --time=00:30:00
 #SBATCH --partition=cpubase_bycore_b1
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --output=slurm-%x-%j.out
 

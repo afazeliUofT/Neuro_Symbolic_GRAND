@@ -12,4 +12,7 @@ def build_code(cfg: Dict[str, object]) -> LDPCCode:
     if family in {"sionna_nr_ldpc", "nr5g", "5g", "5g_ldpc"}:
         from .sionna_nr_ldpc import build_sionna_nr_ldpc
         return build_sionna_nr_ldpc(**cfg)
+    if family in {"sionna_nr_pusch_ldpc", "sionna_pusch", "pusch_nr_ldpc", "nr_pusch_ldpc"}:
+        from .sionna_nr_pusch_ldpc import build_sionna_nr_pusch_ldpc
+        return build_sionna_nr_pusch_ldpc(**cfg)
     raise ValueError(f"Unknown code family: {family}")

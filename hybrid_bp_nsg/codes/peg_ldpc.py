@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 
 import numpy as np
 
@@ -20,11 +20,19 @@ class LDPCCode:
     rm_pattern: np.ndarray | None = None
     bg: str | None = None
     metadata: dict = field(default_factory=dict)
+    # Optional higher-layer / transport helpers used by the v12 package.
+    payload_k: int | None = None
+    encode_payload_fn: Optional[Callable[[np.ndarray], tuple[np.ndarray, np.ndarray]]] = None
+    internal_to_tx_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
+    tx_llr_to_internal_fn: Optional[Callable[[np.ndarray, np.ndarray | None], np.ndarray]] = None
+    crc_check_internal_fn: Optional[Callable[[np.ndarray], bool]] = None
+    payload_from_internal_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
 
     def __post_init__(self) -> None:
         self.h = (np.asarray(self.h, dtype=np.uint8) & 1)
         self.m, self.n = self.h.shape
         self.k = int(self.k)
+        self.payload_k = int(self.payload_k if self.payload_k is not None else self.k)
         self.rate = float(self.rate if self.rate is not None else self.k / max(1, self.n))
         self.deg_v = np.asarray(self.h.sum(axis=0), dtype=np.float32)
         self.deg_c = np.asarray(self.h.sum(axis=1), dtype=np.float32)
@@ -51,12 +59,25 @@ class LDPCCode:
     def transmitted_n(self) -> int:
         return int(self.tx_positions.size)
 
+    @property
+    def transport_k(self) -> int:
+        return int(self.payload_k if self.payload_k is not None else self.k)
+
+    @property
+    def has_outer_crc(self) -> bool:
+        return bool(self.crc_check_internal_fn is not None or self.metadata.get("has_outer_crc", False))
+
     def syndrome(self, bits: np.ndarray) -> np.ndarray:
         bits = np.asarray(bits, dtype=np.uint8)
         return (self.h @ bits.reshape(-1).astype(np.uint8)) % 2
 
     def is_codeword(self, bits: np.ndarray) -> bool:
         return int(self.syndrome(bits).sum()) == 0
+
+    def crc_check_internal(self, bits: np.ndarray) -> bool:
+        if self.crc_check_internal_fn is None:
+            return True
+        return bool(self.crc_check_internal_fn(np.asarray(bits, dtype=np.uint8).reshape(-1)))
 
     def encode_internal(self, message: np.ndarray) -> np.ndarray:
         msg = np.asarray(message, dtype=np.uint8)
@@ -76,11 +97,26 @@ class LDPCCode:
         out = (msg[:, : self.k].astype(np.uint8) @ self.g[: self.k].astype(np.uint8)) % 2
         return out[0].astype(np.uint8) if squeeze else out.astype(np.uint8)
 
+    def internal_to_tx(self, internal_bits: np.ndarray) -> np.ndarray:
+        arr = np.asarray(internal_bits, dtype=np.uint8)
+        if self.internal_to_tx_fn is not None:
+            return (np.asarray(self.internal_to_tx_fn(arr), dtype=np.uint8) & 1)
+        if arr.ndim == 1:
+            return arr[self.tx_positions]
+        return arr[:, self.tx_positions]
+
     def encode(self, message: np.ndarray) -> np.ndarray:
         internal = self.encode_internal(message)
-        if internal.ndim == 1:
-            return internal[self.tx_positions]
-        return internal[:, self.tx_positions]
+        return self.internal_to_tx(internal)
+
+    def encode_payload(self, payload_bits: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        payload_bits = np.asarray(payload_bits, dtype=np.uint8)
+        if self.encode_payload_fn is not None:
+            internal, tx = self.encode_payload_fn(payload_bits)
+            return (np.asarray(internal, dtype=np.uint8) & 1), (np.asarray(tx, dtype=np.uint8) & 1)
+        internal = self.encode_internal(payload_bits)
+        tx = self.internal_to_tx(internal)
+        return internal, tx
 
     def expand_llr(self, llr_tx: np.ndarray, info_llr: np.ndarray | None = None) -> np.ndarray:
         llr_tx = np.asarray(llr_tx, dtype=np.float32)
@@ -102,9 +138,20 @@ class LDPCCode:
                 out[:, punc_info] = info_llr[:, punc_info]
         return out[0] if squeeze else out
 
+    def tx_llr_to_internal(self, llr_tx: np.ndarray, info_llr: np.ndarray | None = None) -> np.ndarray:
+        if self.tx_llr_to_internal_fn is not None:
+            return np.asarray(self.tx_llr_to_internal_fn(np.asarray(llr_tx, dtype=np.float32), info_llr), dtype=np.float32)
+        return self.expand_llr(llr_tx, info_llr=info_llr)
+
     def info_bits(self, internal_bits: np.ndarray) -> np.ndarray:
         arr = np.asarray(internal_bits, dtype=np.uint8)
         return arr[..., : self.k]
+
+    def payload_bits(self, internal_bits: np.ndarray) -> np.ndarray:
+        arr = np.asarray(internal_bits, dtype=np.uint8)
+        if self.payload_from_internal_fn is not None:
+            return np.asarray(self.payload_from_internal_fn(arr), dtype=np.uint8)
+        return arr[..., : self.transport_k]
 
 
 def _random_regular_h(k: int, n: int, dv: int, seed: int) -> np.ndarray:
@@ -113,25 +160,24 @@ def _random_regular_h(k: int, n: int, dv: int, seed: int) -> np.ndarray:
     if m <= 0:
         raise ValueError("n must be larger than k")
     best = None
-    for attempt in range(200):
+    best_rank = -1
+    for _ in range(200):
         h = np.zeros((m, n), dtype=np.uint8)
         for v in range(n):
             rows = rng.choice(m, size=min(dv, m), replace=False)
             h[rows, v] = 1
-        # Ensure no empty checks.
         for r in np.flatnonzero(h.sum(axis=1) == 0):
             h[r, int(rng.integers(0, n))] = 1
         rank = gf2_rank(h)
-        if best is None or rank > gf2_rank(best):
+        if best is None or rank > best_rank:
             best = h
+            best_rank = rank
         if rank == m:
             return h
     return best
 
 
 def build_peg_ldpc(k: int = 32, n: int = 64, dv: int = 3, dc: int | None = None, seed: int = 1234, **_) -> LDPCCode:
-    # This is a compact random regular LDPC builder used for selftests and environments
-    # where Sionna is not installed. It is not intended to reproduce a standard code.
     h = _random_regular_h(int(k), int(n), int(dv), int(seed))
     g = gf2_nullspace(h)
     if g.shape[0] < int(k):

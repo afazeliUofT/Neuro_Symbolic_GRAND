@@ -1,7 +1,0 @@
-{
-  "epochs": 3,
-  "framework": "tensorflow",
-  "checkpoint": "outputs/hybrid_bp_nsg_v11_channel_aligned_smoke/checkpoints/rescue_net_tf.weights.h5",
-  "tf_checkpoint": "outputs/hybrid_bp_nsg_v11_channel_aligned_smoke/checkpoints/tf_ckpt/ckpt-3",
-  "num_gpus": 1
-}

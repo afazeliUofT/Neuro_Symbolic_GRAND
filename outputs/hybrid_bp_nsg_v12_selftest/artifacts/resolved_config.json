@@ -1,8 +1,8 @@
 {
   "project": {
     "seed": 123,
-    "output_dir": "outputs/hybrid_bp_nsg_v11_selftest",
-    "name": "hybrid_bp_nsg_v11_selftest"
+    "output_dir": "outputs/hybrid_bp_nsg_v12_selftest",
+    "name": "hybrid_bp_nsg_v12_selftest"
   },
   "code": {
     "family": "peg_ldpc",

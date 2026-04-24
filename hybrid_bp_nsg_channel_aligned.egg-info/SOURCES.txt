@@ -3,6 +3,7 @@ pyproject.toml
 hybrid_bp_nsg/__init__.py
 hybrid_bp_nsg/cli.py
 hybrid_bp_nsg/config.py
+hybrid_bp_nsg/rescue_search.py
 hybrid_bp_nsg/analysis/__init__.py
 hybrid_bp_nsg/analysis/reporting.py
 hybrid_bp_nsg/channels/__init__.py
@@ -15,6 +16,7 @@ hybrid_bp_nsg/codes/factory.py
 hybrid_bp_nsg/codes/gf2.py
 hybrid_bp_nsg/codes/peg_ldpc.py
 hybrid_bp_nsg/codes/sionna_nr_ldpc.py
+hybrid_bp_nsg/codes/sionna_nr_pusch_ldpc.py
 hybrid_bp_nsg/decoders/__init__.py
 hybrid_bp_nsg/decoders/bp.py
 hybrid_bp_nsg/decoders/grand_rescue.py

@@ -6,7 +6,7 @@ from typing import Dict, Optional
 import numpy as np
 
 from ..codes.peg_ldpc import LDPCCode
-from .bp import BeliefPropagationDecoder, BPDecodeResult
+from .bp import BPDecodeResult, BeliefPropagationDecoder
 from .grand_rescue import ResidualGrandRescueDecoder, RescueResult
 
 
@@ -23,6 +23,9 @@ class HybridDecodeResult:
     elapsed_ms: float
     used_micro_bp: bool
     main_result: BPDecodeResult
+    crc_ok: bool = True
+    crc_valid_candidates: int = 0
+    parity_valid_candidates: int = 0
 
 
 class HybridBPNSGDecoder:
@@ -69,4 +72,7 @@ class HybridBPNSGDecoder:
             elapsed_ms=float(elapsed),
             used_micro_bp=bool(rr.used_micro_bp),
             main_result=main,
+            crc_ok=bool(rr.crc_ok),
+            crc_valid_candidates=int(rr.crc_valid_candidates),
+            parity_valid_candidates=int(rr.parity_valid_candidates),
         )

@@ -29,6 +29,7 @@ def action_selftest(cfg):
         "n_internal": code.n,
         "n_transmitted": code.transmitted_n,
         "k": code.k,
+        "transport_k": int(getattr(code, "transport_k", code.k)),
         "m": code.m,
         "edges": int(code.h.sum()),
         "punctured": int(code.punctured_positions.size),
@@ -39,11 +40,15 @@ def action_selftest(cfg):
 
     rng = np.random.default_rng(int(cfg["project"].get("seed", 123)))
     for i in range(5):
-        msg = rng.integers(0, 2, size=code.k, dtype=np.uint8)
-        c = code.encode_internal(msg)
+        msg = rng.integers(0, 2, size=int(getattr(code, "transport_k", code.k)), dtype=np.uint8)
+        c, tx = code.encode_payload(msg)
         sw = int(code.syndrome(c).sum())
         if sw != 0:
             raise RuntimeError(f"encoder/internal PCM validation failed in selftest at sample {i}: syndrome weight {sw}")
+        if tx.shape[-1] != code.transmitted_n:
+            raise RuntimeError(f"transmitted length mismatch in selftest: got {tx.shape[-1]} expected {code.transmitted_n}")
+        if getattr(code, "has_outer_crc", False) and not code.crc_check_internal(c):
+            raise RuntimeError(f"CRC validation failed in selftest at sample {i}")
 
     bp = BeliefPropagationDecoder(code, max_iters=int(cfg["bp"]["hybrid_main_iterations"]), nms_alpha=float(cfg["bp"]["nms_alpha"]))
     frame = simulate_frame(code, snr_db=2.0, profile="A", rng=rng)
