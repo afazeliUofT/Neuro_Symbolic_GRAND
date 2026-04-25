@@ -85,11 +85,28 @@ def _make_row(cfg: Dict[str, object], code, bp, rng: np.random.Generator):
 
 def _worker_generate_chunk(cfg_json: str, split: str, target_count: int, seed: int, out_dir: str, shard_prefix: str) -> Dict[str, object]:
     # Keep workers CPU-only and avoid oversubscribing BLAS/OpenMP.
-    os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
-    os.environ.setdefault("OMP_NUM_THREADS", "1")
-    os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
-    os.environ.setdefault("MKL_NUM_THREADS", "1")
-    os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
+    # Slurm sets CUDA_VISIBLE_DEVICES in the parent job, so override it here rather
+    # than using setdefault(). This prevents Sionna/TensorFlow worker processes from
+    # grabbing the training GPU during dataset generation.
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+    os.environ["MKL_NUM_THREADS"] = "1"
+    os.environ["NUMEXPR_NUM_THREADS"] = "1"
+    try:
+        import tensorflow as tf  # type: ignore
+        try:
+            tf.config.set_visible_devices([], "GPU")
+        except Exception:
+            pass
+        try:
+            tf.config.threading.set_intra_op_parallelism_threads(1)
+            tf.config.threading.set_inter_op_parallelism_threads(1)
+        except Exception:
+            pass
+    except Exception:
+        pass
 
     cfg = json.loads(cfg_json)
     code = build_code(cfg["code"])

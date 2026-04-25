@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: hybrid-bp-nsg-channel-aligned
-Version: 12.0.1
+Version: 12.0.2
 Summary: FIR TensorFlow GPU PUSCH-aligned CRC-aware hybrid BP + AI/Tanner-guided GRAND rescue for 5G NR LDPC
 Requires-Python: >=3.10
 Provides-Extra: sionna1-no-rt

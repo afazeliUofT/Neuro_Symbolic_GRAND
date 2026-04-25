@@ -1,0 +1,10 @@
+profile,snr_db,decoder,samples,frame_errors,bler,avg_queries,p95_queries,rescue_rate,micro_bp_rate,main_success_rate,avg_latency_ms,crc_fail_rate,framework,num_gpus,weights_used,avg_crc_valid_candidates,avg_parity_valid_candidates
+A,0.0,bp_nms_20,200,200,1.0,0.0,0.0,0.0,0.0,0.0,68.65192303201184,1.0,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_smoke/checkpoints/rescue_net_tf.best.weights.h5,,
+A,0.0,bp_nms_50,200,198,0.99,0.0,0.0,0.0,0.0,0.01,170.4161004535854,0.99,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_smoke/checkpoints/rescue_net_tf.best.weights.h5,,
+A,0.0,hybrid_bp_nsg,200,200,1.0,2400.0,2400.0,0.0,0.0,0.0,919.6432219049893,1.0,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_smoke/checkpoints/rescue_net_tf.best.weights.h5,0.0,0.0
+A,2.0,bp_nms_20,267,59,0.2209737827715356,0.0,0.0,0.0,0.0,0.7790262172284644,47.006975046676416,0.2209737827715356,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_smoke/checkpoints/rescue_net_tf.best.weights.h5,,
+A,2.0,bp_nms_50,267,25,0.09363295880149813,0.0,0.0,0.0,0.0,0.9063670411985019,59.38571389618047,0.09363295880149813,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_smoke/checkpoints/rescue_net_tf.best.weights.h5,,
+A,2.0,hybrid_bp_nsg,267,47,0.1760299625468165,476.40449438202245,2400.0,0.0449438202247191,0.0,0.7790262172284644,216.23838120855197,0.1760299625468165,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_smoke/checkpoints/rescue_net_tf.best.weights.h5,0.8239700374531835,0.8239700374531835
+A,4.0,bp_nms_20,2000,0,0.0,0.0,0.0,0.0,0.0,1.0,18.335795546416193,0.0,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_smoke/checkpoints/rescue_net_tf.best.weights.h5,,
+A,4.0,bp_nms_50,2000,0,0.0,0.0,0.0,0.0,0.0,1.0,18.21351210284047,0.0,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_smoke/checkpoints/rescue_net_tf.best.weights.h5,,
+A,4.0,hybrid_bp_nsg,2000,0,0.0,0.0,0.0,0.0,0.0,1.0,18.257933035260066,0.0,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_smoke/checkpoints/rescue_net_tf.best.weights.h5,1.0,1.0

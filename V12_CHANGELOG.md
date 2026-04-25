@@ -33,8 +33,15 @@
 - Generation path parallelized across CPU workers with oversubscription protection.
 
 
-## v12.0.1 hotfix
+## v12.0.2.2 hotfix
 
-- Fixed CRC validation for `sionna_nr_pusch_ldpc`. The previous `crc_check_internal()` routed a noiseless codeword through `TBDecoder`, which can be tripped by decoder-input sign-convention ambiguities on some Sionna/FIR builds. v12.0.1 now validates the outer TB CRC directly in the internal systematic domain by regenerating the expected code-block input (`payload + TB CRC + zero padding`) and comparing it with the first `cb_size` internal bits.
+- Fixed CRC validation for `sionna_nr_pusch_ldpc`. The previous `crc_check_internal()` routed a noiseless codeword through `TBDecoder`, which can be tripped by decoder-input sign-convention ambiguities on some Sionna/FIR builds. v12.0.2 now validates the outer TB CRC directly in the internal systematic domain by regenerating the expected code-block input (`payload + TB CRC + zero padding`) and comparing it with the first `cb_size` internal bits.
 - Removed the silent fallback that previously skipped TB CRC attachment if `tb_crc_encoder` raised. This now fails loudly during code construction instead of creating CRC-invalid training data.
 - `scripts/check_pusch_nr_chain.py` now also checks that `internal_to_tx` matches the Sionna `TBEncoder` output exactly.
+
+
+## v12.0.2 fixes
+
+- fixed mixed-precision dtype mismatches inside the TensorFlow RescueNet graph path
+- dataset-generation workers now force CPU-only TensorFlow/Sionna use on GPU jobs
+- CLI pipeline imports train/evaluate lazily so TensorFlow is not loaded before generation

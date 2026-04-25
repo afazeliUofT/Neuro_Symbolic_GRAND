@@ -1,0 +1,46 @@
+2026-04-24 07:08:58.125988: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-24 07:09:13.165360: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777039755.309652 2954765 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777039756.442011 2954765 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777039760.250883 2954765 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777039760.251008 2954765 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777039760.251017 2954765 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777039760.251025 2954765 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-24 07:09:20.612793: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+numpy: OK 2.1.1
+yaml: OK 6.0.3
+tensorflow: OK 2.19.1
+sionna: OK 1.2.2
+torch: optional OK 2.11.0
+python: 3.12.4 (main, Jun 12 2024, 16:22:31) [GCC 13.3.0]
+Config: configs/fir_hybrid_bp_nsg_selftest.yaml
+  output_dir: outputs/hybrid_bp_nsg_v12_selftest
+  code: peg_ldpc k=32 n=64
+  failed_snr_db_grid: [0, 1, 2]
+  failed_snr_probs: [0.45, 0.35, 0.2]
+  failed_snr_probs_note: as_configured
+  probability_sum: 1.000000000000
+Config validation OK
+2026-04-24 07:10:21.723896: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-24 07:10:21.734541: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777039821.744827 2996476 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777039821.747987 2996476 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777039821.757125 2996476 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777039821.757166 2996476 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777039821.757172 2996476 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777039821.757175 2996476 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-24 07:10:21.760425: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+python: 3.12.4 (main, Jun 12 2024, 16:22:31) [GCC 13.3.0]
+numpy: 2.1.1
+yaml: 6.0.3
+tensorflow: 2.19.1
+sionna: 1.2.2
+torch (optional): 2.11.0
+2026-04-24 07:10:26,144 | INFO | selftest | Code summary: {'family': 'peg_ldpc', 'n_internal': 64, 'n_transmitted': 64, 'k': 32, 'transport_k': 32, 'm': 32, 'edges': 192, 'punctured': 0, 'metadata': {}}
+2026-04-24 07:10:26,332 | INFO | selftest | BP selftest success=True iterations=2 syndrome_weight=0
+2026-04-24 07:10:26,334 | INFO | selftest | Hybrid selftest success=True action=bp_success queries=0
+2026-04-24 07:10:26,334 | INFO | selftest | Selftest complete.

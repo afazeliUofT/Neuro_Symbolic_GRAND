@@ -49,7 +49,7 @@
     "grad_clip": 1.0,
     "resume": true,
     "require_gpu": true,
-    "mixed_precision": true,
+    "mixed_precision": "bfloat16",
     "preload_dataset": true,
     "loss_weights": {
       "bit": 0.9,

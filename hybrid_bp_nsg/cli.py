@@ -91,12 +91,12 @@ def main():
         make_plots(cfg)
     elif args.action == "pipeline":
         from .training.generation import generate_dataset
-        from .training.train import train_model
-        from .training.evaluation import evaluate
-        from .analysis.reporting import make_report
         generate_dataset(cfg)
+        from .training.train import train_model
         train_model(cfg)
+        from .training.evaluation import evaluate
         evaluate(cfg)
+        from .analysis.reporting import make_report
         make_report(cfg)
 
 

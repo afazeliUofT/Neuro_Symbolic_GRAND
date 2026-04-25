@@ -13,10 +13,18 @@ except Exception:  # pragma: no cover
 def require_tf():
     if tf is None:  # pragma: no cover
         raise RuntimeError(
-            "TensorFlow is required for v11.3 TensorFlow/Keras rescue training/inference. "
+            "TensorFlow is required for v12 TensorFlow/Keras rescue training/inference. "
             "Activate the FIR .venv that contains tensorflow before running train/evaluate."
         )
     return tf
+
+
+def _compute_dtype(layer) -> "tf.dtypes.DType":
+    require_tf()
+    try:
+        return tf.as_dtype(getattr(layer, "compute_dtype", None) or tf.keras.backend.floatx())
+    except Exception:
+        return tf.float32
 
 
 class CandidateReranker(tf.keras.Model if tf is not None else object):  # type: ignore[misc]
@@ -29,17 +37,19 @@ class CandidateReranker(tf.keras.Model if tf is not None else object):  # type: 
         self.d1 = tf.keras.layers.Dense(hidden_dim, activation="gelu")
         self.n1 = tf.keras.layers.LayerNormalization()
         self.d2 = tf.keras.layers.Dense(max(8, hidden_dim // 2), activation="gelu")
-        self.out = tf.keras.layers.Dense(1)
+        # Force final scores to float32 even when mixed precision is enabled.
+        self.out = tf.keras.layers.Dense(1, dtype="float32")
 
     def call(self, packet_embedding, candidate_features, training: bool = False):
-        b = tf.shape(candidate_features)[0]
+        comp_dtype = _compute_dtype(self)
         c = tf.shape(candidate_features)[1]
-        pkt = tf.tile(packet_embedding[:, None, :], [1, c, 1])
-        x = tf.concat([pkt, tf.cast(candidate_features, tf.float32)], axis=-1)
+        pkt = tf.cast(tf.tile(packet_embedding[:, None, :], [1, c, 1]), comp_dtype)
+        cand = tf.cast(candidate_features, comp_dtype)
+        x = tf.concat([pkt, cand], axis=-1)
         x = self.d1(x)
         x = self.n1(x)
         x = self.d2(x)
-        return tf.squeeze(self.out(x), axis=-1)
+        return tf.cast(tf.squeeze(self.out(x), axis=-1), tf.float32)
 
 
 class TransformerBlock(tf.keras.layers.Layer if tf is not None else object):  # type: ignore[misc]
@@ -70,10 +80,9 @@ class TransformerBlock(tf.keras.layers.Layer if tf is not None else object):  # 
 class RescueNet(tf.keras.Model if tf is not None else object):  # type: ignore[misc]
     """TensorFlow/Keras code-aware graph network for channel-aligned GRAND rescue.
 
-    This replaces the PyTorch network in v11.1 because the FIR probes show that:
-      * TensorFlow 2.19.1 is installed and CUDA-enabled in the project venv.
-      * Sionna 1.2.2 accepts TensorFlow tensors but not Torch tensors.
-      * The correct Sionna import path is sionna.phy.fec.ldpc.*.
+    The implementation keeps mixed precision optional for FIR H100 runs, but all
+    custom tf ops inside ``call`` explicitly harmonize dtypes so graph mode / XLA
+    can run without float16/float32 mismatches.
     """
 
     def __init__(
@@ -143,16 +152,16 @@ class RescueNet(tf.keras.Model if tf is not None else object):  # type: ignore[m
         ]
 
         self.bit_d1 = tf.keras.layers.Dense(max(8, hidden_dim // 2), activation="gelu")
-        self.bit_out = tf.keras.layers.Dense(1)
+        self.bit_out = tf.keras.layers.Dense(1, dtype="float32")
 
         self.packet_d1 = tf.keras.layers.Dense(hidden_dim, activation="gelu")
         self.packet_norm = tf.keras.layers.LayerNormalization()
 
-        self.segment_head = tf.keras.layers.Dense(num_segments)
-        self.weight_head = tf.keras.layers.Dense(max_weight_class + 2)
-        self.standard_head = tf.keras.layers.Dense(1)
-        self.expanded_head = tf.keras.layers.Dense(1)
-        self.rescue_head = tf.keras.layers.Dense(1)
+        self.segment_head = tf.keras.layers.Dense(num_segments, dtype="float32")
+        self.weight_head = tf.keras.layers.Dense(max_weight_class + 2, dtype="float32")
+        self.standard_head = tf.keras.layers.Dense(1, dtype="float32")
+        self.expanded_head = tf.keras.layers.Dense(1, dtype="float32")
+        self.rescue_head = tf.keras.layers.Dense(1, dtype="float32")
         self.reranker = CandidateReranker(hidden_dim, candidate_feature_dim=candidate_feature_dim, hidden_dim=hidden_dim)
 
         self.set_graph(h_dense, deg_v, deg_c)
@@ -176,21 +185,24 @@ class RescueNet(tf.keras.Model if tf is not None else object):  # type: ignore[m
 
         v = self.var_drop(self.var_norm(self.var_dense(var_features)), training=training)
         c = self.check_drop(self.check_norm(self.check_dense(check_features)), training=training)
-        h = tf.cast(self.h_dense, tf.float32)
-        dv = tf.cast(self.deg_v, tf.float32)
-        dc = tf.cast(self.deg_c, tf.float32)
+
+        msg_dtype = v.dtype
+        h = tf.cast(self.h_dense, msg_dtype)
+        dv = tf.cast(self.deg_v, msg_dtype)
+        dc = tf.cast(self.deg_c, msg_dtype)
 
         for vu, cu, vn, cn, drop in zip(self.v_updates, self.c_updates, self.v_norms, self.c_norms, self.dropouts):
-            c_to_v = tf.einsum("mn,bmh->bnh", h, c) / dv[None, :, None]
-            v_to_c = tf.einsum("mn,bnh->bmh", h, v) / dc[None, :, None]
-            v = vn(v + drop(vu(tf.concat([v, c_to_v], axis=-1), training=training), training=training))
-            c = cn(c + drop(cu(tf.concat([c, v_to_c], axis=-1), training=training), training=training))
+            c_to_v = tf.einsum("mn,bmh->bnh", h, tf.cast(c, msg_dtype)) / dv[None, :, None]
+            v_to_c = tf.einsum("mn,bnh->bmh", h, tf.cast(v, msg_dtype)) / dc[None, :, None]
+            v_in = tf.concat([tf.cast(v, msg_dtype), c_to_v], axis=-1)
+            c_in = tf.concat([tf.cast(c, msg_dtype), v_to_c], axis=-1)
+            v = vn(tf.cast(v, msg_dtype) + drop(vu(v_in, training=training), training=training))
+            c = cn(tf.cast(c, msg_dtype) + drop(cu(c_in, training=training), training=training))
 
-        bit_logits = tf.squeeze(self.bit_out(self.bit_d1(v)), axis=-1)
+        bit_logits = tf.cast(tf.squeeze(self.bit_out(self.bit_d1(v)), axis=-1), tf.float32)
 
         bsz = tf.shape(v)[0]
         n = tf.shape(v)[1]
-        hid = tf.shape(v)[2]
         k = tf.minimum(tf.cast(self.top_k_tokens, tf.int32), n)
         idx = tf.clip_by_value(heuristic_order[:, :k], 0, n - 1)
         tokens = tf.gather(v, idx, batch_dims=1)
@@ -201,19 +213,20 @@ class RescueNet(tf.keras.Model if tf is not None else object):  # type: ignore[m
         max_pool = tf.reduce_max(v, axis=1)
         token_pool = tf.reduce_mean(tokens, axis=1)
         g = self.global_norm(self.global_dense(global_features))
-        packet = self.packet_norm(self.packet_d1(tf.concat([mean_pool + g, max_pool, token_pool], axis=-1)))
+        packet = self.packet_norm(self.packet_d1(tf.concat([mean_pool + tf.cast(g, mean_pool.dtype), max_pool, token_pool], axis=-1)))
+        packet_f32 = tf.cast(packet, tf.float32)
 
         out = {
             "bit_logits": bit_logits,
-            "segment_logits": self.segment_head(packet),
-            "weight_logits": self.weight_head(packet),
-            "standard_logits": tf.squeeze(self.standard_head(packet), axis=-1),
-            "expanded_logits": tf.squeeze(self.expanded_head(packet), axis=-1),
-            "rescue_logits": tf.squeeze(self.rescue_head(packet), axis=-1),
-            "packet_embedding": packet,
+            "segment_logits": tf.cast(self.segment_head(packet), tf.float32),
+            "weight_logits": tf.cast(self.weight_head(packet), tf.float32),
+            "standard_logits": tf.cast(tf.squeeze(self.standard_head(packet), axis=-1), tf.float32),
+            "expanded_logits": tf.cast(tf.squeeze(self.expanded_head(packet), axis=-1), tf.float32),
+            "rescue_logits": tf.cast(tf.squeeze(self.rescue_head(packet), axis=-1), tf.float32),
+            "packet_embedding": packet_f32,
         }
         if "candidate_features" in inputs:
-            out["candidate_scores"] = self.reranker(packet, inputs["candidate_features"], training=training)
+            out["candidate_scores"] = self.reranker(packet_f32, inputs["candidate_features"], training=training)
         else:
             out["candidate_scores"] = tf.zeros((bsz, 0), dtype=tf.float32)
         return out

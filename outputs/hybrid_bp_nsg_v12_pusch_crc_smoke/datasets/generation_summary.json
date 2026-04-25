@@ -18,14 +18,7 @@
       "kept": 100,
       "attempted": 100,
       "shards": 1,
-      "prefix": "w002"
-    },
-    {
-      "split": "train",
-      "kept": 100,
-      "attempted": 100,
-      "shards": 1,
-      "prefix": "w005"
+      "prefix": "w006"
     },
     {
       "split": "train",
@@ -39,7 +32,7 @@
       "kept": 100,
       "attempted": 100,
       "shards": 1,
-      "prefix": "w007"
+      "prefix": "w002"
     },
     {
       "split": "train",
@@ -53,21 +46,21 @@
       "kept": 100,
       "attempted": 100,
       "shards": 1,
-      "prefix": "w006"
+      "prefix": "w000"
     },
     {
       "split": "train",
       "kept": 100,
       "attempted": 100,
       "shards": 1,
-      "prefix": "w000"
+      "prefix": "w007"
     },
     {
-      "split": "val",
+      "split": "train",
       "kept": 100,
       "attempted": 100,
       "shards": 1,
-      "prefix": "w008"
+      "prefix": "w005"
     },
     {
       "split": "val",
@@ -75,6 +68,13 @@
       "attempted": 100,
       "shards": 1,
       "prefix": "w009"
+    },
+    {
+      "split": "val",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w008"
     }
   ]
 }

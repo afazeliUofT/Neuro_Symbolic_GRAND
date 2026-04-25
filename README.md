@@ -1,4 +1,4 @@
-# Hybrid BP + PUSCH-aligned CRC-aware AI/Tanner-GRAND Rescue — v12.0
+# Hybrid BP + PUSCH-aligned CRC-aware AI/Tanner-GRAND Rescue — v12.0.2
 
 This package is a standalone FIR-oriented replacement for the current GitHub version.
 
@@ -102,3 +102,10 @@ outputs/hybrid_bp_nsg_v12_pusch_crc_full/
 - Training uses TensorFlow graph mode with optional XLA and mixed precision.
 - Dataset generation uses **spawned CPU workers** and is configured for a 32-core FIR allocation.
 - Generation workers force their internal BLAS/OMP thread counts to 1 to avoid oversubscription.
+
+
+## v12.0.2 fixes
+
+- fixed mixed-precision dtype mismatches inside the TensorFlow RescueNet graph path
+- dataset-generation workers now force CPU-only TensorFlow/Sionna use on GPU jobs
+- CLI pipeline imports train/evaluate lazily so TensorFlow is not loaded before generation

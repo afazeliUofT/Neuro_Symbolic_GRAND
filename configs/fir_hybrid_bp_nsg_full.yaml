@@ -36,7 +36,7 @@ train:
   grad_clip: 1.0
   resume: true
   require_gpu: true
-  mixed_precision: true
+  mixed_precision: bfloat16
   xla: true
   cpu_threads: 32
   preload_dataset: true
