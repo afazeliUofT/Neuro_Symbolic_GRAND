@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=hyb-grand-v12-eval
-#SBATCH --time=24:00:00
+#SBATCH --time=16:00:00
 #SBATCH --partition=gpubase_bygpu_b3
 #SBATCH --cpus-per-task=32
-#SBATCH --mem=128G
+#SBATCH --mem=96G
 #SBATCH --gpus-per-node=h100:1
 #SBATCH --output=slurm-%x-%j.out
 

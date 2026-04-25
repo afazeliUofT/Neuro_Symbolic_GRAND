@@ -1,0 +1,64 @@
+2026-04-24 21:08:37.251745: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777090118.776331  804844 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777090119.968919  804844 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777090123.812410  804844 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777090123.812488  804844 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777090123.812500  804844 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777090123.812511  804844 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+I0000 00:00:1777090145.491067  804844 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777090145.509976  804844 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+========================================================================================
+TensorFlow GPU check
+========================================================================================
+sys.executable: /home/rsadve1/scratch/Neuro_Symbolic_GRAND/.venv/bin/python
+CUDA_VISIBLE_DEVICES: 0
+SLURM_JOB_ID: 37206473
+SLURM_GPUS: None
+SLURM_JOB_GPUS: 1
+SLURM_STEP_GPUS: None
+tensorflow: 2.19.1
+build_info: {
+  "cpu_compiler": "/usr/lib/llvm-18/bin/clang",
+  "cuda_compute_capabilities": [
+    "sm_60",
+    "sm_70",
+    "sm_80",
+    "sm_89",
+    "compute_90"
+  ],
+  "cuda_version": "12.5.1",
+  "cudnn_version": "9",
+  "is_cuda_build": true,
+  "is_rocm_build": false,
+  "is_tensorrt_build": false
+}
+built_with_cuda: True
+physical_gpus: [PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
+gpu_details: {'compute_capability': (9, 0), 'device_name': 'NVIDIA H100 80GB HBM3'}
+gpu_matmul_shape: (2048, 2048) mean: 0.02211610972881317
+Config: configs/fir_hybrid_bp_nsg_full.yaml
+  output_dir: outputs/hybrid_bp_nsg_v12_pusch_crc_full
+  code: sionna_nr_pusch_ldpc k=None n=512
+  failed_snr_db_grid: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  failed_snr_probs: [0.20202020202020202, 0.1717171717171717, 0.1414141414141414, 0.1212121212121212, 0.10101010101010101, 0.0808080808080808, 0.0707070707070707, 0.050505050505050504, 0.0303030303030303, 0.0202020202020202, 0.0101010101010101]
+  failed_snr_probs_note: as_configured
+  probability_sum: 1.000000000000
+Config validation OK
+2026-04-24 21:09:09.856285: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777090149.869306  804927 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777090149.873219  804927 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777090149.885488  804927 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777090149.885533  804927 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777090149.885565  804927 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777090149.885575  804927 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+I0000 00:00:1777090156.196217  804927 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777090156.197326  804927 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+2026-04-24 21:10:42,431 | INFO | evaluate | Loaded TensorFlow rescue network on /GPU:0 with GPUs=[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')] using weights=outputs/hybrid_bp_nsg_v12_pusch_crc_full/checkpoints/rescue_net_tf.best.weights.h5
+2026-04-24 23:25:26,399 | INFO | evaluate | Completed profile=A snr=0 samples=4000 summary=outputs/hybrid_bp_nsg_v12_pusch_crc_full/evaluation/profile_A/snr_+0.0dB/summary.csv
+2026-04-25 01:20:42,192 | INFO | evaluate | Completed profile=A snr=1 samples=4000 summary=outputs/hybrid_bp_nsg_v12_pusch_crc_full/evaluation/profile_A/snr_+1.0dB/summary.csv
+2026-04-25 01:51:37,870 | INFO | evaluate | Completed profile=A snr=2 samples=4000 summary=outputs/hybrid_bp_nsg_v12_pusch_crc_full/evaluation/profile_A/snr_+2.0dB/summary.csv
+2026-04-25 03:45:53,694 | INFO | evaluate | Completed profile=A snr=3 samples=80000 summary=outputs/hybrid_bp_nsg_v12_pusch_crc_full/evaluation/profile_A/snr_+3.0dB/summary.csv
+2026-04-25 05:05:25,198 | INFO | evaluate | Completed profile=A snr=4 samples=80000 summary=outputs/hybrid_bp_nsg_v12_pusch_crc_full/evaluation/profile_A/snr_+4.0dB/summary.csv
+2026-04-25 06:08:50,798 | INFO | evaluate | Completed profile=A snr=5 samples=80000 summary=outputs/hybrid_bp_nsg_v12_pusch_crc_full/evaluation/profile_A/snr_+5.0dB/summary.csv
