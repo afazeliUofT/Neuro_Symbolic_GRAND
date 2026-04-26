@@ -1,0 +1,80 @@
+{
+  "attempted": 1000,
+  "kept": {
+    "train": 800,
+    "val": 200
+  },
+  "workers": 8,
+  "jobs": [
+    {
+      "split": "train",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w006"
+    },
+    {
+      "split": "train",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w001"
+    },
+    {
+      "split": "train",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w007"
+    },
+    {
+      "split": "train",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w003"
+    },
+    {
+      "split": "train",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w005"
+    },
+    {
+      "split": "train",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w002"
+    },
+    {
+      "split": "train",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w004"
+    },
+    {
+      "split": "train",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w000"
+    },
+    {
+      "split": "val",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w009"
+    },
+    {
+      "split": "val",
+      "kept": 100,
+      "attempted": 100,
+      "shards": 1,
+      "prefix": "w008"
+    }
+  ]
+}

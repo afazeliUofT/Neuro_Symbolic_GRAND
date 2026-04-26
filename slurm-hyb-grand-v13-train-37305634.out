@@ -1,0 +1,215 @@
+2026-04-25 16:18:03.392473: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777159084.752409 3311057 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777159085.543475 3311057 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777159087.752227 3311057 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777159087.752321 3311057 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777159087.752333 3311057 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777159087.752343 3311057 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+I0000 00:00:1777159109.705768 3311057 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777159109.734279 3311057 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+========================================================================================
+TensorFlow GPU check
+========================================================================================
+sys.executable: /home/rsadve1/scratch/Neuro_Symbolic_GRAND/.venv/bin/python
+CUDA_VISIBLE_DEVICES: 0
+SLURM_JOB_ID: 37305634
+SLURM_GPUS: None
+SLURM_JOB_GPUS: 1
+SLURM_STEP_GPUS: None
+tensorflow: 2.19.1
+build_info: {
+  "cpu_compiler": "/usr/lib/llvm-18/bin/clang",
+  "cuda_compute_capabilities": [
+    "sm_60",
+    "sm_70",
+    "sm_80",
+    "sm_89",
+    "compute_90"
+  ],
+  "cuda_version": "12.5.1",
+  "cudnn_version": "9",
+  "is_cuda_build": true,
+  "is_rocm_build": false,
+  "is_tensorrt_build": false
+}
+built_with_cuda: True
+physical_gpus: [PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
+gpu_details: {'compute_capability': (9, 0), 'device_name': 'NVIDIA H100 80GB HBM3'}
+gpu_matmul_shape: (2048, 2048) mean: 0.023489760234951973
+Config: configs/fir_hybrid_bp_nsg_full.yaml
+  output_dir: outputs/hybrid_bp_nsg_v13_pusch_cdl_full
+  code: sionna_nr_pusch_ldpc k=None n=512
+  failed_snr_db_grid: [0, 1, 2, 3, 4, 5, 6]
+  failed_snr_probs: [0.24, 0.2, 0.17, 0.15, 0.11, 0.08, 0.05]
+  failed_snr_probs_note: as_configured
+  probability_sum: 1.000000000000
+Config validation OK
+2026-04-25 16:18:33.249833: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777159113.262725 3311386 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777159113.266669 3311386 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777159113.278848 3311386 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777159113.278883 3311386 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777159113.278895 3311386 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777159113.278925 3311386 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-25 16:18:39.822459: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:47] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+I0000 00:00:1777159119.822546 3311386 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777159119.823596 3311386 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+code_family: sionna_nr_pusch_ldpc
+transport_k: 256
+ldpc_k: 272
+n_internal: 584
+n_transmitted: 512
+profiles: ['AWGN', 'CDL_C']
+profile=AWGN tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=AWGN modulation=QPSK perfect_csi=True equalizer=identity finite_llr=True
+profile=CDL_C tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=SIONNA_CDL_C modulation=QPSK perfect_csi=True equalizer=one_tap_perfect_csi finite_llr=True
+2026-04-25 16:20:02.316089: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777159202.329131 3311836 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777159202.333123 3311836 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777159202.345642 3311836 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777159202.345685 3311836 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777159202.345696 3311836 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777159202.345706 3311836 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-25 16:20:06,373 | INFO | train | TensorFlow version=2.19.1 GPUs=[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')] mixed_policy=<DTypePolicy "mixed_bfloat16">
+I0000 00:00:1777159207.020752 3311836 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777159207.021826 3311836 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+/home/rsadve1/scratch/Neuro_Symbolic_GRAND/.venv/lib/python3.12/site-packages/keras/src/optimizers/base_optimizer.py:862: UserWarning: Gradients do not exist for variables ['tf_rescue_net/c_update_4/dense_21/kernel', 'tf_rescue_net/c_update_4/dense_21/bias', 'tf_rescue_net/c_update_4/dense_22/kernel', 'tf_rescue_net/c_update_4/dense_22/bias', 'tf_rescue_net/c_norm_4/gamma', 'tf_rescue_net/c_norm_4/beta'] when minimizing the loss. If using `model.compile()`, did you forget to provide a `loss` argument?
+  warnings.warn(
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1777159239.485693 3311889 service.cc:152] XLA service 0x1516f4001950 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+I0000 00:00:1777159239.545877 3311889 service.cc:160]   StreamExecutor device (0): NVIDIA H100 80GB HBM3, Compute Capability 9.0
+I0000 00:00:1777159240.395625 3311889 cuda_dnn.cc:529] Loaded cuDNN version 91000
+I0000 00:00:1777159242.410787 3311889 device_compiler.h:188] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2026-04-25 16:21:38,281 | INFO | train | Epoch 1 | train_loss=1.4015 val_loss=1.3445 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:21:38,947 | INFO | train | New best checkpoint at epoch 1 val_loss=1.3445
+INFO:train:New best checkpoint at epoch 1 val_loss=1.3445
+2026-04-25 16:21:42,476 | INFO | train | Epoch 2 | train_loss=1.3456 val_loss=1.3355 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 2 | train_loss=1.3456 val_loss=1.3355 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:21:42,882 | INFO | train | New best checkpoint at epoch 2 val_loss=1.3355
+INFO:train:New best checkpoint at epoch 2 val_loss=1.3355
+2026-04-25 16:21:46,411 | INFO | train | Epoch 3 | train_loss=1.3358 val_loss=1.3199 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 3 | train_loss=1.3358 val_loss=1.3199 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:21:46,845 | INFO | train | New best checkpoint at epoch 3 val_loss=1.3199
+INFO:train:New best checkpoint at epoch 3 val_loss=1.3199
+2026-04-25 16:21:50,329 | INFO | train | Epoch 4 | train_loss=1.3275 val_loss=1.3389 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 4 | train_loss=1.3275 val_loss=1.3389 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:21:54,361 | INFO | train | Epoch 5 | train_loss=1.3223 val_loss=1.3044 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 5 | train_loss=1.3223 val_loss=1.3044 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:21:54,838 | INFO | train | New best checkpoint at epoch 5 val_loss=1.3044
+INFO:train:New best checkpoint at epoch 5 val_loss=1.3044
+2026-04-25 16:21:58,324 | INFO | train | Epoch 6 | train_loss=1.3127 val_loss=1.3032 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 6 | train_loss=1.3127 val_loss=1.3032 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:21:58,805 | INFO | train | New best checkpoint at epoch 6 val_loss=1.3032
+INFO:train:New best checkpoint at epoch 6 val_loss=1.3032
+2026-04-25 16:22:02,311 | INFO | train | Epoch 7 | train_loss=1.3098 val_loss=1.3101 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 7 | train_loss=1.3098 val_loss=1.3101 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:06,093 | INFO | train | Epoch 8 | train_loss=1.3047 val_loss=1.3000 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 8 | train_loss=1.3047 val_loss=1.3000 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:06,543 | INFO | train | New best checkpoint at epoch 8 val_loss=1.3000
+INFO:train:New best checkpoint at epoch 8 val_loss=1.3000
+2026-04-25 16:22:10,127 | INFO | train | Epoch 9 | train_loss=1.3025 val_loss=1.2969 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 9 | train_loss=1.3025 val_loss=1.2969 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:10,538 | INFO | train | New best checkpoint at epoch 9 val_loss=1.2969
+INFO:train:New best checkpoint at epoch 9 val_loss=1.2969
+2026-04-25 16:22:14,025 | INFO | train | Epoch 10 | train_loss=1.3015 val_loss=1.2934 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 10 | train_loss=1.3015 val_loss=1.2934 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:14,478 | INFO | train | New best checkpoint at epoch 10 val_loss=1.2934
+INFO:train:New best checkpoint at epoch 10 val_loss=1.2934
+2026-04-25 16:22:18,054 | INFO | train | Epoch 11 | train_loss=1.2986 val_loss=1.3024 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 11 | train_loss=1.2986 val_loss=1.3024 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:21,870 | INFO | train | Epoch 12 | train_loss=1.2965 val_loss=1.2909 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 12 | train_loss=1.2965 val_loss=1.2909 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:22,330 | INFO | train | New best checkpoint at epoch 12 val_loss=1.2909
+INFO:train:New best checkpoint at epoch 12 val_loss=1.2909
+2026-04-25 16:22:25,851 | INFO | train | Epoch 13 | train_loss=1.2948 val_loss=1.2893 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 13 | train_loss=1.2948 val_loss=1.2893 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:26,302 | INFO | train | New best checkpoint at epoch 13 val_loss=1.2893
+INFO:train:New best checkpoint at epoch 13 val_loss=1.2893
+2026-04-25 16:22:29,806 | INFO | train | Epoch 14 | train_loss=1.2934 val_loss=1.2866 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 14 | train_loss=1.2934 val_loss=1.2866 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:30,233 | INFO | train | New best checkpoint at epoch 14 val_loss=1.2866
+INFO:train:New best checkpoint at epoch 14 val_loss=1.2866
+2026-04-25 16:22:33,703 | INFO | train | Epoch 15 | train_loss=1.2913 val_loss=1.2890 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 15 | train_loss=1.2913 val_loss=1.2890 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:37,456 | INFO | train | Epoch 16 | train_loss=1.2898 val_loss=1.2852 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 16 | train_loss=1.2898 val_loss=1.2852 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:37,863 | INFO | train | New best checkpoint at epoch 16 val_loss=1.2852
+INFO:train:New best checkpoint at epoch 16 val_loss=1.2852
+2026-04-25 16:22:41,342 | INFO | train | Epoch 17 | train_loss=1.2859 val_loss=1.2867 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 17 | train_loss=1.2859 val_loss=1.2867 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:45,113 | INFO | train | Epoch 18 | train_loss=1.2850 val_loss=1.2822 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 18 | train_loss=1.2850 val_loss=1.2822 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:45,568 | INFO | train | New best checkpoint at epoch 18 val_loss=1.2822
+INFO:train:New best checkpoint at epoch 18 val_loss=1.2822
+2026-04-25 16:22:49,066 | INFO | train | Epoch 19 | train_loss=1.2844 val_loss=1.2851 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 19 | train_loss=1.2844 val_loss=1.2851 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:52,920 | INFO | train | Epoch 20 | train_loss=1.2834 val_loss=1.2865 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 20 | train_loss=1.2834 val_loss=1.2865 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:22:56,737 | INFO | train | Epoch 21 | train_loss=1.2814 val_loss=1.2847 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 21 | train_loss=1.2814 val_loss=1.2847 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:00,533 | INFO | train | Epoch 22 | train_loss=1.2801 val_loss=1.2831 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 22 | train_loss=1.2801 val_loss=1.2831 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:04,320 | INFO | train | Epoch 23 | train_loss=1.2789 val_loss=1.2808 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 23 | train_loss=1.2789 val_loss=1.2808 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:04,724 | INFO | train | New best checkpoint at epoch 23 val_loss=1.2808
+INFO:train:New best checkpoint at epoch 23 val_loss=1.2808
+2026-04-25 16:23:08,176 | INFO | train | Epoch 24 | train_loss=1.2780 val_loss=1.2782 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 24 | train_loss=1.2780 val_loss=1.2782 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:08,575 | INFO | train | New best checkpoint at epoch 24 val_loss=1.2782
+INFO:train:New best checkpoint at epoch 24 val_loss=1.2782
+2026-04-25 16:23:12,049 | INFO | train | Epoch 25 | train_loss=1.2752 val_loss=1.2788 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 25 | train_loss=1.2752 val_loss=1.2788 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:16,266 | INFO | train | Epoch 26 | train_loss=1.2745 val_loss=1.2821 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 26 | train_loss=1.2745 val_loss=1.2821 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:20,050 | INFO | train | Epoch 27 | train_loss=1.2736 val_loss=1.2774 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 27 | train_loss=1.2736 val_loss=1.2774 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:20,529 | INFO | train | New best checkpoint at epoch 27 val_loss=1.2774
+INFO:train:New best checkpoint at epoch 27 val_loss=1.2774
+2026-04-25 16:23:24,020 | INFO | train | Epoch 28 | train_loss=1.2720 val_loss=1.2797 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 28 | train_loss=1.2720 val_loss=1.2797 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:27,836 | INFO | train | Epoch 29 | train_loss=1.2700 val_loss=1.2781 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 29 | train_loss=1.2700 val_loss=1.2781 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:31,722 | INFO | train | Epoch 30 | train_loss=1.2674 val_loss=1.2773 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 30 | train_loss=1.2674 val_loss=1.2773 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:32,350 | INFO | train | New best checkpoint at epoch 30 val_loss=1.2773
+INFO:train:New best checkpoint at epoch 30 val_loss=1.2773
+2026-04-25 16:23:35,839 | INFO | train | Epoch 31 | train_loss=1.2666 val_loss=1.2747 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 31 | train_loss=1.2666 val_loss=1.2747 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:36,259 | INFO | train | New best checkpoint at epoch 31 val_loss=1.2747
+INFO:train:New best checkpoint at epoch 31 val_loss=1.2747
+2026-04-25 16:23:39,749 | INFO | train | Epoch 32 | train_loss=1.2643 val_loss=1.2805 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 32 | train_loss=1.2643 val_loss=1.2805 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:43,533 | INFO | train | Epoch 33 | train_loss=1.2632 val_loss=1.2771 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 33 | train_loss=1.2632 val_loss=1.2771 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:47,307 | INFO | train | Epoch 34 | train_loss=1.2621 val_loss=1.2770 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 34 | train_loss=1.2621 val_loss=1.2770 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:51,143 | INFO | train | Epoch 35 | train_loss=1.2596 val_loss=1.2795 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 35 | train_loss=1.2596 val_loss=1.2795 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:54,983 | INFO | train | Epoch 36 | train_loss=1.2576 val_loss=1.2798 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 36 | train_loss=1.2576 val_loss=1.2798 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:23:58,805 | INFO | train | Epoch 37 | train_loss=1.2565 val_loss=1.2808 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 37 | train_loss=1.2565 val_loss=1.2808 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:02,627 | INFO | train | Epoch 38 | train_loss=1.2552 val_loss=1.2814 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 38 | train_loss=1.2552 val_loss=1.2814 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:06,461 | INFO | train | Epoch 39 | train_loss=1.2537 val_loss=1.2838 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 39 | train_loss=1.2537 val_loss=1.2838 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:10,212 | INFO | train | Epoch 40 | train_loss=1.2525 val_loss=1.2824 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 40 | train_loss=1.2525 val_loss=1.2824 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:13,977 | INFO | train | Epoch 41 | train_loss=1.2511 val_loss=1.2875 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 41 | train_loss=1.2511 val_loss=1.2875 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:17,930 | INFO | train | Epoch 42 | train_loss=1.2500 val_loss=1.2826 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 42 | train_loss=1.2500 val_loss=1.2826 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:21,799 | INFO | train | Epoch 43 | train_loss=1.2489 val_loss=1.2861 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 43 | train_loss=1.2489 val_loss=1.2861 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:25,678 | INFO | train | Epoch 44 | train_loss=1.2479 val_loss=1.2845 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 44 | train_loss=1.2479 val_loss=1.2845 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:29,592 | INFO | train | Epoch 45 | train_loss=1.2470 val_loss=1.2883 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 45 | train_loss=1.2470 val_loss=1.2883 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:33,485 | INFO | train | Epoch 46 | train_loss=1.2469 val_loss=1.2869 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 46 | train_loss=1.2469 val_loss=1.2869 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:37,258 | INFO | train | Epoch 47 | train_loss=1.2466 val_loss=1.2861 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 47 | train_loss=1.2466 val_loss=1.2861 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+2026-04-25 16:24:41,021 | INFO | train | Epoch 48 | train_loss=1.2459 val_loss=1.2868 cand_top1=0.0000 rescue_acc=1.0000 gpu=1
+INFO:train:Epoch 48 | train_loss=1.2459 val_loss=1.2868 cand_top1=0.0000 rescue_acc=1.0000 gpu=1

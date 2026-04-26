@@ -14,7 +14,7 @@ from ..rescue_search import (
     syndrome_osd_candidates,
 )
 
-PROFILE_TO_ID = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+PROFILE_TO_ID = {"A": 0, "AWGN": 0, "AWGN_QPSK": 0, "CDL_C": 1, "CDLC": 1, "CDL-C": 1, "C": 1, "B": 2, "D": 3, "E": 4}
 
 
 def _normalize(x: np.ndarray, eps: float = 1e-6) -> np.ndarray:
@@ -184,8 +184,9 @@ def build_candidate_bank(
         mask[np.asarray(mask_idx, dtype=np.int64)] = 1
         try_add(cand, mask, float(prior_score), source, label)
 
-    # Always inject an oracle positive candidate during training if it is missing.
-    if true_codeword is not None and row < max_candidates and not labels[:row].any():
+    # Optional oracle-positive injection. Disabled by default in v13 so that
+    # training/evaluation metrics reflect the real inference candidate bank.
+    if bool(rescue_cfg.get("candidate_bank_inject_oracle_positive", False)) and true_codeword is not None and row < max_candidates and not labels[:row].any():
         true_codeword = np.asarray(true_codeword, dtype=np.uint8).reshape(-1)
         mask = (base_hard ^ true_codeword).astype(np.uint8)
         weight = int(mask.sum())

@@ -49,7 +49,7 @@ def _flush_shard(path: Path, rows: List[Dict[str, np.ndarray]]) -> None:
 def _make_row(cfg: Dict[str, object], code, bp, rng: np.random.Generator):
     while True:
         snr, profile = _choose_snr_profile(cfg, rng)
-        frame = simulate_frame(code, snr, profile, rng)
+        frame = simulate_frame(code, snr, profile, rng, channel_cfg=cfg.get("channel", {}))
         bp_result = bp.decode(frame.llr_internal, collect_trace=True)
         if bool(cfg["data"].get("sample_failed_only", True)) and bp_result.success:
             continue
@@ -73,7 +73,7 @@ def _make_row(cfg: Dict[str, object], code, bp, rng: np.random.Generator):
             "candidate_features": labels["candidate_features"].astype(np.float32),
             "candidate_labels": labels["candidate_labels"].astype(np.uint8),
             "candidate_valid": labels["candidate_valid"].astype(np.uint8),
-            "profile_id": np.array({"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}.get(profile, 0), dtype=np.int16),
+            "profile_id": np.array({"A": 0, "AWGN": 0, "AWGN_QPSK": 0, "CDL_C": 1, "CDLC": 1, "CDL-C": 1, "C": 1, "B": 2, "D": 3, "E": 4}.get(str(profile).upper(), 0), dtype=np.int16),
             "snr_db": np.array(snr, dtype=np.float32),
             "bp_success": np.array(int(bp_result.success), dtype=np.uint8),
             "target_weight": labels["target_weight"].astype(np.int16),

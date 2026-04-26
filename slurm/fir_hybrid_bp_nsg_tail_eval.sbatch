@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=hyb-grand-v12-tail
+#SBATCH --job-name=hyb-grand-v13-tail
 #SBATCH --time=24:00:00
 #SBATCH --partition=gpubase_bygpu_b3
 #SBATCH --cpus-per-task=32
@@ -29,5 +29,6 @@ export TF_NUM_INTEROP_THREADS=8
 python -m pip install -e . --no-deps --quiet
 python scripts/check_tf_gpu.py --require-gpu
 python scripts/check_config.py configs/fir_hybrid_bp_nsg_tail.yaml
+python scripts/check_channel_models.py --config configs/fir_hybrid_bp_nsg_tail.yaml --profiles AWGN CDL_C
 python -m hybrid_bp_nsg.cli evaluate --config configs/fir_hybrid_bp_nsg_tail.yaml
 python -m hybrid_bp_nsg.cli report --config configs/fir_hybrid_bp_nsg_tail.yaml

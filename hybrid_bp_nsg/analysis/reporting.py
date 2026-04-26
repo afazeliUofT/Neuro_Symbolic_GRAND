@@ -34,14 +34,14 @@ def make_report(cfg: Dict[str, object]) -> None:
 
     report_dir = ensure_dir(out_dir / "reports")
     md = [
-        "# Hybrid BP + PUSCH-aligned CRC-aware AI/Tanner-GRAND evaluation",
+        "# Hybrid BP + AWGN/CDL-C QPSK + parallel AI/Tanner-GRAND evaluation",
         "",
-        "| profile | snr_db | decoder | BLER | avg_latency_ms | avg_queries | rescue_rate | crc_fail_rate | avg_crc_valid_candidates | avg_parity_valid_candidates |",
-        "|---|---:|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| profile | snr_db | decoder | FER | BER_internal | payload_BER | avg_latency_ms | avg_queries | rescue_rate | crc_fail_rate | avg_crc_valid_candidates | avg_parity_valid_candidates |",
+        "|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for r in rows:
         md.append(
-            f"| {r.get('profile','')} | {_f(r,'snr_db'):g} | {r.get('decoder','')} | {_f(r,'bler'):.6g} | {_f(r,'avg_latency_ms'):.4g} | {_f(r,'avg_queries'):.4g} | {_f(r,'rescue_rate'):.4g} | {_f(r,'crc_fail_rate'):.4g} | {_f(r,'avg_crc_valid_candidates'):.4g} | {_f(r,'avg_parity_valid_candidates'):.4g} |"
+            f"| {r.get('profile','')} | {_f(r,'snr_db'):g} | {r.get('decoder','')} | {_f(r,'fer', _f(r,'bler')):.6g} | {_f(r,'ber_internal'):.6g} | {_f(r,'payload_ber'):.6g} | {_f(r,'avg_latency_ms'):.4g} | {_f(r,'avg_queries'):.4g} | {_f(r,'rescue_rate'):.4g} | {_f(r,'crc_fail_rate'):.4g} | {_f(r,'avg_crc_valid_candidates'):.4g} | {_f(r,'avg_parity_valid_candidates'):.4g} |"
         )
     (report_dir / "README.md").write_text("\n".join(md) + "\n", encoding="utf-8")
     logger.info("Wrote %s and %s", eval_root / "evaluation_summary.csv", report_dir / "README.md")

@@ -1,7 +1,7 @@
 project:
-  name: hybrid_bp_nsg_nr5g_pusch_v12_smoke
+  name: hybrid_bp_nsg_nr5g_pusch_v13_smoke
   seed: 31415
-  output_dir: outputs/hybrid_bp_nsg_v12_pusch_crc_smoke
+  output_dir: outputs/hybrid_bp_nsg_v13_pusch_cdl_smoke
 
 code:
   family: sionna_nr_pusch_ldpc
@@ -13,6 +13,22 @@ code:
   strict_pcm_check: true
   seed: 31415
 
+channel:
+  modulation: QPSK
+  awgn: {}
+  cdl_c:
+    carrier_frequency_hz: 3500000000.0
+    subcarrier_spacing_hz: 30000.0
+    num_ofdm_symbols: 14
+    fft_size: 72
+    cyclic_prefix_length: 0
+    delay_spread_s: 1.0e-7
+    speed_m_per_s: 0.0
+    normalize_channel: true
+    direction: uplink
+    model: C
+    perfect_csi: true
+
 data:
   train_samples: 800
   val_samples: 200
@@ -21,7 +37,7 @@ data:
   bp_collect_iterations: 20
   failed_snr_db_grid: [0, 2, 4]
   failed_snr_probs: [0.20, 0.14, 0.10]
-  profiles: ["A"]
+  profiles: ["AWGN", "CDL_C"]
   num_workers: 8
   parallel_chunk_size: 100
 
@@ -123,6 +139,8 @@ rescue:
   candidate_bank_osd_support_sizes: [64, 96, 128]
   candidate_bank_osd_jitter_passes: 1
   oracle_candidate_max_weight: 160
+  candidate_bank_inject_oracle_positive: false
+  parallel_test_batch_size: 256
 
 eval:
   require_gpu: true
@@ -132,7 +150,7 @@ eval:
   samples_per_point: 200
   tail_samples_per_point: 1000
   target_frame_errors: 25
-  max_samples_per_point: 2000
+  max_samples_per_point: 10000
   stop_decoders: ["hybrid_bp_nsg", "bp_nms_20", "bp_nms_50"]
   snr_db_grid: [0, 2, 4]
-  profiles: ["A"]
+  profiles: ["AWGN", "CDL_C"]

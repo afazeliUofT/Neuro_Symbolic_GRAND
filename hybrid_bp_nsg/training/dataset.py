@@ -7,9 +7,9 @@ import numpy as np
 
 
 class NPZShardDataset:
-    """Pure-NumPy NPZ dataset used by the TensorFlow v11.2 trainer.
+    """Pure-NumPy NPZ dataset used by the TensorFlow/Keras trainer.
 
-    The old v11.1 dataset depended on torch.utils.data. FIR probes showed the
+    An earlier package version depended on torch.utils.data. FIR probes showed the
     working Sionna stack is TensorFlow/Sionna 1.2.2, so the dataset is now
     framework-neutral and can feed tf.data or eager TensorFlow loops.
     """

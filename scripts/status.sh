@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -u
-OUT="${1:-outputs/hybrid_bp_nsg_v12_pusch_crc_full}"
+OUT="${1:-outputs/hybrid_bp_nsg_v13_pusch_cdl_full}"
 echo "Output dir: $OUT"
 echo "--- artifacts ---"
 find "$OUT/artifacts" -maxdepth 1 -type f -print 2>/dev/null | sort || true

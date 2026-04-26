@@ -229,22 +229,43 @@ class ResidualGrandRescueDecoder:
             add_candidate(np.zeros(self.code.n, dtype=np.uint8), base_hard.copy(), 0.0, "base_codeword", False)
 
         seen = set()
+        base_syn = self.code.syndrome(base_hard).astype(np.uint8)
+        h_int = self.code.h.astype(np.int16, copy=False)
+        parallel_bs = max(1, int(self.cfg.get("parallel_test_batch_size", 256)))
+        cand_iter = []
         for mask_idx, prior_score, source in candidates:
             key = tuple(sorted(int(x) for x in mask_idx))
             if key in seen:
                 continue
             seen.add(key)
-            queries += 1
-            mask = np.zeros(self.code.n, dtype=np.uint8)
-            mask[list(key)] = 1
-            cand = base_hard.copy()
-            cand[list(key)] ^= 1
-            syn = self.code.syndrome(cand)
-            feat = candidate_feature_vector(self.code, llr, base_hard, cand, mask, feature_pack, prior_score, False)
-            if int(syn.sum()) == 0:
-                add_candidate(mask, cand, prior_score, source, False)
-            elif self.mode == "ai":
-                failed_for_micro.append((mask.copy(), float(prior_score), source, feat))
+            cand_iter.append((key, float(prior_score), source))
+            if len(cand_iter) >= direct_budget:
+                break
+
+        for start_idx in range(0, len(cand_iter), parallel_bs):
+            chunk = cand_iter[start_idx : start_idx + parallel_bs]
+            if not chunk:
+                continue
+            bsz = len(chunk)
+            dense_masks = np.zeros((bsz, self.code.n), dtype=np.uint8)
+            for bi, (key, _prior_score, _source) in enumerate(chunk):
+                dense_masks[bi, list(key)] = 1
+            # Parallel parity test: syn(base xor mask) = syn(base) xor H*mask. A candidate
+            # is parity-valid iff H*mask == syn(base). Using a dense batch here is much
+            # faster than testing masks one-by-one and lets BLAS/threaded matmul use all CPUs.
+            delta = (h_int @ dense_masks.T.astype(np.int16)) % 2
+            valid_flags = np.all(delta == base_syn[:, None], axis=0)
+            cand_batch = (base_hard[None, :] ^ dense_masks).astype(np.uint8)
+            queries += bsz
+            for bi, is_valid in enumerate(valid_flags.tolist()):
+                key, prior_score, source = chunk[bi]
+                mask = dense_masks[bi]
+                cand = cand_batch[bi]
+                if is_valid:
+                    add_candidate(mask, cand, prior_score, source, False)
+                elif self.mode == "ai":
+                    feat = candidate_feature_vector(self.code, llr, base_hard, cand, mask, feature_pack, prior_score, False)
+                    failed_for_micro.append((mask.copy(), float(prior_score), source, feat))
             if len(valid) >= int(self.cfg.get("rerank_list_size", 12)) and queries >= int(self.cfg.get("rerank_extra_queries", 32)):
                 break
             if queries >= direct_budget:

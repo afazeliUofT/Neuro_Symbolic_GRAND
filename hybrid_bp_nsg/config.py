@@ -11,7 +11,7 @@ except Exception:  # pragma: no cover
 
 
 DEFAULTS: Dict[str, Any] = {
-    "project": {"seed": 1234, "output_dir": "outputs/hybrid_bp_nsg_v11"},
+    "project": {"seed": 1234, "output_dir": "outputs/hybrid_bp_nsg_v13_pusch_cdl_default"},
     "code": {"family": "peg_ldpc", "k": 32, "n": 64, "seed": 1234},
     "data": {
         "train_samples": 1000,
@@ -21,7 +21,24 @@ DEFAULTS: Dict[str, Any] = {
         "bp_collect_iterations": 20,
         "failed_snr_db_grid": [0, 1, 2, 3],
         "failed_snr_probs": [0.4, 0.3, 0.2, 0.1],
-        "profiles": ["A"],
+        "profiles": ["AWGN", "CDL_C"],
+    },
+    "channel": {
+        "modulation": "QPSK",
+        "awgn": {},
+        "cdl_c": {
+            "carrier_frequency_hz": 3.5e9,
+            "subcarrier_spacing_hz": 30e3,
+            "num_ofdm_symbols": 14,
+            "fft_size": 72,
+            "cyclic_prefix_length": 0,
+            "delay_spread_s": 100e-9,
+            "speed_m_per_s": 0.0,
+            "normalize_channel": True,
+            "direction": "uplink",
+            "model": "C",
+            "perfect_csi": True,
+        },
     },
     "train": {
         "epochs": 5,
@@ -85,6 +102,7 @@ DEFAULTS: Dict[str, Any] = {
         "standard_budget": 800,
         "expanded_budget": 2400,
         "direct_budget": 1600,
+        "parallel_test_batch_size": 256,
         "combo_pool_w_le3": 24,
         "combo_pool_w_gt3": 16,
         "enable_osd_repair": True,
@@ -99,15 +117,16 @@ DEFAULTS: Dict[str, Any] = {
         "rerank_extra_queries": 32,
         "rerank_use_net": True,
         "weight_penalties": [0.0, 0.0, 0.08, 0.20, 0.38, 0.60, 0.85, 1.12, 1.45, 1.80],
+        "candidate_bank_inject_oracle_positive": False,
     },
     "eval": {
-        "samples_per_point": 1000,
-        "tail_samples_per_point": 5000,
-        "target_frame_errors": 100,
-        "max_samples_per_point": 10000,
+        "samples_per_point": 4000,
+        "tail_samples_per_point": 30000,
+        "target_frame_errors": 200,
+        "max_samples_per_point": 200000,
         "stop_decoders": ["hybrid_bp_nsg", "bp_nms_20", "bp_nms_50"],
         "snr_db_grid": [0, 1, 2, 3],
-        "profiles": ["A"],
+        "profiles": ["AWGN", "CDL_C"],
         "require_gpu": False,
         "mixed_precision": False,
     },
@@ -127,7 +146,7 @@ def deep_update(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any
 def normalize_snr_sampling(data: Dict[str, Any]) -> None:
     """Make failed-SNR sampling probabilities consistent with the configured grid.
 
-    v11.2 accidentally shipped smoke/tail configs where `failed_snr_db_grid`
+    Earlier package versions accidentally shipped smoke/tail configs where `failed_snr_db_grid`
     was shortened but `failed_snr_probs` still had the 11-entry full-run vector.
     NumPy then raises `ValueError: a and p must have same size` during
     `rng.choice(grid, p=probs)`.  This normalizer both fixes old configs and

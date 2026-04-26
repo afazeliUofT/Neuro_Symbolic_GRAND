@@ -20,7 +20,7 @@ class LDPCCode:
     rm_pattern: np.ndarray | None = None
     bg: str | None = None
     metadata: dict = field(default_factory=dict)
-    # Optional higher-layer / transport helpers used by the v12 package.
+    # Optional higher-layer / transport helpers used by the package.
     payload_k: int | None = None
     encode_payload_fn: Optional[Callable[[np.ndarray], tuple[np.ndarray, np.ndarray]]] = None
     internal_to_tx_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None

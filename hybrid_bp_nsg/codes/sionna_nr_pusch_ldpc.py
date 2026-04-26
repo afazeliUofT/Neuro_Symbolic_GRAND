@@ -115,7 +115,7 @@ def build_sionna_nr_pusch_ldpc(
 
     if bool(use_scrambler):
         raise NotImplementedError(
-            "v12 keeps the PUSCH transport-block CRC/interleaver path but requires use_scrambler=False so that the internal<->transmitted mapping remains explicit for rescue search."
+            "This package keeps the PUSCH transport-block CRC/interleaver path but requires use_scrambler=False so that the internal<->transmitted mapping remains explicit for rescue search."
         )
 
     calc_out = calculate_tb_size(
@@ -139,7 +139,7 @@ def build_sionna_nr_pusch_ldpc(
     cw_length = cw_length[cw_length > 0]
     if num_cb != 1 or cw_length.size != 1:
         raise RuntimeError(
-            "v12 PUSCH rescue package currently supports a single code block only. "
+            "This PUSCH rescue package currently supports a single code block only. "
             f"Sionna returned num_cb={num_cb}, cw_length={cw_length.tolist()} for num_coded_bits={num_coded_bits}."
         )
     rm_n = int(cw_length[0])

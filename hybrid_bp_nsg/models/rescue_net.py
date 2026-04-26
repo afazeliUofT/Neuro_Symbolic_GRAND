@@ -13,7 +13,7 @@ except Exception:  # pragma: no cover
 def require_tf():
     if tf is None:  # pragma: no cover
         raise RuntimeError(
-            "TensorFlow is required for v12 TensorFlow/Keras rescue training/inference. "
+            "TensorFlow is required for TensorFlow/Keras rescue training/inference. "
             "Activate the FIR .venv that contains tensorflow before running train/evaluate."
         )
     return tf

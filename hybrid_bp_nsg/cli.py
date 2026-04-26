@@ -51,7 +51,7 @@ def action_selftest(cfg):
             raise RuntimeError(f"CRC validation failed in selftest at sample {i}")
 
     bp = BeliefPropagationDecoder(code, max_iters=int(cfg["bp"]["hybrid_main_iterations"]), nms_alpha=float(cfg["bp"]["nms_alpha"]))
-    frame = simulate_frame(code, snr_db=2.0, profile="A", rng=rng)
+    frame = simulate_frame(code, snr_db=2.0, profile=str(cfg.get("eval", {}).get("profiles", ["AWGN"])[0]), rng=rng, channel_cfg=cfg.get("channel", {}))
     r = bp.decode(frame.llr_internal, collect_trace=True)
     logger.info("BP selftest success=%s iterations=%d syndrome_weight=%d", r.success, r.iterations_used, int(r.syndrome.sum()))
 
@@ -60,7 +60,7 @@ def action_selftest(cfg):
     cfg2["rescue"] = dict(cfg["rescue"])
     cfg2["rescue"]["mode"] = "orb"
     hyb = HybridBPNSGDecoder(code, cfg2, rescue_net=None, mode="orb")
-    hr = hyb.decode(frame.llr_internal, snr_db=2.0, profile="A", collect_trace=True)
+    hr = hyb.decode(frame.llr_internal, snr_db=2.0, profile=str(cfg.get("eval", {}).get("profiles", ["AWGN"])[0]), collect_trace=True)
     logger.info("Hybrid selftest success=%s action=%s queries=%d", hr.success, hr.action, hr.queries)
     logger.info("Selftest complete.")
 

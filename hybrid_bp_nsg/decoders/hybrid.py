@@ -54,7 +54,7 @@ class HybridBPNSGDecoder:
             device=device,
         )
 
-    def decode(self, llr: np.ndarray, snr_db: float = 0.0, profile: str = "A", collect_trace: bool = True) -> HybridDecodeResult:
+    def decode(self, llr: np.ndarray, snr_db: float = 0.0, profile: str = "AWGN", collect_trace: bool = True) -> HybridDecodeResult:
         import time
         t0 = time.perf_counter()
         main = self.main_bp.decode(llr, collect_trace=collect_trace)

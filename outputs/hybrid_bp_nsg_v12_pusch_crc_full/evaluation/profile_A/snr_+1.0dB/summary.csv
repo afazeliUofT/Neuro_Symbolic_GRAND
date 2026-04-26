@@ -1,4 +1,0 @@
-profile,snr_db,decoder,samples,frame_errors,bler,avg_queries,p95_queries,rescue_rate,micro_bp_rate,main_success_rate,avg_latency_ms,crc_fail_rate,framework,num_gpus,weights_used,avg_crc_valid_candidates,avg_parity_valid_candidates
-A,1.0,bp_nms_20,4000,3561,0.89025,0.0,0.0,0.0,0.0,0.10975,68.82075034989975,0.89025,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_full/checkpoints/rescue_net_tf.best.weights.h5,,
-A,1.0,bp_nms_50,4000,3098,0.7745,0.0,0.0,0.0,0.0,0.2255,155.00176754349377,0.7745,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_full/checkpoints/rescue_net_tf.best.weights.h5,,
-A,1.0,hybrid_bp_nsg,4000,3280,0.82,3762.0,4400.0,0.07025,0.0,0.10975,1497.3776753448183,0.82,tensorflow,1,outputs/hybrid_bp_nsg_v12_pusch_crc_full/checkpoints/rescue_net_tf.best.weights.h5,0.18,0.1805

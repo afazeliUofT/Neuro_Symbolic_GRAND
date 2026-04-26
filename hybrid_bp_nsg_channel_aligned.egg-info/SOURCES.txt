@@ -1,4 +1,3 @@
-README.md
 pyproject.toml
 hybrid_bp_nsg/__init__.py
 hybrid_bp_nsg/cli.py
@@ -9,7 +8,9 @@ hybrid_bp_nsg/analysis/reporting.py
 hybrid_bp_nsg/channels/__init__.py
 hybrid_bp_nsg/channels/factory.py
 hybrid_bp_nsg/channels/local_fading.py
+hybrid_bp_nsg/channels/qpsk.py
 hybrid_bp_nsg/channels/simulator.py
+hybrid_bp_nsg/channels/sionna_cdl.py
 hybrid_bp_nsg/channels/sionna_tdl.py
 hybrid_bp_nsg/codes/__init__.py
 hybrid_bp_nsg/codes/factory.py

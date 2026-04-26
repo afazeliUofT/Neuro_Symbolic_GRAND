@@ -1,7 +1,7 @@
 project:
-  name: hybrid_bp_nsg_v12_selftest
+  name: hybrid_bp_nsg_v13_selftest
   seed: 123
-  output_dir: outputs/hybrid_bp_nsg_v12_selftest
+  output_dir: outputs/hybrid_bp_nsg_v13_selftest
 
 code:
   family: peg_ldpc
@@ -11,6 +11,22 @@ code:
   dc: 6
   seed: 123
 
+channel:
+  modulation: QPSK
+  awgn: {}
+  cdl_c:
+    carrier_frequency_hz: 3500000000.0
+    subcarrier_spacing_hz: 30000.0
+    num_ofdm_symbols: 14
+    fft_size: 72
+    cyclic_prefix_length: 0
+    delay_spread_s: 1.0e-7
+    speed_m_per_s: 0.0
+    normalize_channel: true
+    direction: uplink
+    model: C
+    perfect_csi: true
+
 data:
   train_samples: 64
   val_samples: 32
@@ -19,7 +35,7 @@ data:
   bp_collect_iterations: 10
   failed_snr_db_grid: [0, 1, 2]
   failed_snr_probs: [0.45, 0.35, 0.20]
-  profiles: ["A"]
+  profiles: ["AWGN"]
 
 train:
   epochs: 1
@@ -101,6 +117,8 @@ rescue:
   rerank_prior_scale: 0.10
   micro_flip_scale: 1.10
   weight_penalties: [0.0, 0.0, 0.08, 0.20, 0.38, 0.60, 0.85, 1.12, 1.45, 1.80, 2.20, 2.65, 3.15, 3.70, 4.30, 4.95, 5.65, 6.40]
+  candidate_bank_inject_oracle_positive: true
+  parallel_test_batch_size: 128
 
 eval:
   samples_per_point: 40
@@ -109,4 +127,4 @@ eval:
   max_samples_per_point: 200
   stop_decoders: ["hybrid_bp_nsg", "bp_nms_20", "bp_nms_50"]
   snr_db_grid: [0]
-  profiles: ["A"]
+  profiles: ["AWGN"]

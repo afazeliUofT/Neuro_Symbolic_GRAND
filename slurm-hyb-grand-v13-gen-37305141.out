@@ -1,0 +1,521 @@
+2026-04-25 12:57:29.106464: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-25 12:57:43.753927: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147064.895123  285188 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147065.577831  285188 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777147068.820614  285188 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147068.820729  285188 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147068.820738  285188 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147068.820745  285188 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-25 12:57:49.232684: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+numpy: OK 2.1.1
+yaml: OK 6.0.3
+tensorflow: OK 2.19.1
+sionna: OK 1.2.2
+torch: optional OK 2.11.0
+python: 3.12.4 (main, Jun 12 2024, 16:22:31) [GCC 13.3.0]
+Config: configs/fir_hybrid_bp_nsg_full.yaml
+  output_dir: outputs/hybrid_bp_nsg_v13_pusch_cdl_full
+  code: sionna_nr_pusch_ldpc k=None n=512
+  failed_snr_db_grid: [0, 1, 2, 3, 4, 5, 6]
+  failed_snr_probs: [0.24, 0.2, 0.17, 0.15, 0.11, 0.08, 0.05]
+  failed_snr_probs_note: as_configured
+  probability_sum: 1.000000000000
+Config validation OK
+2026-04-25 12:58:48.859949: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-25 12:58:48.871414: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147128.881350  285685 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147128.884377  285685 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777147128.894034  285685 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147128.894070  285685 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147128.894075  285685 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147128.894078  285685 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-25 12:58:48.897405: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-04-25 12:58:55.084399: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+code_family: sionna_nr_pusch_ldpc
+transport_k: 256
+ldpc_k: 272
+n_internal: 584
+n_transmitted: 512
+profiles: ['AWGN', 'CDL_C']
+profile=AWGN tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=AWGN modulation=QPSK perfect_csi=True equalizer=identity finite_llr=True
+profile=CDL_C tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=SIONNA_CDL_C modulation=QPSK perfect_csi=True equalizer=one_tap_perfect_csi finite_llr=True
+2026-04-25 12:59:04.058313: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-25 12:59:04.068302: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147144.077661  285702 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147144.080579  285702 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777147144.088930  285702 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147144.088962  285702 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147144.088967  285702 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147144.088970  285702 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-25 12:59:04.091961: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-04-25 12:59:07.023436: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:08,561 | INFO | generate | Code summary: {"family": "sionna_nr_pusch_ldpc", "requested_n": 512, "requested_k": 256, "transport_k": 256, "ldpc_k": 272, "n_internal": 584, "n_transmitted": 512, "k": 272, "m": 312, "rate": 0.5, "edges": 1852, "avg_check_degree": 5.935897350311279, "max_check_degree": 8, "min_check_degree": 4, "avg_variable_degree": 3.1712329387664795, "num_punctured_internal_positions": 72, "num_transmitted_internal_positions": 512, "bg": "bg2", "metadata": {"num_coded_bits": 512, "target_coderate": 0.5, "num_bits_per_symbol": 2, "num_layers": 1, "tb_size": 256, "cb_size": 272, "num_cb": 1, "tb_crc_length": 16, "cb_crc_length": 0, "cw_length": [512], "use_scrambler": false, "interleaver_validated": true, "output_perm_inv_size": 512, "has_outer_crc": true, "pusch_channel_type": "PUSCH"}}
+2026-04-25 12:59:08,562 | INFO | generate | Parallel generation with 32 workers
+2026-04-25 12:59:09.935100: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:09.938598: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147149.977035  285720 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147149.982267  285726 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147149.990045  285720 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147149.995531  285726 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777147150.080889  285720 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.081002  285720 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.081007  285720 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.081011  285720 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.086420  285726 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.086491  285726 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.086497  285726 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.086501  285726 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-25 12:59:10.242506: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.246039: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.278609  285729 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.281537  285735 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147150.289571  285729 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.292299  285735 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-04-25 12:59:10.365459: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+W0000 00:00:1777147150.368841  285729 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.368890  285729 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.368896  285729 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.368900  285729 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.370362  285735 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.370448  285735 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.370455  285735 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.370460  285735 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.399373  285724 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147150.409965  285724 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-04-25 12:59:10.453655: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.453755: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.454246: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.463353: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.463401: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.464235: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.465928: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.466095: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.466257: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+W0000 00:00:1777147150.476683  285724 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.476800  285724 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.476830  285724 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.476834  285724 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.482808  285740 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147150.482838  285734 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.483552  285727 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-04-25 12:59:10.488343: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.489295: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.489504: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.489611: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+E0000 00:00:1777147150.492549  285740 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.492570  285734 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.492712  285737 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.492786  285743 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147150.492873  285727 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.492894  285747 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.494651  285732 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.494716  285730 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.495220  285736 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147150.502249  285737 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.502286  285743 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.502314  285747 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.504359  285732 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.504572  285730 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.505023  285736 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.518983  285742 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.520506  285750 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.520648  285733 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.520829  285751 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-04-25 12:59:10.523572: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+E0000 00:00:1777147150.529193  285742 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.530703  285750 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.531137  285733 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.531327  285751 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-04-25 12:59:10.543923: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.558910  285739 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-04-25 12:59:10.562465: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.562538: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.562693: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.562795: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+W0000 00:00:1777147150.565724  285734 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565768  285734 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565773  285734 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565777  285734 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565901  285740 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565938  285740 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565943  285740 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565947  285740 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565947  285727 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565976  285727 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565982  285727 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.565986  285727 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1777147150.569986  285739 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777147150.576553  285747 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576585  285747 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576590  285747 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576594  285747 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576681  285730 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576717  285730 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576722  285730 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576726  285730 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576716  285736 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576739  285743 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576762  285736 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576779  285743 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576772  285737 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576788  285736 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576795  285743 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576797  285732 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576810  285737 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576817  285736 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576824  285743 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576842  285732 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576849  285737 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576871  285732 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576878  285737 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.576885  285732 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.580304  285723 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-04-25 12:59:10.585372: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.585407: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.586065: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 12:59:10.586608: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+E0000 00:00:1777147150.589854  285723 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.593033  285755 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.593276  285744 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.593362  285731 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-04-25 12:59:10.593405: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.593492  285752 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+W0000 00:00:1777147150.594305  285742 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.594356  285742 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.594363  285742 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.594369  285742 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595487  285750 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595523  285750 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595529  285750 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595534  285750 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595693  285751 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595729  285751 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595736  285751 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595741  285751 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595893  285733 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595930  285733 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595936  285733 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.595939  285733 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1777147150.600148  285755 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.600154  285744 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.600220  285731 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.600256  285752 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-04-25 12:59:10.609474: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.610255  285738 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147150.610280  285741 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.610528  285754 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.610849  285728 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+W0000 00:00:1777147150.611149  285739 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.611198  285739 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.611205  285739 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.611210  285739 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.612612  285757 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147150.616458  285741 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.616469  285738 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.616527  285754 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.616696  285728 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777147150.617951  285757 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777147150.620114  285723 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.620151  285723 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.620157  285723 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.620182  285723 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628289  285731 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628294  285755 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628307  285744 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628310  285752 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628327  285731 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628341  285755 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628356  285744 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628369  285752 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628372  285731 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628376  285755 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628380  285744 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628384  285752 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628388  285731 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628391  285755 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628396  285744 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.628399  285752 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.629099  285725 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147150.634860  285725 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777147150.641160  285757 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641200  285757 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641206  285757 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641210  285757 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641818  285741 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641822  285754 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641830  285738 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641888  285741 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641906  285754 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641925  285738 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641929  285741 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641935  285754 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641941  285738 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641917  285728 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641947  285741 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641953  285754 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.641959  285738 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.642005  285728 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.642027  285728 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.642032  285728 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.647524  285725 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.647581  285725 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.647588  285725 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.647594  285725 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-25 12:59:10.753279: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.764011  285753 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-04-25 12:59:10.766143: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+E0000 00:00:1777147150.767124  285753 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777147150.776838  285753 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.776880  285753 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.776886  285753 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.776892  285753 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777147150.779095  285745 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777147150.782503  285745 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777147150.792723  285745 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.792794  285745 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.792802  285745 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777147150.792808  285745 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-25 12:59:15.514058: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:15.531172: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:15.737289: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:15.754168: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.057656: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.137894: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.147181: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.151278: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.220356: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.241638: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.282232: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.290669: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.318946: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.355257: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.404900: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.412989: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.487226: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.490958: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.491349: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.492499: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.513677: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.527553: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.530781: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.536400: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.540120: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.540667: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.562268: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.607990: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.672620: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.689658: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.697910: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 12:59:16.743099: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+2026-04-25 13:00:15,969 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w017'}
+2026-04-25 13:00:16,979 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w006'}
+2026-04-25 13:00:17,511 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w027'}
+2026-04-25 13:00:18,414 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w013'}
+2026-04-25 13:00:18,865 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w019'}
+2026-04-25 13:00:19,242 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w012'}
+2026-04-25 13:00:20,200 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w030'}
+2026-04-25 13:00:24,693 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w025'}
+2026-04-25 13:00:27,060 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w015'}
+2026-04-25 13:00:29,436 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w022'}
+2026-04-25 13:00:29,507 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w010'}
+2026-04-25 13:00:30,452 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w009'}
+2026-04-25 13:00:31,078 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w014'}
+2026-04-25 13:00:33,071 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w031'}
+2026-04-25 13:00:34,412 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w005'}
+2026-04-25 13:00:34,677 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w002'}
+2026-04-25 13:00:36,330 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w003'}
+2026-04-25 13:00:40,076 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w000'}
+2026-04-25 13:00:40,093 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w011'}
+2026-04-25 13:00:41,080 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w004'}
+2026-04-25 13:00:41,153 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w007'}
+2026-04-25 13:00:41,911 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w018'}
+2026-04-25 13:00:44,056 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w008'}
+2026-04-25 13:00:45,478 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w028'}
+2026-04-25 13:00:46,208 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w016'}
+2026-04-25 13:00:47,217 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w024'}
+2026-04-25 13:00:47,963 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w001'}
+2026-04-25 13:00:49,365 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w026'}
+2026-04-25 13:00:53,500 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w021'}
+2026-04-25 13:01:00,683 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w029'}
+2026-04-25 13:01:05,733 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w020'}
+2026-04-25 13:01:08,182 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w033'}
+2026-04-25 13:01:09,580 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w032'}
+2026-04-25 13:01:10,050 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w034'}
+2026-04-25 13:01:10,229 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w035'}
+2026-04-25 13:01:10,773 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w036'}
+2026-04-25 13:01:12,522 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w023'}
+2026-04-25 13:01:13,985 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w037'}
+2026-04-25 13:01:14,736 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w038'}
+2026-04-25 13:01:29,778 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w044'}
+2026-04-25 13:01:31,546 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w040'}
+2026-04-25 13:01:34,311 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w042'}
+2026-04-25 13:01:34,351 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w041'}
+2026-04-25 13:01:40,867 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w045'}
+2026-04-25 13:01:42,545 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w052'}
+2026-04-25 13:01:47,176 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w051'}
+2026-04-25 13:01:48,110 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w054'}
+2026-04-25 13:01:52,778 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w059'}
+2026-04-25 13:01:53,347 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w055'}
+2026-04-25 13:01:53,756 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w043'}
+2026-04-25 13:01:54,976 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w049'}
+2026-04-25 13:02:00,002 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w063'}
+2026-04-25 13:02:00,340 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w048'}
+2026-04-25 13:02:00,757 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w066'}
+2026-04-25 13:02:01,229 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w056'}
+2026-04-25 13:02:02,175 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w065'}
+2026-04-25 13:02:03,471 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w053'}
+2026-04-25 13:02:04,710 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w039'}
+2026-04-25 13:02:04,875 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w067'}
+2026-04-25 13:02:05,693 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w064'}
+2026-04-25 13:02:05,857 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w069'}
+2026-04-25 13:02:07,531 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w057'}
+2026-04-25 13:02:08,649 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w070'}
+2026-04-25 13:02:10,773 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w050'}
+2026-04-25 13:02:11,082 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w068'}
+2026-04-25 13:02:12,411 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w058'}
+2026-04-25 13:02:15,598 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w061'}
+2026-04-25 13:02:18,901 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w060'}
+2026-04-25 13:02:19,330 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w046'}
+2026-04-25 13:02:20,641 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w047'}
+2026-04-25 13:02:29,408 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w071'}
+2026-04-25 13:02:35,171 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w072'}
+2026-04-25 13:02:40,078 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w074'}
+2026-04-25 13:02:42,381 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w073'}
+2026-04-25 13:02:48,594 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w075'}
+2026-04-25 13:02:50,078 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w062'}
+2026-04-25 13:02:50,348 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w076'}
+2026-04-25 13:02:54,152 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w085'}
+2026-04-25 13:02:55,202 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w087'}
+2026-04-25 13:02:55,565 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w090'}
+2026-04-25 13:02:56,079 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w083'}
+2026-04-25 13:02:58,931 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w081'}
+2026-04-25 13:02:59,203 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w080'}
+2026-04-25 13:02:59,242 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w082'}
+2026-04-25 13:03:00,069 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w092'}
+2026-04-25 13:03:01,118 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w091'}
+2026-04-25 13:03:03,781 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w094'}
+2026-04-25 13:03:05,870 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w077'}
+2026-04-25 13:03:06,182 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w078'}
+2026-04-25 13:03:11,901 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w079'}
+2026-04-25 13:03:20,105 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w096'}
+2026-04-25 13:03:20,259 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w088'}
+2026-04-25 13:03:22,868 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w084'}
+2026-04-25 13:03:24,103 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w100'}
+2026-04-25 13:03:24,888 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w095'}
+2026-04-25 13:03:25,738 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w086'}
+2026-04-25 13:03:26,239 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w097'}
+2026-04-25 13:03:27,233 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w101'}
+2026-04-25 13:03:33,734 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w098'}
+2026-04-25 13:03:34,084 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w089'}
+2026-04-25 13:03:37,228 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w093'}
+2026-04-25 13:03:41,553 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w103'}
+2026-04-25 13:03:43,580 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w104'}
+2026-04-25 13:03:44,173 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w099'}
+2026-04-25 13:03:47,084 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w102'}
+2026-04-25 13:03:47,801 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w109'}
+2026-04-25 13:03:49,022 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w105'}
+2026-04-25 13:03:50,115 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w106'}
+2026-04-25 13:03:51,275 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w111'}
+2026-04-25 13:03:51,527 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w107'}
+2026-04-25 13:03:52,043 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w110'}
+2026-04-25 13:03:53,399 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w112'}
+2026-04-25 13:03:53,404 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w116'}
+2026-04-25 13:03:58,261 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w117'}
+2026-04-25 13:03:59,547 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w115'}
+2026-04-25 13:04:00,877 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w118'}
+2026-04-25 13:04:06,567 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w113'}
+2026-04-25 13:04:07,475 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w114'}
+2026-04-25 13:04:08,590 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w108'}
+2026-04-25 13:04:14,862 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w120'}
+2026-04-25 13:04:21,283 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w123'}
+2026-04-25 13:04:26,491 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w121'}
+2026-04-25 13:04:28,335 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w125'}
+2026-04-25 13:04:28,954 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w122'}
+2026-04-25 13:04:31,114 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w119'}
+2026-04-25 13:04:33,978 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w127'}
+2026-04-25 13:04:37,620 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w131'}
+2026-04-25 13:04:40,235 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w124'}
+2026-04-25 13:04:43,087 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w137'}
+2026-04-25 13:04:46,634 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w128'}
+2026-04-25 13:04:46,749 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w134'}
+2026-04-25 13:04:47,313 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w133'}
+2026-04-25 13:04:47,767 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w144'}
+2026-04-25 13:04:48,548 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w143'}
+2026-04-25 13:04:48,723 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w140'}
+2026-04-25 13:04:48,730 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w132'}
+2026-04-25 13:04:49,167 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w142'}
+2026-04-25 13:04:51,871 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w126'}
+2026-04-25 13:04:52,915 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w145'}
+2026-04-25 13:04:53,020 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w139'}
+2026-04-25 13:04:53,793 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w129'}
+2026-04-25 13:04:54,444 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w138'}
+2026-04-25 13:04:56,655 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w130'}
+2026-04-25 13:04:57,747 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w135'}
+2026-04-25 13:04:58,444 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w147'}
+2026-04-25 13:05:04,311 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w136'}
+2026-04-25 13:05:06,533 | INFO | generate | Completed worker chunk: {'split': 'train', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w141'}
+2026-04-25 13:05:12,454 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w149'}
+2026-04-25 13:05:20,830 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w152'}
+2026-04-25 13:05:21,475 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w150'}
+2026-04-25 13:05:25,136 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w154'}
+2026-04-25 13:05:25,723 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w148'}
+2026-04-25 13:05:26,446 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w146'}
+2026-04-25 13:05:28,766 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w151'}
+2026-04-25 13:05:32,692 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w155'}
+2026-04-25 13:05:35,573 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w160'}
+2026-04-25 13:05:38,905 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w153'}
+2026-04-25 13:05:42,838 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w157'}
+2026-04-25 13:05:42,860 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 200, 'attempted': 200, 'shards': 1, 'prefix': 'w172'}
+2026-04-25 13:05:43,368 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w164'}
+2026-04-25 13:05:44,412 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w168'}
+2026-04-25 13:05:45,051 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w166'}
+2026-04-25 13:05:45,704 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w156'}
+2026-04-25 13:05:46,106 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w165'}
+2026-04-25 13:05:46,541 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w169'}
+2026-04-25 13:05:46,948 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w159'}
+2026-04-25 13:05:47,153 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w161'}
+2026-04-25 13:05:49,984 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w170'}
+2026-04-25 13:05:50,023 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w158'}
+2026-04-25 13:05:50,274 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w162'}
+2026-04-25 13:05:53,692 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w163'}
+2026-04-25 13:05:56,078 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w167'}
+2026-04-25 13:05:56,548 | INFO | generate | Completed worker chunk: {'split': 'val', 'kept': 250, 'attempted': 250, 'shards': 1, 'prefix': 'w171'}
+2026-04-25 13:05:58,471 | INFO | generate | Parallel generation complete: attempted=43200 kept={'train': 36000, 'val': 7200}
