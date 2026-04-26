@@ -30,6 +30,8 @@ channel:
     direction: uplink
     model: C
     perfect_csi: true
+    use_sionna: true
+    strict_sionna: false
 
 data:
   train_samples: 64

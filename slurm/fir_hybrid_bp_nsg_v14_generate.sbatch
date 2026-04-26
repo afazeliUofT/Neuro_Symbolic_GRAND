@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=hyb-grand-v14-gen
-#SBATCH --time=6:00:00
+#SBATCH --time=12:00:00
 #SBATCH --partition=cpubase_bycore_b3
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=128G

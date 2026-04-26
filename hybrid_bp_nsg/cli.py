@@ -29,11 +29,11 @@ def main(argv=None) -> None:
         from .report import report
         report(cfg)
     elif args.command == "pipeline":
-        from .generate import generate
-        from .train import train
-        from .evaluate import evaluate
-        from .report import report
-        generate(cfg); train(cfg); evaluate(cfg); report(cfg)
+        # Run stages in fresh Python processes so CPU-only generation does not hide
+        # the GPU from training/evaluation in the same interpreter.
+        import subprocess
+        for cmd in ["generate", "train", "evaluate", "report"]:
+            subprocess.check_call([sys.executable, "-m", "hybrid_bp_nsg.cli", cmd, "--config", str(args.config)])
     elif args.command == "plots":
         from .report import report
         report(cfg)

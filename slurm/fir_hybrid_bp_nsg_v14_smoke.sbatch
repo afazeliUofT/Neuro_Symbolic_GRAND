@@ -3,7 +3,7 @@
 #SBATCH --time=2:00:00
 #SBATCH --partition=gpubase_bygpu_b3
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
+#SBATCH --mem=16G
 #SBATCH --gpus-per-node=h100:1
 #SBATCH --output=slurm-%x-%j.out
 set -euo pipefail
@@ -23,7 +23,7 @@ export TF_NUM_INTEROP_THREADS=4
 python scripts/check_tf_gpu.py --require-gpu
 python scripts/check_config.py configs/fir_hybrid_bp_nsg_smoke_v14.yaml
 python scripts/check_channel_models.py --config configs/fir_hybrid_bp_nsg_smoke_v14.yaml --profiles AWGN CDL_C
-python -m hybrid_bp_nsg.cli generate --config configs/fir_hybrid_bp_nsg_smoke_v14.yaml
+CUDA_VISIBLE_DEVICES="" OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 TF_NUM_INTRAOP_THREADS=1 TF_NUM_INTEROP_THREADS=1 python -m hybrid_bp_nsg.cli generate --config configs/fir_hybrid_bp_nsg_smoke_v14.yaml
 python scripts/probe_v14_dataset.py --output outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke
 python -m hybrid_bp_nsg.cli train --config configs/fir_hybrid_bp_nsg_smoke_v14.yaml
 python -m hybrid_bp_nsg.cli evaluate --config configs/fir_hybrid_bp_nsg_smoke_v14.yaml

@@ -32,7 +32,9 @@
       "direction": "uplink",
       "model": "C",
       "perfect_csi": true,
-      "cyclic_prefix_length": 0
+      "cyclic_prefix_length": 0,
+      "use_sionna": true,
+      "strict_sionna": false
     }
   },
   "data": {
