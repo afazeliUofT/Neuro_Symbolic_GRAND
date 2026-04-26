@@ -1,27 +1,38 @@
-# FIR command flow — v14.1
+# FIR command flow for Hybrid GRAND v14.2
 
-After unzipping this package directly inside `/home/rsadve1/scratch/Neuro_Symbolic_GRAND`:
+From `~/scratch/Neuro_Symbolic_GRAND` after unzipping this standalone package:
 
 ```bash
-cd ~/scratch/Neuro_Symbolic_GRAND
 bash scripts/bootstrap_fir_env.sh "$PWD"
 source .venv/bin/activate
 python -m pip install -e . --no-deps
+python scripts/check_package_version.py
+python scripts/check_runtime_deps.py
+python scripts/check_config.py configs/fir_hybrid_bp_nsg_full_v14.yaml
+python scripts/check_channel_models.py --config configs/fir_hybrid_bp_nsg_full_v14.yaml --profiles AWGN CDL_C
 ```
 
-Recommended run order:
+Run selftest and smoke first:
 
 ```bash
 sbatch slurm/fir_hybrid_bp_nsg_v14_selftest.sbatch
 sbatch slurm/fir_hybrid_bp_nsg_v14_smoke.sbatch
-sbatch slurm/fir_hybrid_bp_nsg_v14_generate.sbatch
-# wait until generation finishes and probe_v14_dataset passes
-sbatch slurm/fir_hybrid_bp_nsg_v14_train.sbatch
-# wait until training finishes
-sbatch slurm/fir_hybrid_bp_nsg_v14_evaluate_report.sbatch
 ```
 
-The full train job depends on the full generate job. The full evaluation job depends on the full train job. The selftest and smoke jobs write to separate output directories and may be run independently of the full jobs, subject to cluster GPU/CPU resource limits.
+Only after smoke finishes without `Traceback`, `BrokenProcessPool`, or `CUDA_ERROR_NOT_INITIALIZED`, submit full generation:
 
+```bash
+sbatch slurm/fir_hybrid_bp_nsg_v14_generate.sbatch
+```
 
-Important v14.1 note: smoke runs generation CPU-only inside the GPU allocation, then trains/evaluates with the GPU visible.
+Only after the full generation probe reports `target_weight_q1.00 <= 32` and nonzero candidate positives, submit training:
+
+```bash
+sbatch slurm/fir_hybrid_bp_nsg_v14_train.sbatch
+```
+
+Only after training finishes, submit evaluation/report:
+
+```bash
+sbatch slurm/fir_hybrid_bp_nsg_v14_evaluate_report.sbatch
+```

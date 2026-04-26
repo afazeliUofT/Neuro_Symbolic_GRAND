@@ -1,7 +1,7 @@
 {
   "attempted": 124000,
   "kept": {
-    "train": 680,
-    "val": 187
+    "train": 682,
+    "val": 175
   }
 }

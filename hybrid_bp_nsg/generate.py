@@ -12,9 +12,28 @@ import numpy as np
 
 def _force_cpu_for_generation() -> None:
     """Hide CUDA before TensorFlow/Sionna imports in generation workers."""
-    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    # Use -1 rather than an empty string because some HPC/CUDA stacks still
+    # expose a Slurm GPU context when CUDA_VISIBLE_DEVICES is empty.
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+    os.environ["NVIDIA_VISIBLE_DEVICES"] = "none"
     os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "1")
     os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
+
+
+def _disable_tensorflow_gpus_if_imported() -> None:
+    """Best-effort guard for TensorFlow/Sionna imports inside generation.
+
+    This must run before any TensorFlow op creates a CUDA context. It is safe
+    when TensorFlow is not installed and safe on CPU-only nodes.
+    """
+    try:
+        import tensorflow as tf  # type: ignore
+        try:
+            tf.config.set_visible_devices([], "GPU")
+        except Exception:
+            pass
+    except Exception:
+        pass
 
 
 def _force_single_thread_worker() -> None:
@@ -122,6 +141,7 @@ def _stack_rows(rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
 def _worker_chunk(args: Tuple[Dict[str, Any], str, int, int, int, str]) -> Dict[str, Any]:
     _force_cpu_for_generation()
     _force_single_thread_worker()
+    _disable_tensorflow_gpus_if_imported()
     from .code import build_code
 
     cfg, split, want, worker_id, seed, out_dir = args
@@ -159,6 +179,9 @@ def _chunk_plan(total: int, shard: int) -> List[int]:
 
 def generate(cfg: Dict[str, Any]) -> None:
     _force_cpu_for_generation()
+    _disable_tensorflow_gpus_if_imported()
+    print("generation_cuda_visible:", os.environ.get("CUDA_VISIBLE_DEVICES"), flush=True)
+    print("generation_nvidia_visible:", os.environ.get("NVIDIA_VISIBLE_DEVICES"), flush=True)
 
     from .channels import channel_diagnostics
     from .code import build_code, write_code_summary

@@ -10,6 +10,7 @@ set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 bash scripts/bootstrap_fir_env.sh "$PWD"
 source .venv/bin/activate
+python scripts/check_package_version.py
 export PYTHONPATH="$PWD:${PYTHONPATH:-}"
 export TF_CPP_MIN_LOG_LEVEL="${TF_CPP_MIN_LOG_LEVEL:-1}"
 export TF_FORCE_GPU_ALLOW_GROWTH=true

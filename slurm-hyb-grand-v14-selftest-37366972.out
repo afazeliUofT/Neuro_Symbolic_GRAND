@@ -1,0 +1,112 @@
+Looking in links: /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/x86-64-v4, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/x86-64-v3, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic
+Obtaining file:///scratch/rsadve1/Neuro_Symbolic_GRAND
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: hybrid-bp-nsg-channel-aligned
+  Building editable for hybrid-bp-nsg-channel-aligned (pyproject.toml): started
+  Building editable for hybrid-bp-nsg-channel-aligned (pyproject.toml): finished with status 'done'
+  Created wheel for hybrid-bp-nsg-channel-aligned: filename=hybrid_bp_nsg_channel_aligned-14.2.0-0.editable-py3-none-any.whl size=3091 sha256=25ed2393264d8f4dfafa529a8d1361eb90b63e55d7f6b63ab3f3c2baf7605c87
+  Stored in directory: /tmp/pip-ephem-wheel-cache-qvqce_ht/wheels/3d/d1/92/3f17e744b20096ee9e6e97ff3e4c91596643cba54e0bd495d8
+Successfully built hybrid-bp-nsg-channel-aligned
+Installing collected packages: hybrid-bp-nsg-channel-aligned
+  Attempting uninstall: hybrid-bp-nsg-channel-aligned
+    Found existing installation: hybrid-bp-nsg-channel-aligned 14.2.0
+    Uninstalling hybrid-bp-nsg-channel-aligned-14.2.0:
+      Successfully uninstalled hybrid-bp-nsg-channel-aligned-14.2.0
+Successfully installed hybrid-bp-nsg-channel-aligned-14.2.0
+2026-04-26 09:00:48.376546: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-26 09:00:48.672376: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777219248.758786 1312522 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777219248.792949 1312522 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777219248.962242 1312522 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777219248.962311 1312522 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777219248.962315 1312522 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777219248.962318 1312522 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 09:00:48.986291: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+python: 3.12.4 (main, Jun 12 2024, 16:22:31) [GCC 13.3.0]
+numpy: 2.1.1
+yaml: 6.0.3
+scipy: 1.17.0
+tensorflow: 2.19.1
+sionna: 1.2.2
+{'hybrid_bp_nsg.__version__': '14.2.0', 'distribution_version': '14.2.0', 'python': '/home/rsadve1/scratch/Neuro_Symbolic_GRAND/.venv/bin/python', 'cwd': '/scratch/rsadve1/Neuro_Symbolic_GRAND', 'CUDA_VISIBLE_DEVICES': None}
+2026-04-26 09:00:56.977339: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-26 09:00:56.986555: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777219256.995305 1312531 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777219256.998062 1312531 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777219257.006061 1312531 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777219257.006119 1312531 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777219257.006124 1312531 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777219257.006127 1312531 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 09:00:57.008968: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-04-26 09:01:00.306903: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+{
+  "config": "configs/fir_hybrid_bp_nsg_selftest_v14.yaml",
+  "output_dir": "outputs/hybrid_bp_nsg_v14_selftest",
+  "target_basis": "bp",
+  "max_expanded_weight": 32,
+  "filter_by_target_weight": true,
+  "require_candidate_positive": true,
+  "candidate_bank_inject_oracle_positive": true,
+  "code": {
+    "family": "sionna_nr_pusch_ldpc",
+    "transport_k": 256,
+    "ldpc_k": 272,
+    "n_internal": 584,
+    "n_transmitted": 512,
+    "k": 272,
+    "m": 312,
+    "rate": 0.5,
+    "edges": 1852,
+    "avg_check_degree": 5.935897350311279,
+    "max_check_degree": 8,
+    "min_check_degree": 4,
+    "avg_variable_degree": 3.1712329387664795,
+    "num_punctured_internal_positions": 72,
+    "num_transmitted_internal_positions": 512,
+    "metadata": {
+      "num_coded_bits": 512,
+      "target_coderate": 0.5,
+      "num_bits_per_symbol": 2,
+      "num_layers": 1,
+      "tb_size": 256,
+      "tb_crc_length": 16,
+      "has_outer_crc": true,
+      "pusch_channel_type": "PUSCH",
+      "source": "sionna_ldpc5g_pruned_pcm",
+      "cb_size": 272,
+      "ldpc_k_property": 360,
+      "bg": "bg2",
+      "z": 36,
+      "output_perm_inv_size": 512,
+      "interleaver_validated": true
+    }
+  }
+}
+2026-04-26 09:01:01.206938: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-26 09:01:01.216408: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777219261.225885 1312546 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777219261.228803 1312546 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777219261.237148 1312546 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777219261.237182 1312546 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777219261.237187 1312546 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777219261.237190 1312546 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 09:01:01.240143: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-04-26 09:01:04.157998: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: UNKNOWN ERROR (303)
+Code summary: {'family': 'sionna_nr_pusch_ldpc', 'transport_k': 256, 'ldpc_k': 272, 'n_internal': 584, 'n_transmitted': 512, 'k': 272, 'm': 312, 'rate': 0.5, 'edges': 1852, 'avg_check_degree': 5.935897350311279, 'max_check_degree': 8, 'min_check_degree': 4, 'avg_variable_degree': 3.1712329387664795, 'num_punctured_internal_positions': 72, 'num_transmitted_internal_positions': 512, 'metadata': {'num_coded_bits': 512, 'target_coderate': 0.5, 'num_bits_per_symbol': 2, 'num_layers': 1, 'tb_size': 256, 'tb_crc_length': 16, 'has_outer_crc': True, 'pusch_channel_type': 'PUSCH', 'source': 'sionna_ldpc5g_pruned_pcm', 'cb_size': 272, 'ldpc_k_property': 360, 'bg': 'bg2', 'z': 36, 'output_perm_inv_size': 512, 'interleaver_validated': True}}
+profile=AWGN tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=AWGN modulation=QPSK perfect_csi=True equalizer=identity finite_llr=True
+BP selftest success=True iterations=4 syndrome_weight=0
+Feature selftest target_weight=0 candidate_pos=1
+Selftest complete.

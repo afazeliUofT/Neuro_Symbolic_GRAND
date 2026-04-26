@@ -9,8 +9,10 @@ set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 bash scripts/bootstrap_fir_env.sh "$PWD"
 source .venv/bin/activate
+python scripts/check_package_version.py
 export PYTHONPATH="$PWD:${PYTHONPATH:-}"
-export CUDA_VISIBLE_DEVICES=""
+export CUDA_VISIBLE_DEVICES="-1"
+export NVIDIA_VISIBLE_DEVICES="none"
 export OMP_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
@@ -20,5 +22,6 @@ export TF_NUM_INTEROP_THREADS=1
 python scripts/check_runtime_deps.py || true
 python scripts/check_config.py configs/fir_hybrid_bp_nsg_full_v14.yaml
 python scripts/check_channel_models.py --config configs/fir_hybrid_bp_nsg_full_v14.yaml --profiles AWGN CDL_C
+rm -rf outputs/hybrid_bp_nsg_v14_pusch_cdl_full
 python -m hybrid_bp_nsg.cli generate --config configs/fir_hybrid_bp_nsg_full_v14.yaml
 python scripts/probe_v14_dataset.py --output outputs/hybrid_bp_nsg_v14_pusch_cdl_full
