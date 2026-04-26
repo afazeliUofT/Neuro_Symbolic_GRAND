@@ -1,0 +1,7 @@
+# Runtime dependencies are expected to come from the FIR/Compute Canada environment or the existing .venv.
+# The package itself is installed with: python -m pip install -e . --no-deps
+numpy
+scipy
+pyyaml
+tensorflow
+sionna

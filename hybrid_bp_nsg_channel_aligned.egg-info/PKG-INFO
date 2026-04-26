@@ -1,11 +1,6 @@
 Metadata-Version: 2.4
 Name: hybrid-bp-nsg-channel-aligned
-Version: 13.0.1
-Summary: FIR TensorFlow GPU PUSCH-style 5G NR LDPC with AWGN/CDL-C QPSK channels, explicit FER/BER, and parallel AI/Tanner-GRAND rescue
+Version: 14.0.0
+Summary: Standalone v14 residual AI/Tanner-GRAND rescue decoder for 5G-style LDPC
+Author: Hybrid GRAND v14
 Requires-Python: >=3.10
-Provides-Extra: sionna1-no-rt
-Requires-Dist: sionna-no-rt<1.3,>=1.2; extra == "sionna1-no-rt"
-Provides-Extra: legacy-sionna
-Requires-Dist: sionna==0.19.2; extra == "legacy-sionna"
-Provides-Extra: sionna2-no-rt
-Requires-Dist: sionna-no-rt<2.1,>=2.0; extra == "sionna2-no-rt"

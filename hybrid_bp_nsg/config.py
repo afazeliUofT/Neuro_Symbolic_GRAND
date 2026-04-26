@@ -1,141 +1,16 @@
 from __future__ import annotations
 
 import copy
+import json
 from pathlib import Path
 from typing import Any, Dict
 
-try:
-    import yaml
-except Exception:  # pragma: no cover
-    yaml = None
+import yaml
 
 
-DEFAULTS: Dict[str, Any] = {
-    "project": {"seed": 1234, "output_dir": "outputs/hybrid_bp_nsg_v13_pusch_cdl_default"},
-    "code": {"family": "peg_ldpc", "k": 32, "n": 64, "seed": 1234},
-    "data": {
-        "train_samples": 1000,
-        "val_samples": 200,
-        "shard_size": 250,
-        "sample_failed_only": True,
-        "bp_collect_iterations": 20,
-        "failed_snr_db_grid": [0, 1, 2, 3],
-        "failed_snr_probs": [0.4, 0.3, 0.2, 0.1],
-        "profiles": ["AWGN", "CDL_C"],
-    },
-    "channel": {
-        "modulation": "QPSK",
-        "awgn": {},
-        "cdl_c": {
-            "carrier_frequency_hz": 3.5e9,
-            "subcarrier_spacing_hz": 30e3,
-            "num_ofdm_symbols": 14,
-            "fft_size": 72,
-            "cyclic_prefix_length": 0,
-            "delay_spread_s": 100e-9,
-            "speed_m_per_s": 0.0,
-            "normalize_channel": True,
-            "direction": "uplink",
-            "model": "C",
-            "perfect_csi": True,
-        },
-    },
-    "train": {
-        "epochs": 5,
-        "batch_size": 32,
-        "lr": 1e-3,
-        "weight_decay": 1e-5,
-        "dropout": 0.05,
-        "bit_pos_weight": 4.0,
-        "reach_pos_weight": 4.0,
-        "grad_clip": 1.0,
-        "resume": True,
-        "require_gpu": False,
-        "mixed_precision": False,
-        "preload_dataset": True,
-        "loss_weights": {
-            "bit": 1.0,
-            "segment": 0.2,
-            "weight": 0.2,
-            "standard_reachable": 0.2,
-            "expanded_reachable": 0.2,
-            "rescueable": 0.2,
-            "rerank": 0.2,
-            "rank": 0.1,
-        },
-    },
-    "model": {
-        "graph_hidden_dim": 64,
-        "graph_layers": 3,
-        "transformer_heads": 4,
-        "transformer_layers": 1,
-        "top_k_tokens": 32,
-        "num_segments": 8,
-        "max_weight_class": 32,
-        "rerank_list_size": 8,
-    },
-    "bp": {
-        "hybrid_main_algorithm": "nms",
-        "hybrid_main_iterations": 20,
-        "strong_iterations": 50,
-        "micro_iterations": 8,
-        "nms_alpha": 0.8,
-        "early_stop": True,
-    },
-    "rescue": {
-        "mode": "ai",
-        "target_basis": "channel_with_bp_punctures",
-        "always_rescue_after_bp_fail": True,
-        "try_bp_basis_fallback": True,
-        "gating_threshold": -1.0,
-        "expanded_threshold": 0.2,
-        "hopeless_threshold": -1.0,
-        "rescue_threshold": 0.05,
-        "micro_trigger_threshold": 0.2,
-        "pool_size": 48,
-        "expanded_pool_size": 160,
-        "top_k_bits": 96,
-        "top_k_oscillation": 32,
-        "top_k_unsat": 48,
-        "max_standard_weight": 10,
-        "max_expanded_weight": 32,
-        "standard_budget": 800,
-        "expanded_budget": 2400,
-        "direct_budget": 1600,
-        "parallel_test_batch_size": 256,
-        "combo_pool_w_le3": 24,
-        "combo_pool_w_gt3": 16,
-        "enable_osd_repair": True,
-        "osd_support_sizes": [96, 128, 192, 256, 320],
-        "osd_jitter_passes": 1,
-        "enable_greedy_repair": True,
-        "greedy_repair_steps": 32,
-        "greedy_repair_candidates": 6,
-        "enable_micro_bp": True,
-        "micro_candidate_cap": 6,
-        "likely_weight_topk": 8,
-        "rerank_extra_queries": 32,
-        "rerank_use_net": True,
-        "weight_penalties": [0.0, 0.0, 0.08, 0.20, 0.38, 0.60, 0.85, 1.12, 1.45, 1.80],
-        "candidate_bank_inject_oracle_positive": False,
-    },
-    "eval": {
-        "samples_per_point": 4000,
-        "tail_samples_per_point": 30000,
-        "target_frame_errors": 200,
-        "max_samples_per_point": 200000,
-        "stop_decoders": ["hybrid_bp_nsg", "bp_nms_20", "bp_nms_50"],
-        "snr_db_grid": [0, 1, 2, 3],
-        "profiles": ["AWGN", "CDL_C"],
-        "require_gpu": False,
-        "mixed_precision": False,
-    },
-}
-
-
-def deep_update(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+def deep_update(base: Dict[str, Any], updates: Dict[str, Any]) -> Dict[str, Any]:
     out = copy.deepcopy(base)
-    for k, v in (override or {}).items():
+    for k, v in (updates or {}).items():
         if isinstance(v, dict) and isinstance(out.get(k), dict):
             out[k] = deep_update(out[k], v)
         else:
@@ -143,97 +18,184 @@ def deep_update(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any
     return out
 
 
-def normalize_snr_sampling(data: Dict[str, Any]) -> None:
-    """Make failed-SNR sampling probabilities consistent with the configured grid.
-
-    Earlier package versions accidentally shipped smoke/tail configs where `failed_snr_db_grid`
-    was shortened but `failed_snr_probs` still had the 11-entry full-run vector.
-    NumPy then raises `ValueError: a and p must have same size` during
-    `rng.choice(grid, p=probs)`.  This normalizer both fixes old configs and
-    makes future shortened smoke/tail grids robust.
-
-    If the probability list is longer than the grid and the grid entries look
-    like integer SNR points, we interpret the probability vector as the full
-    dense 0,1,2,... prior and select the probabilities corresponding to the
-    requested grid.  Otherwise we crop/pad conservatively and normalize.
-    """
-    grid = list(data.get("failed_snr_db_grid", []) or [])
-    if not grid:
-        data["failed_snr_db_grid"] = [0.0]
-        data["failed_snr_probs"] = [1.0]
-        return
-
-    raw_probs = data.get("failed_snr_probs", None)
-    if raw_probs is None:
-        probs = [1.0 for _ in grid]
-        note = "uniform_default"
-    else:
-        probs = [float(x) for x in list(raw_probs)]
-        note = "as_configured"
-
-    if len(probs) != len(grid):
-        selected = None
-        # Common FIR case: full-run prior has entries for integer SNR 0..K,
-        # while smoke/tail uses a subset such as [0, 2, 4] or [4..10].
-        try:
-            idx = [int(round(float(x))) for x in grid]
-            if all(abs(float(g) - i) < 1e-6 and 0 <= i < len(probs) for g, i in zip(grid, idx)):
-                selected = [probs[i] for i in idx]
-                note = f"selected_from_dense_prior_len_{len(probs)}"
-        except Exception:
-            selected = None
-        if selected is None:
-            if len(probs) > len(grid):
-                selected = probs[:len(grid)]
-                note = f"cropped_from_len_{len(probs)}"
-            else:
-                selected = probs + [1.0 for _ in range(len(grid) - len(probs))]
-                note = f"padded_from_len_{len(probs)}"
-        probs = selected
-
-    # Ensure all entries are finite and non-negative, then normalize.
-    clean = []
-    for x in probs:
-        try:
-            v = float(x)
-        except Exception:
-            v = 0.0
-        if not (v >= 0.0) or v == float("inf") or v == float("-inf"):
-            v = 0.0
-        clean.append(v)
-    total = sum(clean)
-    if total <= 0.0:
-        clean = [1.0 / len(grid) for _ in grid]
-        note = "uniform_after_invalid_probs"
-    else:
-        clean = [float(x) / total for x in clean]
-
-    data["failed_snr_db_grid"] = [float(x) if isinstance(x, float) else x for x in grid]
-    data["failed_snr_probs"] = clean
-    data["failed_snr_probs_note"] = note
-
-
-def validate_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
-    normalize_snr_sampling(cfg.setdefault("data", {}))
-    code = cfg.setdefault("code", {})
-    fam = str(code.get("family", "")).lower()
-    if fam in {"sionna_nr_pusch_ldpc", "sionna_nr_pusch", "nr_pusch_ldpc"}:
-        if "num_coded_bits" in code:
-            code["n"] = int(code["num_coded_bits"])
-        if code.get("target_tb_size", None) is None:
-            code.pop("k", None)
-        else:
-            code["k"] = int(code["target_tb_size"])
-        code.pop("align_to_pcm_length", None)
-    return cfg
+def default_config() -> Dict[str, Any]:
+    return {
+        "project": {"seed": 31415, "output_dir": "outputs/hybrid_bp_nsg_v14_pusch_cdl_full", "name": "hybrid_bp_nsg_v14"},
+        "code": {
+            "family": "sionna_nr_pusch_ldpc",
+            "num_coded_bits": 512,
+            "target_coderate": 0.5,
+            "num_bits_per_symbol": 2,
+            "num_layers": 1,
+            "transport_k": 256,
+            "strict_pcm_check": True,
+            "seed": 31415,
+            "use_sionna_pcm": True,
+            "fallback_n_internal": 584,
+            "fallback_m": 312,
+        },
+        "channel": {
+            "modulation": "QPSK",
+            "awgn": {},
+            "cdl_c": {
+                "carrier_frequency_hz": 3.5e9,
+                "subcarrier_spacing_hz": 30000.0,
+                "num_ofdm_symbols": 14,
+                "fft_size": 72,
+                "delay_spread_s": 1e-7,
+                "speed_m_per_s": 0.0,
+                "normalize_channel": True,
+                "direction": "uplink",
+                "model": "C",
+                "perfect_csi": True,
+            },
+        },
+        "data": {
+            "train_samples": 36000,
+            "val_samples": 7200,
+            "shard_size": 250,
+            "sample_failed_only": True,
+            "bp_collect_iterations": 20,
+            "failed_snr_db_grid": [1, 2, 3, 4, 5, 6],
+            "failed_snr_probs": [0.10, 0.18, 0.25, 0.22, 0.16, 0.09],
+            "profiles": ["AWGN", "CDL_C"],
+            "profile_probs": [0.55, 0.45],
+            "num_workers": 32,
+            "parallel_chunk_size": 250,
+            "filter_by_target_weight": True,
+            "min_target_weight": 1,
+            "max_target_weight": 32,
+            "require_candidate_positive": True,
+            "require_reachable": False,
+            "max_attempt_multiplier": 80,
+        },
+        "model": {
+            "graph_hidden_dim": 128,
+            "graph_layers": 5,
+            "transformer_heads": 4,
+            "transformer_layers": 1,
+            "top_k_tokens": 64,
+            "num_segments": 8,
+            "max_weight_class": 64,
+            "rerank_list_size": 12,
+        },
+        "bp": {
+            "hybrid_main_algorithm": "nms",
+            "hybrid_main_iterations": 20,
+            "strong_iterations": 50,
+            "micro_iterations": 8,
+            "nms_alpha": 0.8,
+            "early_stop": True,
+        },
+        "rescue": {
+            "mode": "ai",
+            "target_basis": "bp",
+            "fallback_target_basis": "channel_with_bp_punctures",
+            "always_rescue_after_bp_fail": True,
+            "try_bp_basis_fallback": False,
+            "require_crc_for_accept": True,
+            "fallback_accept_parity_without_crc": False,
+            "gating_threshold": -1.0,
+            "expanded_threshold": 0.2,
+            "hopeless_threshold": -1.0,
+            "rescue_threshold": 0.05,
+            "pool_size": 64,
+            "expanded_pool_size": 192,
+            "top_k_bits": 128,
+            "top_k_oscillation": 32,
+            "top_k_unsat": 48,
+            "max_standard_weight": 10,
+            "max_expanded_weight": 32,
+            "standard_budget": 1200,
+            "expanded_budget": 3600,
+            "direct_budget": 2200,
+            "combo_pool_w_le3": 28,
+            "combo_pool_w_gt3": 18,
+            "enable_osd_repair": True,
+            "osd_support_sizes": [64, 96, 128, 160, 192, 256, 320],
+            "osd_jitter_passes": 2,
+            "enable_greedy_repair": True,
+            "greedy_repair_steps": 48,
+            "greedy_repair_candidates": 8,
+            "enable_micro_bp": True,
+            "micro_candidate_cap": 8,
+            "likely_weight_topk": 10,
+            "rerank_extra_queries": 64,
+            "rerank_use_net": True,
+            "component_bonus": -0.35,
+            "segment_bonus_scale": 0.08,
+            "component_focus_scale": 0.1,
+            "oscillation_focus_scale": 0.05,
+            "rerank_prior_scale": 0.1,
+            "micro_flip_scale": 1.1,
+            "reachability_label_mode": "weight_only",
+            "candidate_bank_pool_size": 160,
+            "candidate_bank_top_k_bits": 128,
+            "candidate_bank_top_k_unsat": 48,
+            "candidate_bank_top_k_oscillation": 32,
+            "candidate_bank_max_weight": 12,
+            "candidate_bank_budget": 256,
+            "candidate_bank_enable_greedy": True,
+            "candidate_bank_greedy_steps": 24,
+            "candidate_bank_greedy_candidates": 4,
+            "candidate_bank_enable_osd": True,
+            "candidate_bank_osd_support_sizes": [64, 96, 128, 160],
+            "candidate_bank_osd_jitter_passes": 1,
+            "oracle_candidate_max_weight": 32,
+            "candidate_bank_inject_oracle_positive": True,
+            "parallel_test_batch_size": 256,
+        },
+        "train": {
+            "epochs": 48,
+            "batch_size": 96,
+            "lr": 8e-4,
+            "weight_decay": 1e-5,
+            "dropout": 0.08,
+            "bit_pos_weight": 8.0,
+            "reach_pos_weight": 8.0,
+            "grad_clip": 1.0,
+            "resume": False,
+            "require_gpu": True,
+            "mixed_precision": "bfloat16",
+            "xla": False,
+            "cpu_threads": 32,
+            "preload_dataset": True,
+            "loss_weights": {
+                "bit": 1.0,
+                "segment": 0.2,
+                "weight": 0.2,
+                "standard_reachable": 0.1,
+                "expanded_reachable": 0.12,
+                "rescueable": 0.1,
+                "rerank": 0.75,
+                "rank": 0.05,
+            },
+        },
+        "eval": {
+            "require_gpu": True,
+            "mixed_precision": False,
+            "xla": False,
+            "cpu_threads": 32,
+            "samples_per_point": 4000,
+            "tail_samples_per_point": 30000,
+            "target_frame_errors": 200,
+            "max_samples_per_point": 200000,
+            "stop_decoders": ["hybrid_bp_nsg", "bp_nms_20", "bp_nms_50"],
+            "snr_db_grid": [0, 1, 2, 3, 4, 5, 6],
+            "profiles": ["AWGN", "CDL_C"],
+        },
+    }
 
 
 def load_config(path: str | Path) -> Dict[str, Any]:
-    path = Path(path)
-    if yaml is None:
-        raise RuntimeError("PyYAML is required to read YAML configs. Install with `pip install pyyaml`.")
-    with path.open("r", encoding="utf-8") as f:
-        user_cfg = yaml.safe_load(f) or {}
-    cfg = deep_update(DEFAULTS, user_cfg)
-    cfg["_config_path"] = str(path)
-    return validate_config(cfg)
+    p = Path(path)
+    data = yaml.safe_load(p.read_text()) or {}
+    cfg = deep_update(default_config(), data)
+    cfg["_config_path"] = str(p)
+    return cfg
+
+
+def save_resolved_config(cfg: Dict[str, Any], out_dir: str | Path) -> None:
+    out = Path(out_dir) / "artifacts"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "resolved_config.json").write_text(json.dumps(cfg, indent=2, default=str), encoding="utf-8")
