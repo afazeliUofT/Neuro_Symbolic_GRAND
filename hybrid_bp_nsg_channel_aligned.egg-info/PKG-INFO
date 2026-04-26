@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: hybrid-bp-nsg-channel-aligned
-Version: 14.2.0
-Summary: Standalone v14.2 residual AI/Tanner-GRAND rescue decoder for 5G-style LDPC
+Version: 14.3.0
+Summary: Standalone v14.3 residual AI/Tanner-GRAND rescue decoder for 5G-style LDPC
 Author: Hybrid GRAND v14
 Requires-Python: >=3.10

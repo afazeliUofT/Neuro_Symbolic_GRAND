@@ -1,4 +1,4 @@
-# FIR command flow for Hybrid GRAND v14.2
+# FIR command flow for Hybrid GRAND v14.3
 
 From `~/scratch/Neuro_Symbolic_GRAND` after unzipping this standalone package:
 

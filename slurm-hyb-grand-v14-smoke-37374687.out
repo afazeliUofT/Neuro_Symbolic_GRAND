@@ -1,0 +1,356 @@
+Looking in links: /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/x86-64-v4, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/x86-64-v3, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic
+Obtaining file:///scratch/rsadve1/Neuro_Symbolic_GRAND
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: hybrid-bp-nsg-channel-aligned
+  Building editable for hybrid-bp-nsg-channel-aligned (pyproject.toml): started
+  Building editable for hybrid-bp-nsg-channel-aligned (pyproject.toml): finished with status 'done'
+  Created wheel for hybrid-bp-nsg-channel-aligned: filename=hybrid_bp_nsg_channel_aligned-14.3.0-0.editable-py3-none-any.whl size=3091 sha256=f5af3695ec72bc823df827966a7924628f6dda6bfda258a4c4d6c99379e5d28f
+  Stored in directory: /tmp/pip-ephem-wheel-cache-0e7jnryj/wheels/3d/d1/92/3f17e744b20096ee9e6e97ff3e4c91596643cba54e0bd495d8
+Successfully built hybrid-bp-nsg-channel-aligned
+Installing collected packages: hybrid-bp-nsg-channel-aligned
+  Attempting uninstall: hybrid-bp-nsg-channel-aligned
+    Found existing installation: hybrid-bp-nsg-channel-aligned 14.3.0
+    Uninstalling hybrid-bp-nsg-channel-aligned-14.3.0:
+      Successfully uninstalled hybrid-bp-nsg-channel-aligned-14.3.0
+Successfully installed hybrid-bp-nsg-channel-aligned-14.3.0
+2026-04-26 10:55:52.488003: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-26 10:55:52.538381: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226152.551434  224408 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777226152.555476  224408 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777226152.568653  224408 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226152.568694  224408 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226152.568705  224408 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226152.568716  224408 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 10:55:52.573293: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+python: 3.12.4 (main, Jun 12 2024, 16:22:31) [GCC 13.3.0]
+numpy: 2.1.1
+yaml: 6.0.3
+scipy: 1.17.0
+tensorflow: 2.19.1
+sionna: 1.2.2
+{'hybrid_bp_nsg.__version__': '14.3.0', 'distribution_version': '14.3.0', 'python': '/home/rsadve1/scratch/Neuro_Symbolic_GRAND/.venv/bin/python', 'cwd': '/scratch/rsadve1/Neuro_Symbolic_GRAND', 'CUDA_VISIBLE_DEVICES': '0'}
+2026-04-26 10:55:58.559123: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226158.571842  224418 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777226158.575775  224418 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777226158.587874  224418 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226158.587912  224418 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226158.587924  224418 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226158.587934  224418 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+tensorflow: 2.19.1
+gpus: [PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
+2026-04-26 10:56:05.114497: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226165.127270  224430 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777226165.131214  224430 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777226165.143511  224430 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226165.143551  224430 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226165.143562  224430 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226165.143572  224430 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 10:56:10.702602: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:47] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+I0000 00:00:1777226170.702660  224430 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777226170.719383  224430 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+{
+  "config": "configs/fir_hybrid_bp_nsg_smoke_v14.yaml",
+  "output_dir": "outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke",
+  "target_basis": "bp",
+  "max_expanded_weight": 32,
+  "filter_by_target_weight": true,
+  "require_candidate_positive": true,
+  "candidate_bank_inject_oracle_positive": true,
+  "code": {
+    "family": "sionna_nr_pusch_ldpc",
+    "transport_k": 256,
+    "ldpc_k": 272,
+    "n_internal": 584,
+    "n_transmitted": 512,
+    "k": 272,
+    "m": 312,
+    "rate": 0.5,
+    "edges": 1852,
+    "avg_check_degree": 5.935897350311279,
+    "max_check_degree": 8,
+    "min_check_degree": 4,
+    "avg_variable_degree": 3.1712329387664795,
+    "num_punctured_internal_positions": 72,
+    "num_transmitted_internal_positions": 512,
+    "metadata": {
+      "num_coded_bits": 512,
+      "target_coderate": 0.5,
+      "num_bits_per_symbol": 2,
+      "num_layers": 1,
+      "tb_size": 256,
+      "tb_crc_length": 16,
+      "has_outer_crc": true,
+      "pusch_channel_type": "PUSCH",
+      "source": "sionna_ldpc5g_pruned_pcm",
+      "cb_size": 272,
+      "ldpc_k_property": 360,
+      "bg": "bg2",
+      "z": 36,
+      "output_perm_inv_size": 512,
+      "interleaver_validated": true
+    }
+  }
+}
+2026-04-26 10:56:11.817577: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226171.829737  224456 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777226171.833705  224456 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777226171.846010  224456 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226171.846054  224456 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226171.846066  224456 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226171.846076  224456 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 10:56:16.307151: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:47] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+I0000 00:00:1777226176.307240  224456 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777226176.308307  224456 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+profile=AWGN tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=AWGN modulation=QPSK perfect_csi=True equalizer=identity finite_llr=True
+profile=CDL_C tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=SIONNA_CDL_C modulation=QPSK perfect_csi=True equalizer=one_tap_perfect_csi finite_llr=True
+2026-04-26 10:56:21.747295: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226181.760134  224585 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777226181.764082  224585 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777226181.776349  224585 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226181.776388  224585 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226181.776399  224585 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226181.776409  224585 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 10:56:26.373646: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:47] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+I0000 00:00:1777226186.373731  224585 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777226186.374805  224585 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+2026-04-26 10:56:26.449619: E tensorflow/core/util/util.cc:131] oneDNN supports DT_HALF only on platforms with AVX-512. Falling back to the default Eigen-based implementation if present.
+{
+  "config": "configs/fir_hybrid_bp_nsg_smoke_v14.yaml",
+  "mixed_policy": "<DTypePolicy \"mixed_bfloat16\">",
+  "gpus": [
+    "PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')"
+  ],
+  "n": 584,
+  "m": 312,
+  "outputs": {
+    "bit_logits": {
+      "shape": [
+        2,
+        584
+      ],
+      "dtype": "float32"
+    },
+    "segment_logits": {
+      "shape": [
+        2,
+        8
+      ],
+      "dtype": "float32"
+    },
+    "weight_logits": {
+      "shape": [
+        2,
+        65
+      ],
+      "dtype": "float32"
+    },
+    "standard_logits": {
+      "shape": [
+        2
+      ],
+      "dtype": "float32"
+    },
+    "expanded_logits": {
+      "shape": [
+        2
+      ],
+      "dtype": "float32"
+    },
+    "rescue_logits": {
+      "shape": [
+        2
+      ],
+      "dtype": "float32"
+    },
+    "packet_embedding": {
+      "shape": [
+        2,
+        128
+      ],
+      "dtype": "float32"
+    },
+    "candidate_scores": {
+      "shape": [
+        2,
+        16
+      ],
+      "dtype": "float32"
+    }
+  }
+}
+Model forward check passed.
+2026-04-26 10:56:30.148943: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226190.160550  224669 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777226190.164471  224669 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777226190.176694  224669 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226190.176731  224669 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226190.176743  224669 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226190.176753  224669 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 10:56:33.405724: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+generation_cuda_visible: -1
+generation_nvidia_visible: none
+code_family: sionna_nr_pusch_ldpc
+transport_k: 256
+ldpc_k: 272
+n_internal: 584
+n_transmitted: 512
+profiles: ['AWGN', 'CDL_C']
+profile=AWGN tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=AWGN modulation=QPSK perfect_csi=True equalizer=identity finite_llr=True
+profile=CDL_C tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=SIONNA_CDL_C modulation=QPSK perfect_csi=True equalizer=one_tap_perfect_csi finite_llr=True
+Parallel generation with 8 workers
+2026-04-26 10:56:34.407853: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-26 10:56:34.407918: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-26 10:56:34.408106: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-26 10:56:34.408565: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226194.420805  224677 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777226194.420817  224682 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226194.420886  224680 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226194.421404  224681 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777226194.424724  224682 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777226194.424726  224677 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777226194.424734  224680 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1777226194.425232  224681 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777226194.437047  224677 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437043  224681 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437047  224682 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437049  224680 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437080  224677 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437100  224681 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437117  224682 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437133  224680 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437143  224677 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437153  224681 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437162  224682 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437172  224680 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437182  224677 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437208  224681 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437217  224682 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.437226  224680 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 10:56:34.447663: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777226194.459867  224683 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777226194.463669  224683 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777226194.475769  224683 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.475826  224683 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.475837  224683 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777226194.475847  224683 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 10:56:37.699603: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+2026-04-26 10:56:37.833869: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+2026-04-26 10:56:37.836210: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+2026-04-26 10:56:37.836224: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+2026-04-26 10:56:37.836279: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+Completed worker chunk: {'split': 'val', 'kept': 171, 'attempted': 24000, 'shards': 1, 'prefix': 'w004'}
+Completed worker chunk: {'split': 'train', 'kept': 194, 'attempted': 25000, 'shards': 1, 'prefix': 'w001'}
+Completed worker chunk: {'split': 'train', 'kept': 161, 'attempted': 25000, 'shards': 1, 'prefix': 'w003'}
+Completed worker chunk: {'split': 'train', 'kept': 184, 'attempted': 25000, 'shards': 1, 'prefix': 'w000'}
+Completed worker chunk: {'split': 'train', 'kept': 175, 'attempted': 25000, 'shards': 1, 'prefix': 'w002'}
+Parallel generation complete: attempted=124000 kept={'train': 714, 'val': 171}
+=== V14 DATASET SANITY PROBE ===
+output: outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke
+npz_files: 5
+
+--- split train ---
+samples: 714
+target_weight_hist_top: [(1, 71), (2, 61), (6, 36), (4, 33), (7, 32), (8, 32), (13, 31), (9, 30), (3, 30), (5, 29), (12, 26), (11, 23), (17, 21), (27, 19), (16, 19), (24, 18), (26, 17), (10, 17), (19, 17), (14, 16), (25, 16), (15, 15), (18, 14), (23, 14), (20, 12), (21, 12), (28, 11), (30, 10), (22, 9), (31, 9)]
+target_weight_q0.00=1
+target_weight_q0.25=4
+target_weight_q0.50=10
+target_weight_q0.75=18
+target_weight_q0.90=26
+target_weight_q0.95=28
+target_weight_q0.99=31
+target_weight_q1.00=32
+standard_reachable_rate: 0.5196078431372549 positives: 371 n: 714
+expanded_reachable_rate: 1.0 positives: 714 n: 714
+rescueable_rate: 0.4803921568627451 positives: 343 n: 714
+candidate_any_positive_rate: 1.0 positives: 714 n: 714
+candidate_top1_positive_rate: 0.927170868347339 positives: 662 n: 714
+candidate_pos_total: 714 candidate_valid_total: 772 avg_valid_candidates: 1.0812324929971988
+snr_hist: [(2.0, 306), (2.5, 103), (3.5, 66), (4.0, 64), (3.0, 54), (4.5, 41), (5.0, 36), (5.5, 17), (6.0, 16), (7.0, 8), (8.0, 3)]
+profile_hist: [(0, 365), (1, 349)]
+
+--- split val ---
+samples: 171
+target_weight_hist_top: [(1, 28), (6, 12), (2, 11), (4, 10), (3, 10), (24, 7), (11, 7), (9, 6), (15, 6), (5, 6), (7, 5), (19, 5), (21, 5), (26, 5), (23, 5), (13, 5), (14, 4), (12, 4), (10, 4), (32, 4), (8, 4), (18, 3), (16, 2), (20, 2), (17, 2), (29, 2), (31, 2), (22, 1), (30, 1), (27, 1)]
+target_weight_q0.00=1
+target_weight_q0.25=3
+target_weight_q0.50=8
+target_weight_q0.75=18
+target_weight_q0.90=24
+target_weight_q0.95=28
+target_weight_q0.99=32
+target_weight_q1.00=32
+standard_reachable_rate: 0.5614035087719298 positives: 96 n: 171
+expanded_reachable_rate: 1.0 positives: 171 n: 171
+rescueable_rate: 0.43859649122807015 positives: 75 n: 171
+candidate_any_positive_rate: 1.0 positives: 171 n: 171
+candidate_top1_positive_rate: 0.9766081871345029 positives: 167 n: 171
+candidate_pos_total: 171 candidate_valid_total: 176 avg_valid_candidates: 1.0292397660818713
+snr_hist: [(2.0, 76), (2.5, 25), (4.0, 16), (5.0, 16), (3.0, 15), (3.5, 9), (4.5, 5), (8.0, 3), (7.0, 3), (5.5, 2), (6.0, 1)]
+profile_hist: [(0, 96), (1, 75)]
+
+[DONE] Dataset sanity passed.
+2026-04-26 11:49:58.019323: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777229398.032423  225268 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777229398.036470  225268 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777229398.048988  225268 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777229398.049032  225268 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777229398.049044  225268 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777229398.049054  225268 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 11:50:04.966861: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:47] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+I0000 00:00:1777229404.966934  225268 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777229404.968015  225268 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+2026-04-26 11:50:05.259251: E tensorflow/core/util/util.cc:131] oneDNN supports DT_HALF only on platforms with AVX-512. Falling back to the default Eigen-based implementation if present.
+TensorFlow version=2.19.1 GPUs=[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')] mixed_policy=<DTypePolicy "mixed_bfloat16">
+Epoch 1 | train_loss=1.5453 val_loss=1.2203 cand_top1=0.9948 rescue_acc=0.5241 gpu=1
+New best checkpoint at epoch 1 val_loss=1.2203
+Epoch 2 | train_loss=1.1528 val_loss=0.9932 cand_top1=0.9948 rescue_acc=0.7424 gpu=1
+New best checkpoint at epoch 2 val_loss=0.9932
+Epoch 3 | train_loss=0.9622 val_loss=0.8895 cand_top1=0.9896 rescue_acc=0.9276 gpu=1
+New best checkpoint at epoch 3 val_loss=0.8895
+Epoch 4 | train_loss=0.8760 val_loss=0.8385 cand_top1=0.9896 rescue_acc=0.9276 gpu=1
+New best checkpoint at epoch 4 val_loss=0.8385
+2026-04-26 11:50:35.228544: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1777229435.241439  225595 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1777229435.245402  225595 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1777229435.257756  225595 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777229435.257796  225595 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777229435.257807  225595 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1777229435.257818  225595 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-04-26 11:50:39.908705: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:47] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+I0000 00:00:1777229439.908778  225595 gpu_process_state.cc:208] Using CUDA malloc Async allocator for GPU: 0
+I0000 00:00:1777229439.909855  225595 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78751 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:0c:00.0, compute capability: 9.0
+code_family: sionna_nr_pusch_ldpc
+transport_k: 256
+ldpc_k: 272
+n_internal: 584
+n_transmitted: 512
+profiles: ['AWGN', 'CDL_C']
+profile=AWGN tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=AWGN modulation=QPSK perfect_csi=True equalizer=identity finite_llr=True
+profile=CDL_C tx_len=512 llr_tx_len=512 llr_internal_len=584 channel_type=SIONNA_CDL_C modulation=QPSK perfect_csi=True equalizer=one_tap_perfect_csi finite_llr=True
+Loaded TensorFlow rescue network using weights=outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke/checkpoints/rescue_net_tf.best.weights.h5
+Completed profile=AWGN snr=0 samples=300 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke/evaluation/profile_AWGN/snr_+0.0dB/summary.csv
+Completed profile=AWGN snr=2 samples=300 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke/evaluation/profile_AWGN/snr_+2.0dB/summary.csv
+Completed profile=AWGN snr=4 samples=300 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke/evaluation/profile_AWGN/snr_+4.0dB/summary.csv
+Completed profile=CDL_C snr=0 samples=300 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke/evaluation/profile_CDL_C/snr_+0.0dB/summary.csv
+Completed profile=CDL_C snr=2 samples=300 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke/evaluation/profile_CDL_C/snr_+2.0dB/summary.csv

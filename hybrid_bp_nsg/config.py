@@ -156,7 +156,7 @@ def default_config() -> Dict[str, Any]:
             "grad_clip": 1.0,
             "resume": False,
             "require_gpu": True,
-            "mixed_precision": "bfloat16",
+            "mixed_precision": "mixed_bfloat16",
             "xla": False,
             "cpu_threads": 32,
             "preload_dataset": True,

@@ -24,6 +24,7 @@ export TF_NUM_INTEROP_THREADS=4
 python scripts/check_tf_gpu.py --require-gpu
 python scripts/check_config.py configs/fir_hybrid_bp_nsg_smoke_v14.yaml
 python scripts/check_channel_models.py --config configs/fir_hybrid_bp_nsg_smoke_v14.yaml --profiles AWGN CDL_C
+python scripts/check_model_forward.py --config configs/fir_hybrid_bp_nsg_smoke_v14.yaml --batch 2
 rm -rf outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke
 CUDA_VISIBLE_DEVICES="-1" NVIDIA_VISIBLE_DEVICES="none" OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 TF_NUM_INTRAOP_THREADS=1 TF_NUM_INTEROP_THREADS=1 python -m hybrid_bp_nsg.cli generate --config configs/fir_hybrid_bp_nsg_smoke_v14.yaml
 python scripts/probe_v14_dataset.py --output outputs/hybrid_bp_nsg_v14_pusch_cdl_smoke

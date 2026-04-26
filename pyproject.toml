@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hybrid-bp-nsg-channel-aligned"
-version = "14.2.0"
-description = "Standalone v14.2 residual AI/Tanner-GRAND rescue decoder for 5G-style LDPC"
+version = "14.3.0"
+description = "Standalone v14.3 residual AI/Tanner-GRAND rescue decoder for 5G-style LDPC"
 requires-python = ">=3.10"
 authors = [{name="Hybrid GRAND v14"}]
 dependencies = []

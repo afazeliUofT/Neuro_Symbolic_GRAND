@@ -75,7 +75,12 @@ def train(cfg: Dict[str, Any]) -> None:
         pass
     mp = tcfg.get("mixed_precision", False)
     if mp:
-        tf.keras.mixed_precision.set_global_policy(str(mp) if isinstance(mp, str) else "mixed_float16")
+        policy = str(mp) if isinstance(mp, str) else "mixed_float16"
+        if policy == "bfloat16":
+            policy = "mixed_bfloat16"
+        elif policy == "float16":
+            policy = "mixed_float16"
+        tf.keras.mixed_precision.set_global_policy(policy)
     print(f"TensorFlow version={tf.__version__} GPUs={tf.config.list_physical_devices('GPU')} mixed_policy={tf.keras.mixed_precision.global_policy()}")
     out_dir = Path(cfg["project"]["output_dir"])
     code = build_code(cfg)

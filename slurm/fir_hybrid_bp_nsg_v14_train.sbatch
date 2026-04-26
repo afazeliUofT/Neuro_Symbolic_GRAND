@@ -23,5 +23,6 @@ export TF_NUM_INTRAOP_THREADS=${SLURM_CPUS_PER_TASK:-32}
 export TF_NUM_INTEROP_THREADS=8
 python scripts/check_tf_gpu.py --require-gpu
 python scripts/check_config.py configs/fir_hybrid_bp_nsg_full_v14.yaml
+python scripts/check_model_forward.py --config configs/fir_hybrid_bp_nsg_full_v14.yaml --batch 2
 python scripts/probe_v14_dataset.py --output outputs/hybrid_bp_nsg_v14_pusch_cdl_full
 python -m hybrid_bp_nsg.cli train --config configs/fir_hybrid_bp_nsg_full_v14.yaml
