@@ -3,7 +3,7 @@
 #SBATCH --time=12:00:00
 #SBATCH --partition=gpubase_bygpu_b3
 #SBATCH --cpus-per-task=32
-#SBATCH --mem=128G
+#SBATCH --mem=96G
 #SBATCH --gpus-per-node=h100:1
 #SBATCH --output=slurm-%x-%j.out
 set -euo pipefail
