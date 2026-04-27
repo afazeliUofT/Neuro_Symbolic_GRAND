@@ -143,3 +143,10 @@ Completed profile=AWGN snr=4 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusc
 Completed profile=AWGN snr=5 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/profile_AWGN/snr_+5.0dB/summary.csv
 Completed profile=AWGN snr=6 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/profile_AWGN/snr_+6.0dB/summary.csv
 Completed profile=CDL_C snr=0 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/profile_CDL_C/snr_+0.0dB/summary.csv
+Completed profile=CDL_C snr=1 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/profile_CDL_C/snr_+1.0dB/summary.csv
+Completed profile=CDL_C snr=2 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/profile_CDL_C/snr_+2.0dB/summary.csv
+Completed profile=CDL_C snr=3 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/profile_CDL_C/snr_+3.0dB/summary.csv
+Completed profile=CDL_C snr=4 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/profile_CDL_C/snr_+4.0dB/summary.csv
+Completed profile=CDL_C snr=5 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/profile_CDL_C/snr_+5.0dB/summary.csv
+Completed profile=CDL_C snr=6 samples=4000 summary=outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/profile_CDL_C/snr_+6.0dB/summary.csv
+Wrote outputs/hybrid_bp_nsg_v14_pusch_cdl_full/evaluation/evaluation_summary.csv and outputs/hybrid_bp_nsg_v14_pusch_cdl_full/reports/README.md
