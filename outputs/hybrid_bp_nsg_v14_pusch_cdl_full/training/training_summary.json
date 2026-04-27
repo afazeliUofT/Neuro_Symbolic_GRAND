@@ -1,0 +1,8 @@
+{
+  "epochs": 48,
+  "framework": "tensorflow",
+  "checkpoint": "outputs/hybrid_bp_nsg_v14_pusch_cdl_full/checkpoints/rescue_net_tf.weights.h5",
+  "best_checkpoint": "outputs/hybrid_bp_nsg_v14_pusch_cdl_full/checkpoints/rescue_net_tf.best.weights.h5",
+  "best_val_loss": 0.47007972995440167,
+  "num_gpus": 1
+}
